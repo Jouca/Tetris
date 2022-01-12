@@ -1,69 +1,13 @@
 import random
 import pygame
-
-
-COLOR = {'RED' : (237, 41, 57),
-         'ORANGE' : (255, 121, 0),
-         'YELLOW' : (254, 203, 0),
-         'GREEN' : (105, 190, 40),
-         'CYAN' : (0, 159, 218),
-         'BLUE' : (0, 101, 189),
-         'PURPLE' : (149, 45, 152)}
-
-# à compléter en prévision pour plus tard
-TETRIMINO_DATA = {1 : {'name' : 'O', 'color' : '', 'monochrome' : ''},
-                  2 : 'I',
-                  3 : 'T',
-                  4 : 'L',
-                  5 : 'J',
-                  6 : 'S',
-                  7 : 'Z'}
-
-TETRIMINO_SHAPE = {1 : [[1, 1],
-                        [1, 1]],
-                   2 : [[0, 0, 0, 0],
-                        [1, 1, 1, 1],
-                        [0, 0, 0, 0],
-                        [0, 0, 0, 0]],
-                   3 : [[0, 1, 0],
-                        [1, 1, 1],
-                        [0, 0, 0]],
-                   4 : [[0, 0, 1],
-                        [1, 1, 1],
-                        [0, 0, 0]],
-                   5 : [[1, 0, 0],
-                        [1, 1, 1],
-                        [0, 0, 0]],
-                   6 : [[0, 1, 1],
-                        [1, 1, 0],
-                        [0, 0, 0]],
-                   7 : [[1, 1, 0],
-                        [0, 1, 1],
-                        [0, 0, 0]]}
-
-# l'utilité est moyen, serviable plus tard pour les statistiques eventuellement
-ROTATION_PHASIS_NAME = {0 : 'N',
-                        1 : 'E',
-                        2 : 'S',
-                        3 : 'W'}
-
-# pour se réprer, le dico n'a aucune utilité en soi
-TETRIMINO_STATE = {0 : 'falling',
-                   1 : 'lock_down'}
-
-
-SIDE = [(0, -1), # haut
-        (1, 0), # droite
-        (0, 1), # gauche
-        (-1, 0)] # gauche
-
+from others.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
 
 
 def turn_right(tetrimino, phasis):
     if phasis == 0:
         return tetrimino
     else:
-        phasis -= 1    
+        phasis -= 1
         rotated_tetrimino = []
         for i in range(len(tetrimino)):
             tetrimino_line = []
@@ -73,12 +17,10 @@ def turn_right(tetrimino, phasis):
     return turn_right(rotated_tetrimino, phasis)
 
 
-
-
 class Bag:
-    
-    content = list(range(7))
-    random.shuffle(content)
+
+    content = list(range(1, 8))
+    # random.shuffle(content)
 
     def __len__(self):
         return len(Bag.content)
@@ -94,12 +36,15 @@ class Bag:
         return Bag.content
 
     def next_tetrimino(self):
-        if len(self) < 4 :
-            next_generation = list(range(7))
+        if len(self) < 7:
+            # next_generation = list(range(7))
+            next_generation = list(range(1, 8))
             random.shuffle(next_generation)
-            Bag.content += next_generation
+            Bag.content = next_generation + Bag.content
         return Bag.content.pop()
-            
+
+    def display(self, *args):
+        pass
 
 
 # pas très optimal mais au moins ça permet de bien comprendre
@@ -108,9 +53,9 @@ def start_center(tetrimino_type):
 
 
 class Tetrimino:
-    
+
     count = 0
-    
+
     # création d'un dictionnaire contenant toutes les rotations
     ROTATION_PHASIS = {}
     for i in range(1, 8):
@@ -122,13 +67,14 @@ class Tetrimino:
     def __init__(self, Bag):
         self.phasis = 0
         self.current_state = 0
-        self.type = Bag.next_tetrimino()+1
-        print(f"Tetrimino {self.type}" )
+        # self.type = Bag.next_tetrimino() + 1
+        self.type = Bag.next_tetrimino()
+        print(f"Tetrimino {self.type}")
         self.x = start_center(self.type)
         print(self)
         self.y = 0  # dans skyline
         Tetrimino.count += 1
-        
+
     # temporaire, pour la visualisation du tetrimino, à enlever à la fin
     def __str__(self):
         stock = ''
@@ -148,9 +94,9 @@ class Tetrimino:
         """
         tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
         test_list = [[] for i in range(3)]
-        
+
         square_len = len(tetrimino_shape)
-        last_row = last_column =  square_len - 1
+        last_row = last_column = square_len - 1
         first_column = 0
 
         # du moment que la liste de test correspondant est vide
@@ -166,7 +112,7 @@ class Tetrimino:
                 if tetrimino_shape[i][first_column]:
                     test_list[1].append((i, first_column))
             first_column += 1
-        
+
         while not test_list[2]:
             for i in range(square_len):
                 if tetrimino_shape[i][last_column]:
@@ -186,7 +132,7 @@ class Tetrimino:
         s'apprête à se figer dans la matrice avec un temps escompté
         - 2 lorsque le tetrimino est en 'completion phase'"""
         test_list = self.list_test_around()
-        
+
         for element in test_list[0]:
             print(element)
             if not Matrix.content[self.x + element[0]][self.y + element[1]]:
@@ -199,7 +145,11 @@ class Tetrimino:
                 super_rotation_system()"""
         return 0
 
-    def super_rotation_system():
+    def super_rotation_system(self):
+        pass
+
+    def display(self, Matrix):
+        Matrix.cell_size
         pass
 
     # je ne pense pas qu'il y ait besoin de compléter plus si on fait bien les
@@ -229,10 +179,9 @@ class Tetrimino:
 
     def get_state(self):
         return self.current_state
-    
+
     def get_type(self):
         return self.type
-
 
 
 class Window:
@@ -241,7 +190,7 @@ class Window:
         self.height = window_size[1]
         self.size = window_size
         self.margin = round(0.05 * self.height)
-    
+
     def change_size(self, new_size):
         self.width = new_size[0]
         self.height = new_size[1]
@@ -258,14 +207,15 @@ class Verification:
 
     def line_clear(Matrix):
         """"""
-
         pass
+
 
 class Matrix:
 
     def __init__(self, Window):
         self.resize(Window)
-        self.content = [[0 for j in range(10)] for i in range(22)] # deux colonnes pour skyline
+        # création d'une matrice vide avec deux lignes pour la skyline
+        self.content = [[0 for j in range(10)] for i in range(22)]
         self.highter_row = 22
 
     def __str__(self):
@@ -275,11 +225,8 @@ class Matrix:
             stock += '\n'
         return stock
 
-    def __add__(self, Tetrimino:Tetrimino):
+    def __add__(self, Tetrimino: Tetrimino):
         tetrimino_shape = Tetrimino.ROTATION_PHASIS[Tetrimino.type][Tetrimino.phasis]
-        """print(Tetrimino)
-        print(Tetrimino.x)
-        print(Tetrimino.y)"""
         for i in range(len(tetrimino_shape)):
             for j in range(len(tetrimino_shape)):
                 if tetrimino_shape[j][i] == 1:
@@ -288,18 +235,21 @@ class Matrix:
                         self.highter_row = Tetrimino.y + j
                         print(self.highter_row)
 
-    def resize(self, Window:Window):
+    def resize(self, Window: Window, *args):
         # pourrait être enlevé, mais mieux pour compréhension étapes
         remaining_height_spaces = Window.height - 2 * Window.margin
         self.cell_size = remaining_height_spaces // 21
-        self.x = (Window.width - self.cell_size * 10) // 2
-        self.y = (Window.height - self.cell_size * 21) // 2
         self.w = self.cell_size * 10
         self.h = self.cell_size * 21
+        self.x = (Window.width - self.w) // 2
+        self.y = (Window.height - self.h) // 2
+        self.width = (self.h // 147) + 1
 
-    def display(self, surface):
-        pygame.draw.rect(surface,(250,0,0),pygame.Rect(self.x, self.y, self.w, self.h))
-
+    def display(self, surface, *args):
+        print(self.h)
+        pygame.draw.rect(surface, (250, 0, 0),
+                         pygame.Rect(self.x, self.y, self.w, self.h),
+                         self.width)
 
 
 class Hold_queue:
@@ -307,14 +257,18 @@ class Hold_queue:
     def __init__(self, Window, Matrix):
         self.resize(Window, Matrix)
 
-    def resize(self, Window:Window, Matrix:Matrix):
+    def resize(self, Window: Window, Matrix: Matrix):
         remaining_space = Window.width - (Matrix.x + Matrix.w) - Window.margin
         self.w = self.h = round(Matrix.cell_size * 3.7)
         self.x = (remaining_space - self.w) * 0.7 + Window.margin
         self.y = Matrix.y
+        print(self.h)
+        self.width = self.h // 39 + 1
 
-    def display(self, surface):
-        pygame.draw.rect(surface,(250,0,0),pygame.Rect(self.x, self.y, self.w, self.h))
+    def display(self, surface, *args):
+        pygame.draw.rect(surface, (250, 0, 0),
+                         pygame.Rect(self.x, self.y, self.w, self.h),
+                         self.width)
 
 
 class Next_queue:
@@ -322,37 +276,94 @@ class Next_queue:
     def __init__(self, Window, Matrix):
         self.resize(Window, Matrix)
 
-    def resize(self, Window:Window, Matrix:Matrix):
+    def resize(self, Window: Window, Matrix: Matrix):
         matrix_place = Matrix.x + Matrix.w
         remaining_space = Window.width - matrix_place - Window.margin
+        # évaluation des paramètres utiles pour définir les encadrés
         self.w = round(Matrix.cell_size * 3.7)
+        self.h1 = self.w
+        self.h2 = round(Matrix.h*0.9) - self.w
         self.x = (round((remaining_space - self.w) * 0.3)) + matrix_place
         self.y1 = Matrix.y
         self.y2 = round(self.y1 + self.w + (Matrix.h / 10))
-        self.h1 = self.w
-        self.h2 = round(Matrix.h*0.9) - self.w
-        self.next = pygame.Rect(self.x + (self.w - Matrix.cell_size * 3) // 2,
-                                self.y1 + (self.w - Matrix.cell_size * 2) // 2,
-                                Matrix.cell_size * 3,
-                                Matrix.cell_size * 2)
-
-    def display(self, surface):
-        pygame.draw.rect(surface,(250,0,0),pygame.Rect(self.x, self.y1, self.w, self.h1))
-        pygame.draw.rect(surface,(250,0,0),pygame.Rect(self.x, self.y2, self.w, self.h2))
-        pygame.draw.rect(surface,(0,0,250),self.next)
-        space = (self.h2 - 5 *  self.next.height) // 6
+        self.width = self.h1 // 39 + 1
+        """self.next = [pygame.Rect(self.x + (self.w - tetrimino_w) // 2,
+                                self.y1 + (self.w - tetrimino_h) // 2,
+                                tetrimino_w,tetrimino_h)]
+        space = (self.h2 - 5 *  self.next[0].height) // 6
         y = self.y2 + space
         for i in range(5):
-            tetrimino_place = pygame.Rect(self.next.x, y, self.next.width, self.next.height)
-            y += self.next.height + space
-            pygame.draw.rect(surface, (0, 0, 250), tetrimino_place)
+            tetrimino_place = pygame.Rect(self.next[0].x, y, self.next[0].width, self.next[0].height)
+            y += self.next[0].height + space
+            self.next.append(tetrimino_place)"""
+        # liste des positions 'y' des différents emplacement des tetriminos
+        self.t_w = Matrix.cell_size * 3
+        self.t_h = Matrix.cell_size * 2
+        self.t_x = self.x + (self.w - self.t_w) // 2
+        self.next_y = [self.y1 + (self.w - self.t_h) // 2]
+        space = (self.h2 - 5 * self.t_h) // 6
+        y = self.y2 + space
+        for i in range(5):
+            t_place = y
+            y += self.t_h + space
+            self.next_y.append(t_place)
+
+    def display(self, surface, Bag):
+        # conteneur de la prochaine pièce de jeu
+        pygame.draw.rect(surface,
+                         (250, 0, 0),
+                         pygame.Rect(self.x, self.y1, self.w, self.h1),
+                         self.width)
+        # conteneur des cinq pièces suivantes
+        pygame.draw.rect(surface,
+                         (250, 0, 0),
+                         pygame.Rect(self.x, self.y2, self.w, self.h2),
+                         self.width)
+        """encadrement (provisoire)
+        for i in range(6):
+            pygame.draw.rect(surface,(0,0,250),pygame.Rect(self.t_x, self.next_y[i], self.t_w, self.t_h), self.width)"""
+
+        # représentation sur les bons emplacements des différents tetriminos
+        for i in range(1, 7):
+            tetrimino_type = Bag.content[-i]
+            tetrimino_shape = TETRIMINO_SHAPE[tetrimino_type]
+            color = COLOR[TETRIMINO_DATA[tetrimino_type]['color']]
+            # dans le cas où le tetrimino n'est ni 'I' ni 'O'
+            # la proba d'obtenir est plus grande, on gagne une comparaison :)
+            if tetrimino_type > 2:
+                cell_size = self.t_w // 3
+                for j in range(2):
+                    for k in range(3):
+                        if tetrimino_shape[j][k]:
+                            rect = (self.t_x + k * cell_size,
+                                    self.next_y[i - 1] + j * cell_size,
+                                    cell_size, cell_size)
+                            pygame.draw.rect(surface, color, pygame.Rect(rect),
+                                             self.width)
+            # si le tetrimino est un 'I' tetrimino
+            elif tetrimino_type == 2:
+                cell_size = self.t_w // 4
+                shift = (self.t_h - cell_size) // 2
+                for j in range(4):
+                    rect = (self.t_x + j * cell_size,
+                            self.next_y[i - 1] + shift,
+                            cell_size, cell_size)
+                    pygame.draw.rect(surface, color,
+                                     pygame.Rect(rect), self.width)
+            # s'il s'agit d'un 'O' tetrimino
+            else:
+                cell_size = self.t_h // 2
+                shift = (self.t_w - 2 * cell_size) // 2
+                for j in range(2):
+                    for k in range(2):
+                        rect = (self.t_x + k * cell_size + shift,
+                                self.next_y[i - 1] + j * cell_size,
+                                cell_size, cell_size)
+                        pygame.draw.rect(surface, color,
+                                         pygame.Rect(rect), self.width)
 
 
-    
-
-# je ne sais pas si c'est pertinent ou pas, mais je le laisse pour le moment
 class Statistic:
 
     def stat_view(self):
         nb_tetrimino = Tetrimino.get_count(Tetrimino)
-    
