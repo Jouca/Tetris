@@ -26,7 +26,7 @@ def clear_lines(tableau):
     n = 0
     copy_tableau = tableau.copy()
     for i in range(len(tableau)):
-        if copy_tableau[i].count(1) == len(tableau[i]):
+        if copy_tableau[i].count(0) == 0:
             copy_tableau.pop(i)
             copy_tableau.insert(0, [0] * len(tableau[0]))
             n += 1
