@@ -1,3 +1,39 @@
+class Spritesheet:
+    """
+    Objet s'occupant d'un fichier type spritesheet.
+    """
+    def __init__(self, filename):
+        self.filename = filename
+        self.sprite_sheet = pygame.image.load(filename).convert()
+        self.meta_data = self.filename.replace('png', 'json')
+        with open(self.meta_data, encoding="utf-8") as fichier:
+            self.data = json.load(fichier)
+        fichier.close()
+
+    def get_sprite(self, x_position, y_position, width, heigth):
+        """
+        Permet d'avoir le sprite avec sa position x, sa position y,
+        sa taille et sa hauteur.
+        """
+        sprite = pygame.Surface((width, heigth))
+        sprite.set_colorkey((0, 0, 0))
+        sprite.blit(
+            self.sprite_sheet,
+            (0, 0),
+            (x_position, y_position, width, heigth)
+        )
+        return sprite
+
+    def parse_sprite(self, name):
+        """
+        Permet de dessiner le sprite.
+        """
+        sprite = self.data['frames'][name]['frame']
+        x_position, y_position = sprite["x"], sprite["y"]
+        w_position, h_position = sprite["w"], sprite["h"]
+        image = self.get_sprite(x_position, y_position, w_position, h_position)
+        return image
+
 def clear_lines(tableau):
     """
     Permet de supprimer les lignes d'un tableau quand la ligne ne contient que
