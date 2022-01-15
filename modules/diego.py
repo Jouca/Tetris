@@ -30,4 +30,4 @@ def clear_lines(tableau):
             copy_tableau.pop(i)
             copy_tableau.insert(0, [0] * len(tableau[0]))
             n += 1
-    return copy_tableau,n
+    return copy_tableau, n
