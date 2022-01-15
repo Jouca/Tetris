@@ -34,6 +34,7 @@ class Spritesheet:
         image = self.get_sprite(x_position, y_position, w_position, h_position)
         return image
 
+
 def clear_lines(tableau):
     """
     Permet de supprimer les lignes d'un tableau quand la ligne ne contient que
