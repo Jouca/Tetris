@@ -1,13 +1,10 @@
-# problème avec le resize de la next_queue
-
-
 # importations des librairies python
 import pygame
 import tkinter
 import sys
 import time
 import termcolor
-from solene import Bag, Hold_queue, Matrix, Next_queue, Tetrimino, Window
+from sauvegarde_solene import Bag, Hold_queue, Matrix, Next_queue, Tetrimino, Window, Data
 
 # initialisation de pygame
 pygame.init()
@@ -49,8 +46,8 @@ window_size = pygame.display.get_surface().get_size()
 
 
 def resize_all(Window, Object):
-    for element in Object:
-        element.resize(Window, Object[2])
+    for element in Object[2:]:
+        element.resize(Window)
 
 
 def display_all(Window, Object, resize=False):
@@ -61,25 +58,25 @@ def display_all(Window, Object, resize=False):
         element.display(frame, Object[-1])"""
     # pour la next_queue qui est particulière
     Object[3].display(frame, Object[0])
+    # tetrimino particulier
     Object[1].display(frame, Object[2])
-    """# le reste
-    for element in Object[3:]:
-        element.display(frame)"""
     Object[2].display(frame)
+    Object[5].display(frame)
     Object[4].display(frame)
     window.blit(frame, (0, 0))
     pygame.display.flip()
 
 
-game_window = Window(window_size)
 bag = Bag()
+game_window = Window(window_size)
 matrix = Matrix(game_window)
-next_queue = Next_queue(game_window, matrix)
-hold_queue = Hold_queue(game_window, matrix)
+next_queue = Next_queue(game_window)
+hold_queue = Hold_queue(game_window)
+data = Data(game_window)
 
 tetrimino = Tetrimino(bag)
 
-Object = (bag, tetrimino, matrix, next_queue, hold_queue)
+Object = (bag, tetrimino, matrix, next_queue, hold_queue, data)
 
 display_all(game_window, Object)
 
@@ -143,7 +140,7 @@ while True:
                 hold_queue.hold(tetrimino)
                 tetrimino = Tetrimino(bag)
             
-            Object = (bag, tetrimino, matrix, next_queue, hold_queue)
+            Object = (bag, tetrimino, matrix, next_queue, hold_queue, data)
             display_all(game_window, Object)
 
     # time.sleep(2)
