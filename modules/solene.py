@@ -1,3 +1,5 @@
+# création dico ---> 368
+
 import random
 import pygame
 from others.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
@@ -8,7 +10,7 @@ def display_visual_tetrimino(surface, place_properties, y, t_type):
     queue et la next queue, ce, sans création d'un objet tetrimino.
     Prend en paramètre :
     - `surface`, un objet pygame.Surface ;
-    - `place_properties`, un objet Hold_queue ou Next_queue, utile afin de
+    - `place_properties`, un objet HoldQueue ou NextQueue, utile afin de
     récupérer des informations de l'emplacement du tetrimino visuel ;
     - `y` : la position y, particulière de l'emplacement du tetrimino visuel
     sous la forme d'un int ;
@@ -125,7 +127,7 @@ def start_center(tetrimino_type):
 
 
 class Tetrimino:
-    """modélise un tetrimino"""
+    """modélise un tetrimino."""
 
     # compteur intéressant pour les informations en fin de partie
     count = 0
@@ -231,6 +233,7 @@ class Tetrimino:
         pass
 
     def display(self, surface, Matrix):
+        """affiche l'instance de tetrimino en fonction de ses spécificités"""
         y = Matrix.y - 3/10 * Matrix.cell_size
         tetrimino_shape = self.ROTATION_PHASIS[self.type][self.phasis]
         color = COLOR[TETRIMINO_DATA[self.type]['color']]
@@ -238,8 +241,8 @@ class Tetrimino:
             for j in range(len(tetrimino_shape)):
                 if tetrimino_shape[i][j]:
                     # affichage mino par mino sur matrix
-                    mino_x = Matrix.x + (j+self.x) * Matrix.cell_size
-                    mino_y = y + (i+self.y) * Matrix.cell_size
+                    mino_x = Matrix.x + (j + self.x) * Matrix.cell_size
+                    mino_y = y + (i + self.y - 1) * Matrix.cell_size
                     pygame.draw.rect(surface,
                                      color,
                                      pygame.Rect(mino_x,
@@ -250,9 +253,9 @@ class Tetrimino:
         if self.y == 0:
             pygame.draw.rect(surface, (0, 0, 0),
                              pygame.Rect(Matrix.x,
-                                         Matrix.y - Matrix.cell_size,
+                                         0,
                                          Matrix.w,
-                                         Matrix.cell_size))
+                                         Matrix.y))
 
     # setters
     def fall(self):
@@ -277,9 +280,17 @@ class Tetrimino:
         anti-horaire."""
         self.phasis = (self.phasis + 1) % 4
 
+    def set_type(self, new_type):
+        """change le type d'un tetrimino."""
+        self.type = new_type
+
+    def set_y(self, value):
+        self.y = value
+
     # getters
     def get_count(self):
-        return Tetrimino.count
+        """renvoie le nombre de tetrimino créés."""
+        return self.count
 
     def get_phasis(self):
         return self.phasis
@@ -298,11 +309,11 @@ class Tetrimino:
 
 
 class Window:
+    """objet stockant les propriétés de la fenêtre."""
+
     def __init__(self, window_size):
-        self.width = window_size[0]
-        self.height = window_size[1]
-        self.size = window_size
-        self.margin = round(0.05 * self.height)
+        """initialisation de l'instance."""
+        self.change_size(window_size)
 
     def change_size(self, new_size):
         self.width = new_size[0]
@@ -315,13 +326,16 @@ class Window:
 
 
 class Matrix:
+    """modélisation de matrix dans laquelle tombe les tetrimino."""
 
     def __init__(self, Window):
+        """initialisation des différents attribut de la classe Matrix."""
         self.resize(Window)
         # création d'une matrice vide avec deux lignes pour la skyline
         self.content = [[0 for j in range(10)] for i in range(22)]
         self.higher_row = 22
 
+    # ##temporaire
     def __str__(self):
         stock = ''
         for i in range(1, 22):
@@ -330,11 +344,14 @@ class Matrix:
         return stock
 
     def __add__(self, Tetrimino: Tetrimino):
+        """méthode spéciale permettant d'utiliser l'opérateur '+' pour
+        lock down un `Tetrimino`, un objet de la classe `Tetrimino`."""
         t_type = Tetrimino.type
         t_phasis = Tetrimino.phasis
         tetrimino_shape = Tetrimino.ROTATION_PHASIS[t_type][t_phasis]
-        for i in range(len(tetrimino_shape)):
-            for j in range(len(tetrimino_shape)):
+        tetrimino_lenght = len(tetrimino_shape)
+        for i in range(tetrimino_lenght):
+            for j in range(tetrimino_lenght):
                 if tetrimino_shape[j][i] == 1:
                     pos_y = Tetrimino.y + j
                     pos_x = Tetrimino.x + i
@@ -344,6 +361,9 @@ class Matrix:
                         print(self.higher_row)
 
     def resize(self, Window: Window):
+        """redimmensionne les valeurs utile à la représentation
+        graphique de matrix. La fonction permet la création d'un dictionnaire
+        pratique à la représentation des mino."""
         # pourrait être enlevé, mais mieux pour compréhension étapes
         remaining_height_spaces = Window.height - 2 * Window.margin
         self.cell_size = remaining_height_spaces // 21
@@ -353,23 +373,33 @@ class Matrix:
         self.y = (Window.height - self.h) // 2
         # self.width = (self.h // 147) + 1
         self.width = round(self.cell_size * 3/10)
-
-    def display(self, surface, *args):
-        # variable utile pour dessiner la skyline
+        # création d'un attribut de classe de type dictionnaire
+        # contenant des objets de type pygame.Rect pour chaque case
+        Matrix.cell = {}
         y = self.y - 3/10 * self.cell_size
-        for i in range(self.higher_row, 22):
+        for i in range(1, 22):
+            Matrix.cell[i] = {}
             for j in range(10):
-                current_cell = self.content[i][j]
-                if current_cell:
-                    # affichage d'un mino de matrix
-                    color = COLOR[TETRIMINO_DATA[current_cell]['color']]
-                    pygame.draw.rect(surface,
-                                     color,
-                                     pygame.Rect(self.x + j * self.cell_size,
+                Matrix.cell[i][j] = pygame.Rect(self.x + j * self.cell_size,
                                                  y + i * self.cell_size,
                                                  self.cell_size,
-                                                 self.cell_size))
+                                                 self.cell_size)
 
+    def display(self, surface, *args):
+        """dessine matrix selon ses attributs sur une surface `surface` devant
+        être du type pygame.Surface."""
+
+        for e in self.cell:
+            for i in range(1, 21):
+                for j in range(10):
+                    # ##couleurs sympa garder pour mode spécial ?
+                    color = (i*4, j*4, 40)
+                    pygame.draw.rect(surface,
+                                            color, self.cell[i][j])
+        pygame.draw.rect(surface, (250, 0, 0), self.cell[1][0])
+        pygame.draw.rect(surface, (0, 250, 0), self.cell[20][9])
+
+        y = self.y - 3/10 * self.cell_size
         # dessin de la grille
         for i in range(1, 21):
             grid_y = y + i * self.cell_size
@@ -415,16 +445,26 @@ class Matrix:
                                          self.cell_size))
 
 
-class Hold_queue(Matrix):
+class HoldQueue(Matrix):
+    """modélise la hold queue, là où les tetrimino sont mis sur le côté et
+    pouvant être rappelé dans le jeu à tout moment à raison d'une fois par
+    tetrimino."""
 
     def __init__(self, Window):
+        """initialisation de l'instance par l'attribution de ses valeurs
+        pratique à sa représentation. L'attribut t_type est à 0 : il n'y a
+        pas de tetrimino hold."""
         self.resize(Window)
         self.t_type = 0
 
     def hold(self, Tetrimino):
+        """permet de hold une pièce. `Tetrimino` doit être une instance
+        de la classe Tetrimino."""
         self.t_type = Tetrimino.type
 
     def resize(self, Window):
+        """redimensionne selon les valeurs de `Window` une instance de la
+        classe Window."""
         # informations générales de l'emplacement de la hold queue
         super().resize(Window)
         remaining_space = Window.width - (self.x + self.w) - Window.margin
@@ -438,21 +478,42 @@ class Hold_queue(Matrix):
         self.t_y = self.y + (self.w - self.t_h) // 2
 
     def display(self, surface):
+        """affichage de l'encadré associé à la hold queue, avec si y a le
+        type du tetrimino hold."""
         # représentation de l'encadré
         pygame.draw.rect(surface, (150, 150, 150),
                          pygame.Rect(self.x, self.y, self.w, self.h),
                          self.width)
         # dans le cas où il y a un tetrimino mis de côté, l'afficher
-        if self.t_type:
-            display_visual_tetrimino(surface, self, self.t_y, self.t_type)
+        try:
+            if self.t_type:
+                display_visual_tetrimino(surface, self, self.t_y, self.t_type)
+        # afin de ne pas définir un attribut t_type à la classe Data
+        except AttributeError:
+            pass
+
+    def get_t_type(self):
+        """renvoie le type du tetrimino dans la hold_queue, un int compris
+        entre 0 et 7 inclus. 0 signifiant que la hold queue est vide."""
+        return self.t_type
 
 
-class Next_queue(Matrix):
+class NextQueue(Matrix):
+    """modélisation de la next queue dans laquelle sont représentés les six
+    prochaines pièces de la partie en cours."""
+
+    # pylint: disable=W0231
+    # (super-init-not-called), il m'est inutile de faire appel à la méthode
+    # constructeur de HoldQueue vu qu'elle même fait appel à la méthode resize
+    # que j'utilise dans la méthode du même nom dans cette classe.
 
     def __init__(self, Window):
+        """méthode constructeur de la classe."""
         self.resize(Window)
 
     def resize(self, Window):
+        """permet d'après les données de `Window` de redimensionner l'encadré
+        grâce à la msie à jour des attributs de l'instance concernant cela."""
         super().resize(Window)
         matrix_place = self.x + self.w
         remaining_space = Window.width - matrix_place - Window.margin
@@ -477,6 +538,9 @@ class Next_queue(Matrix):
             self.next_y.append(t_place)
 
     def display(self, surface, Bag):
+        """affiche des encadrés correspondant à la next queue dans lesquelles
+        figurent les tetrimino en attente dans l'instance de `Bag`, `surface`
+        doit être un objet de type pygame.Surface."""
         # conteneur de la prochaine pièce de jeu
         pygame.draw.rect(surface,
                          (150, 150, 150),
@@ -511,27 +575,27 @@ class Verification():
         pass
 
 
-class Data(Hold_queue):
+class Data(HoldQueue):
     """regroupe les données relatifs aux informations du jeu, ainsi que les
     attributs permettant de tracer l'encadré d'affichage du score, niveau,
     nombre de line clear."""
 
     # pylint: disable=W0231
     # (super-init-not-called), il m'est inutile de faire appel à la méthode
-    # constructeur de Hold_queue vu qu'elle même fait appel à la méthode resize
+    # constructeur de HoldQueue vu qu'elle même fait appel à la méthode resize
     # que j'utilise dans la méthode du même nom dans cette classe.
 
     def __init__(self, Window):
-        """méthode constructeur de la classe. Initialise le score à 0"""
+        """méthode constructeur de la classe. Initialise le score les données
+        d'une parties."""
         self.resize(Window)
-        self.t_type = 0
         self.score = 0
         self.level = 1
         self.set_refresh()
 
     def set_refresh(self):
-        """met à jour la valeur du temps entre chaque frame du jeu en accord avec
-        la guideline officiel du jeu."""
+        """met à jour la valeur du temps entre chaque frame du jeu en accord
+        avec la guideline officiel du jeu."""
         self.refresh = (0.8 - (self.level - 1) * 0.007) ** (self.level - 1)
 
     def resize(self, _Window):
