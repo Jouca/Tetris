@@ -4,7 +4,7 @@ import tkinter
 import sys
 import time
 import termcolor
-from solene import Bag, Hold_queue, Matrix, Next_queue, Tetrimino, Window, Data
+from solene import Bag, HoldQueue, Matrix, NextQueue, Tetrimino, Window, Data
 
 # initialisation de pygame
 pygame.init()
@@ -71,8 +71,8 @@ def display_all(Window, Object, resize=False):
 bag = Bag()
 game_window = Window(window_size)
 matrix = Matrix(game_window)
-next_queue = Next_queue(game_window)
-hold_queue = Hold_queue(game_window)
+next_queue = NextQueue(game_window)
+hold_queue = HoldQueue(game_window)
 data = Data(game_window)
 
 tetrimino = Tetrimino(bag)
