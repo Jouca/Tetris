@@ -9,9 +9,9 @@ trimestre pour la spécialité NSI."""
 import tkinter
 import sys
 import time
-import termcolor
+import pygame.display
 import pygame
-from solene import Bag, HoldQueue, Matrix, NextQueue, Tetrimino, Window, Data
+from solene import Bag, HoldQueue, Matrix, MenuButton, NextQueue, Tetrimino, Window, MenuButton, Data
 
 
 # initialisation de pygame
@@ -34,7 +34,7 @@ WINDOW_WIDTH = round(WINDOW_HEIGHT * 1.8)
 
 # définition de la fenêtre pygame de taille dynamique
 tetris_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT),
-                                 pygame.RESIZABLE)
+                                 pygame.RESIZABLE, 64)
 
 # importation d'images
 icon = pygame.image.load("icon.jpg").convert_alpha()
@@ -51,7 +51,7 @@ window_size = pygame.display.get_surface().get_size()
 def resize_all(window_ob, obj):
     """"redimensionne tous les objets nécéssitant d'être
     redimensionnés."""
-    for element in obj[2:]:
+    for element in obj[1:]:
         element.resize(window_ob)
 
 
@@ -63,15 +63,8 @@ def display_all(window, obj, resize=False):
     frame = pygame.Surface(window.size)
     if resize:
         resize_all(window, obj)
-    """for element in object:
-        element.display(frame, object[-1])"""
-    # pour la next_queue qui est particulière
-    obj[3].display(frame, obj[0])
-    # tetrimino particulier
-    obj[1].display(frame, obj[2])
-    obj[2].display(frame)
-    obj[5].display(frame)
-    obj[4].display(frame)
+    for element in obj:
+        element.display(frame)
     tetris_window.blit(frame, (0, 0))
     pygame.display.flip()
 
@@ -81,23 +74,22 @@ game_window = Window(window_size)
 matrix = Matrix(game_window)
 next_queue = NextQueue(game_window)
 hold_queue = HoldQueue(game_window)
+menu_button = MenuButton(game_window)
 data = Data(game_window)
 
-tetrimino = Tetrimino(bag)
+tetrimino = Tetrimino()
 
-game_object = (bag, tetrimino, matrix, next_queue, hold_queue, data)
+game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
 
 display_all(game_window, game_object)
 time_before_refresh = time.time()
 
-# test qui ne fonctionne pas TvT
-# print(timeit.timeit("matrix.display(frame)", setup="from solene import Matrix", number=100000))
 
 while True:
 
     # stocke la valeur actuelle de la taille de la fenêtre
     window_current_size = pygame.display.get_surface().get_size()
-    game_object = (bag, tetrimino, matrix, next_queue, hold_queue, data)
+    game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
     current_time = time.time()
     time_elapsed = current_time - time_before_refresh
 
@@ -109,19 +101,19 @@ while True:
             pygame.quit()
             sys.exit()
 
-        """# appui sur le boutton redimensionner de la fenêtre
+        '''# appui sur le boutton redimensionner de la fenêtre
         if event.type == pygame.VIDEORESIZE:
-            # test merdique, reprendrais plus tard
             try:
                 print(game_window.size, FULLSCREEN_SIZE)
                 if game_window.size == FULLSCREEN_SIZE:
                     pygame.draw.rect(tetris_window, (0, 0, 250),
                                      pygame.Rect(0, 0, 1700, 200))
                     pygame.display.flip()
-                    #pygame.quit()
-                    #sys.exit()
+                    time.sleep(3)
+                    pygame.quit()
+                    sys.exit()
             except NameError:
-                FULLSCREEN_SIZE = pygame.display.get_surface().get_size()"""
+                FULLSCREEN_SIZE = pygame.display.get_surface().get_size()'''
 
         # dans le cas où l'utilisateur change la taille de la fenêtre
         if game_window.size != window_current_size:
@@ -138,9 +130,11 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_n:
                 matrix+tetrimino
-                tetrimino = Tetrimino(bag)
+                tetrimino = Tetrimino()
                 hold_queue.can_hold = True
-                termcolor.cprint(bag.get_content(), 'red')
+
+            if event.key == pygame.K_DOWN:
+                tetrimino.fall()
 
             if event.key == pygame.K_RIGHT:
                 tetrimino.move_right()
@@ -160,12 +154,18 @@ while True:
                         tetrimino.set_type(temp)
                         tetrimino.set_y(0)
                     else:
-                        tetrimino = Tetrimino(bag)
+                        tetrimino = Tetrimino()
 
             display_all(game_window, game_object)
 
     # l'égalité entre int et float n'est pas efficace
     if time_elapsed > data.refresh:
-        tetrimino.fall()
+        # ##tetrimino.current_state(matrix)
+        # pygame.image.save(tetris_window,"screenshot.jpg")
+        if tetrimino.state:
+            matrix+tetrimino
+            tetrimino = Tetrimino()
+        else:
+            tetrimino.fall()
         time_before_refresh = time.time()
         display_all(game_window, game_object)
