@@ -130,6 +130,7 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_n:
                 matrix+tetrimino
+                matrix.clear_lines(data)
                 tetrimino = Tetrimino()
                 hold_queue.can_hold = True
 
@@ -142,8 +143,11 @@ while True:
             if event.key == pygame.K_LEFT:
                 tetrimino.move_left()
 
+            if event.key == pygame.K_z:
+                tetrimino.turn_left(matrix)
+
             if event.key == pygame.K_UP:
-                tetrimino.turn_right()
+                tetrimino.turn_right(matrix)
 
             if event.key == pygame.K_c:
                 if hold_queue.can_hold:
