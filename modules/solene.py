@@ -13,7 +13,7 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 # importation de librairies python utiles
 import random
 import pygame
-from others.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
+from others.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT
 from diego import clear_lines
 
 def display_visual_tetrimino(surface, place_properties, y, t_type):
@@ -139,11 +139,10 @@ class Window:
 class Matrix:
     """modélisation de matrix dans laquelle tombe les tetrimino."""
 
-    content = [[0 for j in range(10)] for i in range(22)]
-
     def __init__(self, window):
         """initialisation des différents attribut de la classe Matrix."""
         self.resize(window)
+        self.content = [[0 for j in range(10)] for i in range(22)]
         # création d'une matrice vide avec deux lignes pour la skyline
         self.higher_row = 22
 
@@ -151,7 +150,7 @@ class Matrix:
     def __str__(self):
         stock = ''
         for i in range(1, 22):
-            stock += ' '.join(str(Matrix.content[i]))
+            stock += ' '.join(str(self.content[i]))
             stock += '\n'
         return stock
 
@@ -167,14 +166,15 @@ class Matrix:
                 if tetrimino_shape[j][i] == 1:
                     pos_y = tetrimino.y + j
                     pos_x = tetrimino.x + i
-                    Matrix.content[pos_y][pos_x] = tetrimino.type
+                    self.content[pos_y][pos_x] = tetrimino.type
                     if tetrimino.y + j < self.higher_row:
                         self.higher_row = tetrimino.y + j
                         print(self.higher_row)
 
-    def clear_lines(self):
+    def clear_lines(self, data):
         """voir dans `diego.py`"""
-        Matrix.content = clear_lines(self.content)
+        self.content, nb_line_cleared = clear_lines(self.content)
+        data.add_to_line_clear(nb_line_cleared)
 
     def resize(self, window):
         """redimmensionne les valeurs utile à la représentation
@@ -194,7 +194,7 @@ class Matrix:
         y = self.y - self.width
         for i in range(10):
             Matrix.cell[i] = {}
-            for j in range(22):
+            for j in range(21):
                 x = self.x + i * self.cell_size
                 if j == 0:
                     Matrix.cell[i][1] = pygame.Rect(x,
@@ -213,7 +213,7 @@ class Matrix:
 
         for i in range(1, 22):
             for j in range(10):
-                current_cell = Matrix.content[i][j]
+                current_cell = self.content[i][j]
                 if current_cell:
                     # affichage d'un mino de matrix
                     color = COLOR[TETRIMINO_DATA[current_cell]['color']]
@@ -221,14 +221,14 @@ class Matrix:
                                      color, self.cell[j][i])
 
         # demo toutes les cases, première et dernière de matrix visible
-        """for e in self.cell:
+        '''for e in self.cell:
             for i in range(10):
                 for j in range(1, 22):
                     # ##couleurs sympa garder pour mode spécial ?
                     color = (i*4, j*4, 40)
                     pygame.draw.rect(surface, color, self.cell[i][j])
         pygame.draw.rect(surface, (250, 0, 0), self.cell[0][1])
-        pygame.draw.rect(surface, (0, 250, 0), self.cell[9][21])"""
+        pygame.draw.rect(surface, (0, 250, 0), self.cell[9][21])'''
 
         # dessin de la grille
         # lignes horizontales du quadrillage de matrix
@@ -407,14 +407,91 @@ class Tetrimino(Bag, Matrix):
         except IndexError:
             self.state = 1
 
-    def super_rotation_system(self):
+    # ##
+    def rotation_test(self):
+        """"""
+
+
+    def super_rotation_system(self, matrix, phasis):
         """super rotation système décrit par la guideline de Tetris,
         permettant de faire tourner un tetrimino bien que la situation
         ne soit pas confortable à la manoeuvre en temps habituel (contre
         un bord de matrix, sur la floor, ...). Change les coordonnées x,
-        y d'un tetrimino en évaluant la situation."""
+        y d'un tetrimino en évaluant la situation.
+        `phasis` est la phase vers laquelle le tetrimino doit tourner."""
+        # ne rien faire dans le cas d'un O tetrimino
         if self.type == 1:
             return
+        # s'il s'agit d'un tetrimino 3x2 : (L, J, S, Z, T)
+        elif self.type != 2:
+            if self.phasis == 2:
+                return True
+            rotation_case = f'{PHASIS_NAME[self.phasis]}_3x2'
+            tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][phasis]
+            rotation_point_list = ROTATION_POINT[rotation_case]
+            if self.phasis == 0:
+                if phasis == 1:
+                    self.x = self.x + rotation_point_list[2][0]
+                    self.y = self.y + rotation_point_list[2][1]
+                else:
+                    self.x = self.x + rotation_point_list[1][0]
+                    self.y = self.y + rotation_point_list[1][1]
+                return True
+            for i in range(5):
+                current_point = i
+                count = 0
+                x = self.x + ROTATION_POINT[rotation_case][current_point][0]
+                y = self.y + ROTATION_POINT[rotation_case][current_point][1]
+                for j, row in enumerate(tetrimino_shape):
+                    for k in range(3):
+                        mino = row[k]
+                        if mino and k + x > -1:
+                            try:
+                                if matrix.content[j + y][k + x] == 0:
+                                    count += 1
+                            except IndexError:
+                                continue
+                if count == 4:
+                    # print(current_point)
+                    self.x = x
+                    self.y = y
+                    return True
+        # dans le cas où il s'agit du I tetrimino
+        else:
+            rotation_case = f'{PHASIS_NAME[self.phasis]}_I'
+            tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][phasis]
+            rotation_point_list = ROTATION_POINT[rotation_case]
+            if self.phasis in (0, 2):
+                if phasis == 1:
+                    self.x = self.x + rotation_point_list[2][0]
+                    self.y = self.y + rotation_point_list[2][1]
+                else:
+                    self.x = self.x + rotation_point_list[1][0]
+                    self.y = self.y + rotation_point_list[1][1]
+                return True
+            else:
+                for i, rotation_case in enumerate(rotation_point_list):
+                    current_point = i
+                    count = 0
+                    x = self.x + rotation_case[0]
+                    y = self.y + rotation_case[1]
+                    for j, row in enumerate(tetrimino_shape):
+                        for k in range(4):
+                            mino = row[k]
+                            if mino and k + x > -1:
+                                try:
+                                    if matrix.content[j + y][k + x] == 0:
+                                        count += 1
+                                except IndexError:
+                                    continue
+                    if count == 4:
+                        print(f'turn point : {current_point}')
+                        self.x = x
+                        self.y = y
+                        return True
+            print(f'turn point : FAIL')
+            return False
+
 
     def display(self, surface):
         """affiche l'instance de tetrimino en fonction de ses spécificités."""
@@ -424,6 +501,7 @@ class Tetrimino(Bag, Matrix):
             for j in range(len(tetrimino_shape)):
                 if row[j]:
                     # affichage mino par mino sur matrix
+                    # ## devrait pouvoir enlever ceci
                     try:
                         pygame.draw.rect(surface,
                                          color,
@@ -434,7 +512,7 @@ class Tetrimino(Bag, Matrix):
     # setters
     def fall(self):
         """permet de faire tomber le tetrimino."""
-        if self.test_around[0][0][0] != 21:
+        if self.test_around[0][0][0] < 21:
             self.y += 1
             self.list_test_around()
         else:
@@ -452,18 +530,21 @@ class Tetrimino(Bag, Matrix):
             self.x += 1
             self.list_test_around()
 
-    def turn_left(self):
+    # ##penser à l'implémentationo quand méthode turn_right ok
+    def turn_left(self, matrix):
         """permet de tourner le tetrimino de 90° dans le sens
         horaire."""
-        self.super_rotation_system()
-        self.phasis = (self.phasis - 1) % 4
+        phasis = (self.phasis - 1) % 4
+        self.super_rotation_system(matrix, phasis)
+        self.phasis = phasis
         self.list_test_around()
 
-    def turn_right(self):
+    def turn_right(self, matrix):
         """permet de tourner le tetrimino de 90° dans le sens
         anti-horaire."""
-        self.super_rotation_system()
-        self.phasis = (self.phasis + 1) % 4
+        phasis = (self.phasis + 1) % 4
+        if self.super_rotation_system(matrix, phasis):
+            self.phasis = phasis
         self.list_test_around()
 
     def set_type(self, new_type):
@@ -652,6 +733,7 @@ class Data(HoldQueue):
         self.resize(window)
         self.score = 0
         self.level = 1
+        self.line_clear = 0
         self.set_refresh()
 
     def set_refresh(self):
@@ -676,3 +758,6 @@ class Data(HoldQueue):
         self.t_h = self.cell_size * 2
         self.t_x = self.x + (self.w - self.t_w) // 2
         self.t_y = self.y + (self.w - self.t_h) // 2"""
+
+    def add_to_line_clear(self, value_to_add):
+        self.line_clear += value_to_add
