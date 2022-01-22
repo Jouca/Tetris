@@ -53,16 +53,24 @@ TETRIMINO_SHAPE = {1: [[1, 1],
                        [0, 0, 0]]}
 
 
-# l'utilité est moyen, serviable plus tard pour les statistiques eventuellement
-ROTATION_PHASIS_NAME = {0: 'N',
-                        1: 'E',
-                        2: 'S',
-                        3: 'W'}
+PHASIS_NAME = {0: 'NORTH',
+               1: 'EAST',
+               2: 'SOUTH',
+               3: 'WEST'}
 
 
 # pour se réprer, le dico n'a aucune utilité en soi
 TETRIMINO_STATE = {0: 'falling',
                    1: 'lock_down'}
+
+
+ROTATION_POINT = {'NORTH_3x2': ((0, 0), (1, -1), (-1, -1)),
+                  'EAST_3x2': ((0, 0), (1, 0), (1, 1), (0, -2), (1, -2)), # visual, ...
+                  'WEST_3x2': ((0, 0), (-1, 0), (-1, 1), (0, -2), (-1, -2)),
+                  'NORTH_I': ((0, 0), (-1, -2), (1, -2)), # visual, west, east
+                  'EAST_I' : ((0, 0), (-1, 0), (2, 0), (-2, -3), (2, -1)), # visual, right wall, left wall, out of right well, out of left well
+                  'SOUTH_I': ((0, 0), (-2, -1), (1, -1)), # visual, west, east
+                  'WEST_I': ((0, 0), (-2, 0), (1, 0), (-2, -2), (1, -3))} # visual, right wall, left wall, out of left well, out of right well
 
 
 SIDE = [(0, -1),  # haut
