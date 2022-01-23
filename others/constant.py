@@ -1,3 +1,5 @@
+"""module contenant les constantes utiles au jeu Tetris."""
+
 COLOR = {'RED': (237, 41, 57),
          'ORANGE': (255, 121, 0),
          'YELLOW': (254, 203, 0),
@@ -59,18 +61,34 @@ PHASIS_NAME = {0: 'NORTH',
                3: 'WEST'}
 
 
-# pour se réprer, le dico n'a aucune utilité en soi
-TETRIMINO_STATE = {0: 'falling',
-                   1: 'lock_down'}
-
-
-ROTATION_POINT = {'NORTH_3x2': ((0, 0), (1, -1), (-1, -1)),
-                  'EAST_3x2': ((0, 0), (1, 0), (1, 1), (0, -2), (1, -2)), # visual, ...
-                  'WEST_3x2': ((0, 0), (-1, 0), (-1, 1), (0, -2), (-1, -2)),
-                  'NORTH_I': ((0, 0), (-1, -2), (1, -2)), # visual, west, east
-                  'EAST_I' : ((0, 0), (-1, 0), (2, 0), (-2, -3), (2, -1)), # visual, right wall, left wall, out of right well, out of left well
-                  'SOUTH_I': ((0, 0), (-2, -1), (1, -1)), # visual, west, east
-                  'WEST_I': ((0, 0), (-2, 0), (1, 0), (-2, -2), (1, -3))} # visual, right wall, left wall, out of left well, out of right well
+# la rotation "naturelle" est testée avant ces rotations spéciaux nécéssitant
+# un déplacement des coordonnées
+ROTATION_POINT = {'3x2': {'NORTH': {'WEST': [(1, -1)],  # 3
+                                    'EAST': [(-1, -1)]},  # 3
+                          'EAST': {'NORTH': [(1, 0),  # 2
+                                             (1, -2),  # 4
+                                             (0, -2)],  # 5
+                                   'SOUTH': [(1, 0)]},  # 2
+                          'WEST': {'SOUTH': [(-1, 0)],  # 2
+                                   'NORTH': [(-1, 0),  # 2
+                                             (-1, -2),  # 5
+                                             (0, -2)]}},  # 4
+                  'I': {'NORTH': {'WEST': [(-1, -2)],  # 4
+                                  'EAST': [(1, -2)]},  # 5
+                        'EAST': {'NORTH': [(-1, 0),  # 3
+                                           (2, 0),  # 2
+                                           (2, -2)],  # X
+                                 'SOUTH': [(-1, 0),  # 2
+                                           (2, 0),  # 3
+                                           (-1, -3)]},  # X
+                        'SOUTH': {'EAST': [(-2, -1)],  # 5
+                                  'WEST': [(2, -1)]},  # 4
+                        'WEST': {'SOUTH': [(-2, 0),  # 2
+                                           (1, -1),  # 3
+                                           (1, -3)],  # X
+                                 'NORTH': [(-2, 0),  # 3
+                                           (1, 0),  # 2
+                                           (-2, -2)]}}}  # X
 
 
 SIDE = [(0, -1),  # haut
