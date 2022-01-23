@@ -1,39 +1,41 @@
-def Dico_ghost(x):
-    """Renvoie un dictionnaire avec la liste des blocs au extrémiter dans chaque orientation"""
-    haut = []
-    droite = []
-    bas = []
-    gauche = []
-    taille = len(TETRIMINO_SHAPE[x])
+def get_all_side(tetrimino_shape):
+    """Renvoie un dictionnaire avec la liste des blocs aux
+    extremités dans chaque orientation."""
+    north = []
+    east = []
+    south = []
+    west = []
+    taille = len(tetrimino_shape)
     for i in range(taille):
-        min_haut = 5
-        max_droite = 0
-        max_bas = 0
-        min_gauche = 5
-        collone, ligne = 10, 10
+        min_north = 5
+        max_east = 0
+        max_south = 0
+        min_west = 5
+        column, row = 10, 10
         for j in range(taille):
-            if TETRIMINO_SHAPE[x][i][j] == 1:
-                if j < min_gauche:
-                    gauche.append((i, j))
-                    min_gauche = j
-                if j >= max_droite:
-                    collone = j
-            if TETRIMINO_SHAPE[x][j][i] == 1:
-                if j < min_haut:
-                    haut.append((j, i))
-                    min_haut = j
-                if j >= max_bas:
-                    ligne = j
-        if collone != 10:
-            droite.append((i, collone))
-        if ligne != 10:
-            bas.append((ligne, i))
-    return {"0":haut, "1":droite, "2":bas, "3":gauche}
+            if tetrimino_shape[i][j] == 1:
+                if j < min_west:
+                    west.append((i, j))
+                    min_west = j
+                if j >= max_east:
+                    column = j
+            if tetrimino_shape[j][i] == 1:
+                if j < min_north:
+                    north.append((j, i))
+                    min_north = j
+                if j >= max_south:
+                    row = j
+        if column != 10:
+            east.append((i, column))
+        if row != 10:
+            south.append((row, i))
+    return {"0":north, "1":east, "2":south, "3":west}
 
 
-def Convert_Liste(Liste, Orientation):
-    """Prend un Liste et la renvoie sous forme compacté par rapport à l'orientation
-    >>>Convert_Liste(Liste1, 0)
+def list_conversion(Liste, Orientation):
+    """Prend une liste `Liste` et la renvoie sous forme "compactée"
+    par rapport à l'orientation.
+    >>> list_conversion(Liste1, 0)
     [[(1, 0), 1], [(0, 1), 2]]
     """
     Liste.append((5, 5))
@@ -57,12 +59,10 @@ def Convert_Liste(Liste, Orientation):
     return Liste_Retour
 
 
-def Ghost(X):
-    """Renvoie un dictionnaire des bloc à l'extrémiter de chaque côté"""
-    Dico = Dico_ghost(X)
+def border_dict(tetrimino_shape):
+    """Renvoie un dictionnaire des bloc à l'extremité de chaque côté."""
+    all_side_dict = get_all_side(tetrimino_shape)
     Dico_Retour = {}
-    for l in range(len(Dico)):
-        Dico_Retour[str(l)] = Convert_Liste(Dico[str(l)], l)
+    for l in range(len(all_side_dict)):
+        Dico_Retour[str(l)] = list_conversion(all_side_dict[str(l)], l)
     return Dico_Retour
-
-
