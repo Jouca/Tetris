@@ -12,9 +12,12 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 
 # importation de librairies python utiles
 import random
+import colorsys
 import pygame
 from others.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT
 from diego import clear_lines
+from paul import border_dict
+
 
 def display_visual_tetrimino(surface, place_properties, y, t_type):
     """permet de définir un tetrimino visuel, notamment pour la hold
@@ -93,12 +96,25 @@ def turn_right(tetrimino, phasis):
     return turn_right(rotated_tetrimino, phasis)
 
 
+def change_color_luminosity(color, rate_of_change):
+    """change la luminosité de la couleur, renvoie un tuple rgb de la couleur
+    assombrit selon `rate_of_change`, un entier. `couleur` doit être un tuple
+    représentant les valeurs rgb (chaque entier est compris entre 0 et 255)."""
+    red, green, blue = color
+    hue, saturation, lightness = colorsys.rgb_to_hsv(red, green, blue)
+    temp_color = colorsys.hsv_to_rgb(hue, saturation, lightness - rate_of_change)
+    final_color = [0, 0, 0]
+    for i, primary in enumerate(temp_color):
+        final_color[i] = round(primary)
+    return tuple(final_color)
+
+
 class Bag:
     """modélise un sac contenant l'ordre des tetrimino suivant
     représentés par un numéro correspondant à leur type."""
 
-    # content = list(range(1, 8))
-    content = [5 for _ in range(10)]
+    content = list(range(1, 8))
+    # ##content = [5 for _ in range(10)]
     random.shuffle(content)
 
     def __len__(self):
@@ -293,6 +309,24 @@ class Tetrimino(Bag, Matrix):
             ROTATION_PHASIS[i][phasis] = turn_right(TETRIMINO_SHAPE[i],
                                                     phasis)
 
+    # création du dictionnaire utile aux ghost pieces et aux test alentours
+    BORDER = {}
+    for i in range(1, 8):
+        BORDER[i] = {}
+        for phasis in range(4):
+            BORDER[i][phasis] = border_dict(ROTATION_PHASIS[i][phasis])
+
+    # création d'un dictionnaire des teintes pour le lock phase
+    COLOR_SHADE = {}
+    for tetrimino_type in range(1, 8):
+        color = TETRIMINO_DATA[tetrimino_type]['color']
+        color_rgb = COLOR[color]
+        COLOR_SHADE[tetrimino_type] = {0: color_rgb}
+        for shade in range(1, 10):
+            previous_color = COLOR_SHADE[tetrimino_type][shade-1]
+            changed_color = change_color_luminosity(previous_color, 14)
+            COLOR_SHADE[tetrimino_type][shade] = changed_color
+
     @staticmethod
     def start_center(tetrimino_type):
         """indique l'indice permettant de centrer un tetrimino
@@ -313,7 +347,6 @@ class Tetrimino(Bag, Matrix):
         self.x = Tetrimino.start_center(self.type)
         # dans la skyline (en haut de la matrice)
         self.y = 0
-        self.list_test_around()
         # incrémente le nombre de tetrimino créé de 1
         Tetrimino.count += 1
         # ##à enlever en fin
@@ -330,55 +363,6 @@ class Tetrimino(Bag, Matrix):
         stock += f'\n type du tetrimino : {TETRIMINO_SHAPE[self.type]}'
         return stock
 
-    def list_test_around(self):
-        # ##
-        """renvoie une liste de trois listes, par indice:
-        - 0 pour les test en bas ;
-        - 1 pour les test à gauche ;
-        - 2 pour les test à droite.
-        L'exemple est valable pour un J tetrimino (phasis: north) à la
-        position relative (3, 3) de matrix.
-        >>> bag = Bag()
-        >>> tetrimino = Tetrimino()
-        >>> tetrimino.set_type(5)
-        >>> tetrimino.set_y(3)
-        >>> tetrimino.list_test_around()
-        on obtiendrais self.test_around():
-        [[(4, 3), (4, 4), (4, 5)], [(3, 3), (4, 3)], [(4, 5)]]"""
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
-        test_list = [[] for i in range(3)]
-
-        square_len = len(tetrimino_shape)
-        last_row = last_column = square_len - 1
-        first_column = 0
-
-        # principe : du moment que la liste de test correspondant est vide,
-        # on ajoute un couple d'indice si l'emplacement comporte un mino
-        # sinon on décale selon ce que l'on souhaite obtenir
-
-        # test en dessous
-        while not test_list[0]:
-            for i in range(square_len):
-                if tetrimino_shape[last_row][i]:
-                    test_list[0].append((last_row + self.y, i + self.x))
-            last_row -= 1
-
-        # test à gauche
-        while not test_list[1]:
-            for i in range(square_len):
-                if tetrimino_shape[i][first_column]:
-                    test_list[1].append((i + self.y, first_column + self.x))
-            first_column += 1
-
-        # test à droite
-        while not test_list[2]:
-            for i in range(square_len):
-                if tetrimino_shape[i][last_column]:
-                    test_list[2].append((i + self.y, last_column + self.x))
-            last_column -= 1
-
-        self.test_around = test_list
-
     # si 2 --> test pour voir si line clear ou autre, puis passage au
     # tetrimino suivant version non finie, il reste à déterminer les cas
     # où le tetrimino sort de la matrice !
@@ -389,26 +373,8 @@ class Tetrimino(Bag, Matrix):
         - 1 si le tetrimino est en 'lock phase', phase où le tetrimino
         s'apprête à se figer dans la matrice avec un temps escompté
         - 2 lorsque le tetrimino est en 'completion phase'"""
-        # ## enlever ?
-        '''# dans le cas où le tetrimino atteint le floor de matrix
-        if test_list[0][0][0] == 21:
-            self.state = 1
-            return'''
 
-        # self.list_test_around()
-
-        # pour tous les emplacements "situés" en dessous
-        try:
-            for element in self.test_around[0]:
-                # si la case directement en dessous dans matrix contient un mino
-                if self.content[element[0] + 1][element[1]]:
-                    self.state = 1
-                    return
-            self.state = 0
-        except IndexError:
-            self.state = 1
-
-    def rotation_test(self, matrix, tetrimino_shape, nb_column):
+    def test_around(self, matrix, tetrimino_shape, nb_column):
         """les test de super rotation system sont effectuées dans cette
         fonction. Elle renvoie un booléen, True lorsque le test est passé
         avec succès, False sinon.
@@ -469,7 +435,7 @@ class Tetrimino(Bag, Matrix):
         # optimisable, mais comme cela on a une économie en calcul
         # je privilégie la performance :) (et puis, pas besoin de mettre
         # (0, 0) dans le dictionnaire des test à chaque fois x))
-        if self.rotation_test(matrix, tetrimino_shape, nb_column):
+        if self.test_around(matrix, tetrimino_shape, nb_column):
             return True
         # dans le cas où la rotation au point de rotation naturel échoue
         # on fait appel à d'autres test existants
@@ -482,7 +448,7 @@ class Tetrimino(Bag, Matrix):
                 # déplacement des coordonnées selon les test
                 self.x = coordinates[0] + rotation_test[0]
                 self.y = coordinates[1] + rotation_test[1]
-                if self.rotation_test(matrix, tetrimino_shape, nb_column):
+                if self.test_around(matrix, tetrimino_shape, nb_column):
                     return True
         # s'opère lorsque phasis vaut SOUTH pour un tetrimino 3x2
         # il n'y a pas de test supplémentaire donc ne peut pas tourner
@@ -496,85 +462,6 @@ class Tetrimino(Bag, Matrix):
         self.x = coordinates[0]
         self.y = coordinates[1]
         return False
-
-    '''def super_rotation_system(self, matrix, phasis):
-        """super rotation système décrit par la guideline de Tetris,
-        permet de faire tourner un tetrimino bien que la situation
-        ne soit pas confortable à la manoeuvre en temps habituel (contre
-        un bord de matrix, sur la floor, ...).
-        La fonction effectue des test en changeant les coordonnées x, y
-        d'un tetrimino via des translations et non de rotation avec un
-        point de rotation comme le suggère la guideline.
-        `matrix` est un objet de la classe Matrix.
-        `phasis` est la phase vers laquelle le tetrimino doit tourner.
-        La fonction renvoie un booléen selon si la pièce peut tourner ou non,
-        elle change les attributs x et y de l'instance pour le test ayant
-        réussi."""
-        # ne rien faire dans le cas d'un O tetrimino
-        if self.type == 1:
-            return True
-        # s'il s'agit d'un tetrimino 3x2 : (L, J, S, Z, T)
-        if self.type != 2:
-            t_type = '3x2'
-            nb_column = 3
-        # autrement, il s'agit d'un I tetrimino
-        else:
-            t_type = 'I'
-            nb_column = 4
-        # ## test pour les situation de rotation à enlever en fin
-        print(f'{PHASIS_NAME[self.phasis]}  -->  {PHASIS_NAME[phasis]}')
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][phasis]
-        # optimisable, mais comme cela on a une économie en calcul
-        # je privilégie la performance :) (et puis, pas besoin de mettre
-        # (0, 0) dans le dictionnaire des test à chaque fois x))
-        try:
-            count = 0
-            for i, row in enumerate(tetrimino_shape):
-                for j in range(nb_column):
-                    mino = row[j]
-                    if mino and j + self.x > -1:
-                        if matrix.content[i + self.y][j + self.x] == 0:
-                            count += 1
-            if count == 4:
-                return True
-        except:
-            pass
-        # dans le cas où la rotation au point de rotation naturel échoue
-        # on fait appel à d'autres test existants
-        try:
-            test_list = ROTATION_POINT[t_type][PHASIS_NAME[self.phasis]][PHASIS_NAME[phasis]]
-            for i, rotation_test in enumerate(test_list):
-                # initialisation d'un compteur de mino réussissant le test
-                count = 0
-                # déplacement des coordonnées selon les test
-                x = self.x + rotation_test[0]
-                y = self.y + rotation_test[1]
-                try:
-                    # parcours de la matrice représentatant le tetrimino
-                    for j, row in enumerate(tetrimino_shape):
-                        for k in range(nb_column):
-                            mino = row[k]
-                            # le mino ne sort pas de matrix
-                            if mino and k + x > -1:
-                                # cellule de matrix libre pour mino
-                                if matrix.content[j + y][k + x] == 0:
-                                    # reussite du test par mino
-                                    count += 1
-                    # dans le cas où les quatre mino réussissent le test
-                    if count == 4:
-                        self.x = x
-                        self.y = y
-                        print(f'turn point : {i+2}')
-                        return True
-                except IndexError:
-                    pass
-        # s'opère lorsque phasis vaut SOUTH pour un tetrimino 3x2
-        # il n'y a pas de test supplémentaire donc ne peut pas tourner
-        except KeyError:
-            return False
-        # dans le cas où tous les test échouent
-        print('turn point : FAIL')
-        return False'''
 
     def display(self, surface):
         """affiche l'instance de tetrimino en fonction de ses spécificités."""
@@ -592,26 +479,60 @@ class Tetrimino(Bag, Matrix):
                     except KeyError:
                         pass
 
-    # setters
-    def fall(self):
+    def leftmost(self):
+        """renvoie le plus petit coordonnée x possédé par un mino."""
+        # on selectionne les bords gauche du tetrimino
+        left = Tetrimino.BORDER[self.type][self.phasis][3]
+        left_most = 4
+        for shift in left:
+            if shift[0][1] < left_most:
+                left_most = shift[0][1]
+        return left_most + self.x
+
+    # ## n'est pas utilisé pour le moment, voir par la suite
+    def rightmost(self):
+        """renvoie la plus grande valeur x d'un mino."""
+        # on selectionne les bords droit du tetrimino
+        right = Tetrimino.BORDER[self.type][self.phasis][1]
+        right_most = 0
+        for shift in right:
+            if shift[0][1] + shift[1] > right_most:
+                right_most = shift[0][1]
+        return right_most + self.x
+
+    def fall(self, matrix):
         """permet de faire tomber le tetrimino."""
-        if self.test_around[0][0][0] < 21:
-            self.y += 1
-            self.list_test_around()
-        else:
-            self.state = 1
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        nb_column = len(tetrimino_shape)
+        self.y += 1
+        if self.test_around(matrix, tetrimino_shape, nb_column):
+            return
+        # le test a échoué, le tetrimino ne peut pas tomber,
+        # on passe en lock phase
+        self.y -= 1
+        self.state = 1
 
-    def move_left(self):
+    def move_left(self, matrix):
         """déplace d'une case vers la gauche le tetrimino."""
-        if self.test_around[1][0][1] != 0:
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        nb_column = len(tetrimino_shape)
+        # dans le cas où le mino le plus à gauche n'est pas adjacent au mur
+        if self.leftmost() > 0:
             self.x -= 1
-            self.list_test_around()
-
-    def move_right(self):
-        """déplace d'une case vers la droite le tetrimino."""
-        if self.test_around[2][0][1] != 9:
+            if self.test_around(matrix, tetrimino_shape, nb_column):
+                return
+            # le test a échoué, le tetrimino ne peut pas aller à gauche
             self.x += 1
-            self.list_test_around()
+
+    def move_right(self, matrix):
+        """déplace d'une case vers la droite le tetrimino."""
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        nb_column = len(tetrimino_shape)
+        self.x += 1
+        if self.test_around(matrix, tetrimino_shape, nb_column):
+            return
+        # le test a échoué, le tetrimino ne peut pas aller à droite
+        self.x -= 1
 
     # ##penser à l'implémentationo quand méthode turn_right ok
     def turn_left(self, matrix):
@@ -620,7 +541,6 @@ class Tetrimino(Bag, Matrix):
         phasis = (self.phasis - 1) % 4
         if self.super_rotation_system(matrix, phasis):
             self.phasis = phasis
-        self.list_test_around()
 
     def turn_right(self, matrix):
         """permet de tourner le tetrimino de 90° dans le sens
@@ -628,21 +548,17 @@ class Tetrimino(Bag, Matrix):
         phasis = (self.phasis + 1) % 4
         if self.super_rotation_system(matrix, phasis):
             self.phasis = phasis
-        self.list_test_around()
 
     def set_type(self, new_type):
         """change le type d'un tetrimino pour `new_type` un entier
         naturel compris entre 1 et 7 inclus."""
         self.type = new_type
-        self.list_test_around()
 
     def set_y(self, value):
         """place le tetrimino à la position `value` spécifié.
         `value` doit être un int compris entre 0 et 21 compris."""
         self.y = value
-        self.list_test_around()
 
-    # getters
     def get_count(self):
         """renvoie le nombre de tetrimino créés."""
         return self.count
