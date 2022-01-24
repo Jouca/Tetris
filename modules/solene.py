@@ -31,7 +31,8 @@ def display_visual_tetrimino(surface, place_properties, y, t_type):
     - `t_type` : le type du tetrimino indiqué par un entier compris entre 1
     et 7 inclus"""
     tetrimino_shape = TETRIMINO_SHAPE[t_type]
-    color = COLOR[TETRIMINO_DATA[t_type]['color']]
+    # ##color = COLOR[TETRIMINO_DATA[t_type]['color']]
+    color = Tetrimino.COLOR_SHADE[t_type][0]
     x = place_properties.t_x
     w = place_properties.t_w
     h = place_properties.t_h
@@ -233,7 +234,8 @@ class Matrix:
                 current_cell = self.content[i][j]
                 if current_cell:
                     # affichage d'un mino de matrix
-                    color = COLOR[TETRIMINO_DATA[current_cell]['color']]
+                    # ##color = COLOR[TETRIMINO_DATA[current_cell]['color']]
+                    color = Tetrimino.COLOR_SHADE[current_cell][0]
                     pygame.draw.rect(surface,
                                      color, self.cell[j][i])
 
@@ -343,6 +345,8 @@ class Tetrimino(Bag, Matrix):
         self.phasis = 0
         self.state = 0
         self.type = self.next_tetrimino()
+        # définit la nuance de couleur du tetrimino
+        self.shade = 0
         # position centrée horizontalement
         self.x = Tetrimino.start_center(self.type)
         # dans la skyline (en haut de la matrice)
@@ -373,6 +377,20 @@ class Tetrimino(Bag, Matrix):
         - 1 si le tetrimino est en 'lock phase', phase où le tetrimino
         s'apprête à se figer dans la matrice avec un temps escompté
         - 2 lorsque le tetrimino est en 'completion phase'"""
+
+    def can_fall(self, matrix):
+        """test afin de vérifier si un tetrimino peut tomber.
+        Il prend en paramètre `matrix` une instance de la classe Matrix,
+        et renvoie un booléen correspondant à l'issue du test (succès ou
+        échec)."""
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        nb_column = len(tetrimino_shape)
+        self.y += 1
+        if self.test_around(matrix, tetrimino_shape, nb_column):
+            return True
+        # rétablit la valeur y du tetrimino
+        self.y -= 1
+        return False
 
     def test_around(self, matrix, tetrimino_shape, nb_column):
         """les test de super rotation system sont effectuées dans cette
@@ -463,10 +481,33 @@ class Tetrimino(Bag, Matrix):
         self.y = coordinates[1]
         return False
 
+    def lock_phase(self, matrix, phase): ## continuer docstring une fois finie
+        """il s'agit de la phase où le tetrimino est sur le point de se bloquer,
+        elle fait en sorte de varier la couleur du tetrimino afin que le joueur
+        puisse mieux prendre en compte la situation du tetrimino."""
+        # dans le cas où le tetrimino peut tomber
+        if self.can_fall(matrix):
+            # permet de sortir de la lock phase
+            self.state = 0
+            return
+        # dans le cas où la phase vaut 1
+        if phase == 1:
+            # on assombrit la couleur du tetrimino
+            self.shade += 1
+        # autrement
+        else:
+            # la couleur est eclaircie
+            self.shade -= 1
+        # si la couleur atteint un des "bords"
+        if self.shade in (0, 9):
+            # on change de phase
+            phase = (phase + 1) % 2
+        return phase
+    
     def display(self, surface):
         """affiche l'instance de tetrimino en fonction de ses spécificités."""
         tetrimino_shape = self.ROTATION_PHASIS[self.type][self.phasis]
-        color = COLOR[TETRIMINO_DATA[self.type]['color']]
+        color = Tetrimino.COLOR_SHADE[self.type][self.shade]
         for i, row in enumerate(tetrimino_shape):
             for j in range(len(tetrimino_shape)):
                 if row[j]:
@@ -501,15 +542,14 @@ class Tetrimino(Bag, Matrix):
         return right_most + self.x
 
     def fall(self, matrix):
-        """permet de faire tomber le tetrimino."""
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
-        nb_column = len(tetrimino_shape)
-        self.y += 1
-        if self.test_around(matrix, tetrimino_shape, nb_column):
+        """permet de faire tomber le tetrimino, s'il ne peut pas,
+        le tetrimino passe en lock phase. A pour paramètre une instance de
+        la classe Matrix."""
+        # teste si le tetrimino est apte à tomber
+        if self.can_fall(matrix):
             return
         # le test a échoué, le tetrimino ne peut pas tomber,
         # on passe en lock phase
-        self.y -= 1
         self.state = 1
 
     def move_left(self, matrix):
