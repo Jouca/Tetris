@@ -78,6 +78,7 @@ menu_button = MenuButton(game_window)
 data = Data(game_window)
 
 tetrimino = Tetrimino()
+phase = 1
 
 game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
 
@@ -164,16 +165,35 @@ while True:
                         tetrimino = Tetrimino()
 
             display_all(game_window, game_object)
+    
+    """if tetrimino.state == 1:
+        '''chrono = time.time()
+        if chrono > 0.5:
+            pass
+        else:
+            matrix+tetrimino
+            print('X')
+            tetrimino = Tetrimino()
+            print('OHHH')
+            display_all(game_window, game_object)
+            matrix.clear_lines(data)
+            display_all(game_window, game_object)'''
+        matrix+tetrimino
+        tetrimino = Tetrimino()
+        display_all(game_window, game_object)
+        matrix.clear_lines(data)
+        display_all(game_window, game_object)"""
+    if tetrimino.state == 1:
+        phase = tetrimino.lock_phase(matrix, phase)
+        display_all(game_window, game_object)
+        time.sleep(0.1)
+
+    if tetrimino.state == 2:
+        tetrimino = Tetrimino()
 
     # l'égalité entre int et float n'est pas efficace
     if time_elapsed > data.refresh:
-        if tetrimino.state:
-            matrix+tetrimino
-            tetrimino = Tetrimino()
-            display_all(game_window, game_object)
-            matrix.clear_lines(data)
-            display_all(game_window, game_object)
-        else:
-            tetrimino.fall(matrix)
+        tetrimino.fall(matrix)
         time_before_refresh = time.time()
         display_all(game_window, game_object)
+    # display_all(game_window, game_object)
