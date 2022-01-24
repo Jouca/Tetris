@@ -5,25 +5,25 @@ def get_all_side(tetrimino_shape):
     east = []
     south = []
     west = []
-    taille = len(tetrimino_shape)
-    for i in range(taille):
+    size = len(tetrimino_shape)
+    for i in range(size):
         min_north = 5
         max_east = 0
         max_south = 0
         min_west = 5
         column, row = 10, 10
-        for j in range(taille):
+        for j in range(size):
             if tetrimino_shape[i][j] == 1:
                 if j < min_west:
                     west.append((i, j))
                     min_west = j
-                if j >= max_east:
+                if j > max_east:
                     column = j
             if tetrimino_shape[j][i] == 1:
                 if j < min_north:
                     north.append((j, i))
                     min_north = j
-                if j >= max_south:
+                if j > max_south:
                     row = j
         if column != 10:
             east.append((i, column))
@@ -32,37 +32,43 @@ def get_all_side(tetrimino_shape):
     return {"0":north, "1":east, "2":south, "3":west}
 
 
-def list_conversion(Liste, Orientation):
+def list_conversion(liste, orientation):
     """Prend une liste `Liste` et la renvoie sous forme "compactée"
     par rapport à l'orientation.
     >>> list_conversion(Liste1, 0)
     [[(1, 0), 1], [(0, 1), 2]]
     """
-    Liste.append((5, 5))
-    Taille = len(Liste)
-    Rang = 1
-    Liste_Retour = []
-    Dimension = 1
-    if Orientation % 2 == 0:
-        Place = 0
+    # Rajoute une coordonnée bidon qui permet seulement de pouvoir parcourir toute la liste
+    # C'est 5 car la coordonnée maximal est 3
+    liste.append((5, 5))
+    size = len(liste)
+    rank = 1
+    return_list = []
+    # Le nombre de coordonnée côte à côte, augmente quand il y en a plusieur et
+    # se réinitialise à chaque différence
+    dimension = 1
+    # Permet de savoir si cela doit être la coordonnée X ou Y qui doit être identique
+    if orientation % 2 == 0:
+        spot = 0
     else:
-        Place = 1
-    Cloud = Liste[0]
-    while Rang < Taille:
-        if Cloud[Place] != Liste[Rang][Place]:
-            Liste_Retour.append([Cloud, Dimension])
-            Cloud = Liste[Rang]
-            Dimension = 1
-        elif Cloud[Place] == Liste[Rang][Place]:
-            Dimension += 1
-        Rang += 1
-    return Liste_Retour
+        spot = 1
+    # Si il y a plusieur coordonnée côte à côte, cela garde la première coordonnée, donc la plus petite
+    backup = liste[0]
+    while rank < size:
+        if backup[spot] != liste[rank][spot]:
+            return_list.append([backup, dimension])
+            backup = liste[rank]
+            dimension = 1
+        elif backup[spot] == liste[rank][spot]:
+            dimension += 1
+        rank += 1
+    return return_list
 
 
 def border_dict(tetrimino_shape):
     """Renvoie un dictionnaire des bloc à l'extremité de chaque côté."""
     all_side_dict = get_all_side(tetrimino_shape)
-    Dico_Retour = {}
+    return_dico = {}
     for l in range(len(all_side_dict)):
-        Dico_Retour[str(l)] = list_conversion(all_side_dict[str(l)], l)
-    return Dico_Retour
+        return_dico[l] = list_conversion(all_side_dict[l], l)
+    return return_dico
