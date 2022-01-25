@@ -10,7 +10,7 @@ import tkinter
 import sys
 import time
 import pygame
-from solene import Bag, HoldQueue, Matrix, MenuButton, NextQueue, Tetrimino, Window, MenuButton, Data
+from modules.solene import Bag, HoldQueue, Matrix, MenuButton, NextQueue, Tetrimino, Window, MenuButton, Data
 
 
 # initialisation de pygame
@@ -36,8 +36,8 @@ tetris_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT),
                                  pygame.RESIZABLE, 64)
 
 # importation d'images
-icon = pygame.image.load("icon.jpg").convert_alpha()
-prop = pygame.image.load("prop2.png").convert_alpha()
+# icon = pygame.image.load("icon.jpg").convert_alpha()
+# prop = pygame.image.load("prop2.png").convert_alpha()
 menubutton = pygame.image.load("image/menubutton.png").convert_alpha()
 """tetris_window.blit(prop, (55, 16))
 pygame.display.flip()"""
@@ -165,24 +165,7 @@ while True:
                         tetrimino = Tetrimino()
 
             display_all(game_window, game_object)
-    
-    """if tetrimino.state == 1:
-        '''chrono = time.time()
-        if chrono > 0.5:
-            pass
-        else:
-            matrix+tetrimino
-            print('X')
-            tetrimino = Tetrimino()
-            print('OHHH')
-            display_all(game_window, game_object)
-            matrix.clear_lines(data)
-            display_all(game_window, game_object)'''
-        matrix+tetrimino
-        tetrimino = Tetrimino()
-        display_all(game_window, game_object)
-        matrix.clear_lines(data)
-        display_all(game_window, game_object)"""
+
     if tetrimino.state == 1:
         phase = tetrimino.lock_phase(matrix, phase)
         display_all(game_window, game_object)
