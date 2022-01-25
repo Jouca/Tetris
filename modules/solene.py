@@ -99,7 +99,7 @@ def turn_right(tetrimino, phasis):
 
 def change_color_luminosity(color, rate_of_change):
     """change la luminosité de la couleur, renvoie un tuple rgb de la couleur
-    assombrit selon `rate_of_change`, un entier. `couleur` doit être un tuple
+    assombrie selon `rate_of_change`, un entier. `couleur` doit être un tuple
     représentant les valeurs rgb (chaque entier est compris entre 0 et 255)."""
     red, green, blue = color
     hue, saturation, lightness = colorsys.rgb_to_hsv(red, green, blue)
@@ -108,6 +108,29 @@ def change_color_luminosity(color, rate_of_change):
     for i, primary in enumerate(temp_color):
         final_color[i] = round(primary)
     return tuple(final_color)
+
+
+# j'aurais préféré mettre une
+class Window:
+    """objet stockant les propriétés de la fenêtre."""
+
+    def __init__(self, window_size):
+        """initialisation de l'instance."""
+        self.change_size(window_size)
+        # pylint n'est pas content lorsque l'on ne définit pas
+        # l'attribut margin dans la méthode constructeur
+        self.update_margin()
+
+    def change_size(self, new_size):
+        """la taille de la fenêtre est mise à jour."""
+        self.width = new_size[0]
+        self.height = new_size[1]
+        self.size = new_size
+        self.update_margin()
+
+    def update_margin(self):
+        """met à jour la valeur de la marge."""
+        self.margin = round(0.05 * self.height)
 
 
 class Bag:
@@ -130,28 +153,6 @@ class Bag:
             random.shuffle(next_generation)
             Bag.content = next_generation + Bag.content
         return self.content.pop()
-
-
-class Window:
-    """objet stockant les propriétés de la fenêtre."""
-
-    def __init__(self, window_size):
-        """initialisation de l'instance."""
-        self.change_size(window_size)
-        # pylint n'est pas content lorsque l'on ne définit pas
-        # l'attribut margin dans la méthode constructeur
-        self.update_margin()
-
-    def change_size(self, new_size):
-        """la taille de la fenêtre est mise à jour."""
-        self.width = new_size[0]
-        self.height = new_size[1]
-        self.size = new_size
-        self.update_margin()
-
-    def update_margin(self):
-        """met à jour la valeur de la marge."""
-        self.margin = round(0.05 * self.height)
 
 
 class Matrix:
@@ -481,6 +482,7 @@ class Tetrimino(Bag, Matrix):
         self.y = coordinates[1]
         return False
 
+    # fonction améliorable
     def lock_phase(self, matrix, phase): ## continuer docstring une fois finie
         """il s'agit de la phase où le tetrimino est sur le point de se bloquer,
         elle fait en sorte de varier la couleur du tetrimino afin que le joueur
@@ -489,7 +491,9 @@ class Tetrimino(Bag, Matrix):
         if self.can_fall(matrix):
             # permet de sortir de la lock phase
             self.state = 0
-            return
+            self.shade = 0
+            # on renvoie 1 afin de reinitialiser phase
+            return 1
         # dans le cas où la phase vaut 1
         if phase == 1:
             # on assombrit la couleur du tetrimino
