@@ -10,7 +10,7 @@ import tkinter
 import sys
 import time
 import pygame
-from modules.solene import Bag, HoldQueue, Matrix, MenuButton, NextQueue, Tetrimino, Window, MenuButton, Data
+from modules.solene import Bag, HoldQueue, Matrix, MenuButton, NextQueue, Tetrimino, Window, MenuButton, Data, Chronometer
 
 
 # initialisation de pygame
@@ -32,13 +32,13 @@ WINDOW_WIDTH = round(WINDOW_HEIGHT * 1.8)
 
 
 # définition de la fenêtre pygame de taille dynamique
-tetris_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT),
-                                 pygame.RESIZABLE, 64)
+tetris_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.RESIZABLE, 64)
 
 # importation d'images
-# icon = pygame.image.load("icon.jpg").convert_alpha()
+# icon = pygame.image.load("image/logo.ico").convert_alpha()
 # prop = pygame.image.load("prop2.png").convert_alpha()
 menubutton = pygame.image.load("image/menubutton.png").convert_alpha()
+
 """tetris_window.blit(prop, (55, 16))
 pygame.display.flip()"""
 
@@ -78,13 +78,16 @@ menu_button = MenuButton(game_window)
 data = Data(game_window)
 
 tetrimino = Tetrimino()
-phase = 1
+shade_phase = 1
 
 game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
 
 display_all(game_window, game_object)
-time_before_refresh = time.time()
 
+
+time_before_refresh = Chronometer()
+lock_down_chrono = Chronometer()
+lock_phase_first = 1
 
 while True:
 
@@ -92,7 +95,6 @@ while True:
     window_current_size = pygame.display.get_surface().get_size()
     game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
     current_time = time.time()
-    time_elapsed = current_time - time_before_refresh
 
     # évènements pygame
     for event in pygame.event.get():
@@ -133,6 +135,7 @@ while True:
             if event.key == pygame.K_n:
                 matrix + tetrimino
                 tetrimino = Tetrimino()
+                shade_phase = 1
                 display_all(game_window, game_object)
                 matrix.clear_lines(data)
                 display_all(game_window, game_object)
@@ -164,19 +167,29 @@ while True:
                     else:
                         tetrimino = Tetrimino()
 
-            display_all(game_window, game_object)
+            # ##display_all(game_window, game_object)
 
     if tetrimino.state == 1:
-        phase = tetrimino.lock_phase(matrix, phase)
-        display_all(game_window, game_object)
-        time.sleep(0.1)
-
-    if tetrimino.state == 2:
+        # permet de jouer sur la couleur du tetrimino
+        lock_phase_first, shade_phase = tetrimino.lock_phase(matrix, lock_down_chrono, lock_phase_first, shade_phase)
+        # ##display_all(game_window, game_object)
+        time.sleep(0.015)
+    
+    # phase lock down
+    elif tetrimino.state == 2:
+        print('POURQUOI' + str(lock_phase_first))
+        matrix+tetrimino
         tetrimino = Tetrimino()
-
-    # l'égalité entre int et float n'est pas efficace
-    if time_elapsed > data.refresh:
-        tetrimino.fall(matrix)
-        time_before_refresh = time.time()
         display_all(game_window, game_object)
-    # display_all(game_window, game_object)
+        matrix.clear_lines(data)
+        display_all(game_window, game_object)
+        time_before_refresh.reset()
+    else:
+        # l'égalité entre int et float n'est pas efficace
+        # ##if time_before_refresh.time_elapsed() > data.refresh:
+        if time_before_refresh == data.refresh:
+            tetrimino.fall(matrix)
+            # on reinitialise le chrono
+            time_before_refresh.reset()
+            # ##display_all(game_window, game_object)
+    display_all(game_window, game_object)
