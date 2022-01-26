@@ -14,6 +14,7 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 import random
 import colorsys
 import pygame
+import time
 from others.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT
 from diego import clear_lines
 from paul import border_dict
@@ -131,6 +132,30 @@ class Window:
     def update_margin(self):
         """met à jour la valeur de la marge."""
         self.margin = round(0.05 * self.height)
+
+
+class Chronometer:
+    """modélise un chronomètre."""
+
+    def __init__(self):
+        """initialisation d'un chronomètre."""
+        self.reset()
+
+    # ##enlever ?
+    def time_elapsed(self):
+        """renvoie le temps passé depuis l'initialisation
+        du chronomètre"""
+        return time.time() - self.time
+    
+    def __eq__(self, duration):
+        """renvoie le booléen vrai si le temps indiqué sur
+        le chronomètre correspond à la durée `duration` (float)
+        comparée, autrement, il renvoie faux."""
+        return time.time() - self.time > duration
+
+    def reset(self):
+        """reinitialise le chronomètre."""
+        self.time = time.time()
 
 
 class Bag:
@@ -483,17 +508,31 @@ class Tetrimino(Bag, Matrix):
         return False
 
     # fonction améliorable
-    def lock_phase(self, matrix, phase): ## continuer docstring une fois finie
-        """il s'agit de la phase où le tetrimino est sur le point de se bloquer,
-        elle fait en sorte de varier la couleur du tetrimino afin que le joueur
-        puisse mieux prendre en compte la situation du tetrimino."""
+    def lock_phase(self, matrix, chrono, first, phase):
+        """il s'agit de la phase où le tetrimino est sur le point de se
+        bloquer, elle fait en sorte de varier la couleur du tetrimino avec
+        l'attribut shade, afin que le joueur puisse mieux prendre en compte
+        la situation du tetrimino. Un chronomètre est mis en place lors du
+        premier appel du lock phase, paramètre su grâce à `first` valant 1
+        dans ce cas particulier. `phase` indique la phase de changement de
+        couleur 1 lorsque le tetrimino doit s'assombrir, 0 dans le cas où
+        il s'éclaircit. `chrono` est le chronomètre associé au lock phase."""
+        # initialisation du chronomètre
+        if first:
+            chrono.reset()
+            first = 0
+        # temps du lock phase écoulé
+        if chrono == 0.5:
+            self.state = 2
+            first = 1
+            return first, 1
         # dans le cas où le tetrimino peut tomber
         if self.can_fall(matrix):
             # permet de sortir de la lock phase
             self.state = 0
             self.shade = 0
             # on renvoie 1 afin de reinitialiser phase
-            return 1
+            return 1, 1
         # dans le cas où la phase vaut 1
         if phase == 1:
             # on assombrit la couleur du tetrimino
@@ -506,7 +545,7 @@ class Tetrimino(Bag, Matrix):
         if self.shade in (0, 9):
             # on change de phase
             phase = (phase + 1) % 2
-        return phase
+        return first, phase
     
     def display(self, surface):
         """affiche l'instance de tetrimino en fonction de ses spécificités."""
