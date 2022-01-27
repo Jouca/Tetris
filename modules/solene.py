@@ -10,17 +10,18 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 # les classes parents sont avant tout pratique pour les positions relatives
 # des différents objets entre eux.
 
+
 # importation de librairies python utiles
 import random
 import colorsys
-import pygame
 import time
-from others.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT
+import pygame
+from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT
 from diego import clear_lines
 from paul import border_dict
 
 
-def display_visual_tetrimino(surface, place_properties, y, t_type):
+def display_visual_tetrimino(surface, place_properties, y_axis, t_type):
     """permet de définir un tetrimino visuel, notamment pour la hold
     queue et la next queue, ce, sans création d'un objet tetrimino.
     Prend en paramètre :
@@ -34,42 +35,42 @@ def display_visual_tetrimino(surface, place_properties, y, t_type):
     tetrimino_shape = TETRIMINO_SHAPE[t_type]
     # ##color = COLOR[TETRIMINO_DATA[t_type]['color']]
     color = Tetrimino.COLOR_SHADE[t_type][0]
-    x = place_properties.t_x
-    w = place_properties.t_w
-    h = place_properties.t_h
+    x_axis = place_properties.t_x
+    w_value = place_properties.t_w
+    h_value = place_properties.t_h
     width = place_properties.width // 2 + 1
     # dans le cas où le tetrimino n'est ni 'I' ni 'O'
     # placé en début on gagne une comparaison :)
     if t_type > 2:
-        cell_size = w // 3
+        cell_size = w_value // 3
         for j in range(2):
             for k in range(3):
                 if tetrimino_shape[j][k]:
-                    rect = (x + k * cell_size,
-                            y + j * cell_size,
+                    rect = (x_axis + k * cell_size,
+                            y_axis + j * cell_size,
                             cell_size, cell_size)
                     pygame.draw.rect(surface, color, pygame.Rect(rect))
                     pygame.draw.rect(surface, (250, 250, 250),
                                      pygame.Rect(rect), width)
     # si le tetrimino est un 'I' tetrimino
     elif t_type == 2:
-        cell_size = w // 4
-        shift = (h - cell_size) // 2
+        cell_size = w_value // 4
+        shift = (h_value - cell_size) // 2
         for j in range(4):
-            rect = (x + j * cell_size,
-                    y + shift,
+            rect = (x_axis + j * cell_size,
+                    y_axis + shift,
                     cell_size, cell_size)
             pygame.draw.rect(surface, color, pygame.Rect(rect))
             pygame.draw.rect(surface, (250, 250, 250), pygame.Rect(rect),
                              width)
     # s'il s'agit d'un 'O' tetrimino
     else:
-        cell_size = h // 2
-        shift = (w - 2 * cell_size) // 2
+        cell_size = h_value // 2
+        shift = (w_value - 2 * cell_size) // 2
         for j in range(2):
             for k in range(2):
-                rect = (x + k * cell_size + shift,
-                        y + j * cell_size,
+                rect = (x_axis + k * cell_size + shift,
+                        y_axis + j * cell_size,
                         cell_size, cell_size)
                 pygame.draw.rect(surface, color, pygame.Rect(rect))
                 pygame.draw.rect(surface, (250, 250, 250), pygame.Rect(rect),
@@ -146,7 +147,7 @@ class Chronometer:
         """renvoie le temps passé depuis l'initialisation
         du chronomètre"""
         return time.time() - self.time
-    
+
     def __eq__(self, duration):
         """renvoie le booléen vrai si le temps indiqué sur
         le chronomètre correspond à la durée `duration` (float)
@@ -235,19 +236,19 @@ class Matrix:
         # création d'un attribut de classe de type dictionnaire
         # contenant des objets de type pygame.Rect pour chaque case
         Matrix.cell = {}
-        y = self.y - self.width
+        y_axis = self.y - self.width
         for i in range(10):
             Matrix.cell[i] = {}
             for j in range(21):
-                x = self.x + i * self.cell_size
+                x_axis = self.x + i * self.cell_size
                 if j == 0:
-                    Matrix.cell[i][1] = pygame.Rect(x,
+                    Matrix.cell[i][1] = pygame.Rect(x_axis,
                                                     self.y,
                                                     self.cell_size,
                                                     self.cell_size * 7/10)
                 else:
-                    Matrix.cell[i][j+1] = pygame.Rect(x,
-                                                      y + j * self.cell_size,
+                    Matrix.cell[i][j+1] = pygame.Rect(x_axis,
+                                                      y_axis + j * self.cell_size,
                                                       self.cell_size,
                                                       self.cell_size)
 
@@ -323,6 +324,13 @@ class Matrix:
                                          self.cell_size))
 
 
+def start_center(tetrimino_type):
+    """indique l'indice permettant de centrer un tetrimino
+    selon son type (spécifié en argument de la fonction, un
+    entier compris entre 1 et 7 inclus) dans matrice."""
+    return (10 - len(TETRIMINO_SHAPE[tetrimino_type])) // 2
+
+
 class Tetrimino(Bag, Matrix):
     """modélise un tetrimino."""
 
@@ -355,13 +363,6 @@ class Tetrimino(Bag, Matrix):
             changed_color = change_color_luminosity(previous_color, 14)
             COLOR_SHADE[tetrimino_type][shade] = changed_color
 
-    @staticmethod
-    def start_center(tetrimino_type):
-        """indique l'indice permettant de centrer un tetrimino
-        selon son type (spécifié en argument de la fonction, un
-        entier compris entre 1 et 7 inclus) dans matrice."""
-        return (10 - len(TETRIMINO_SHAPE[tetrimino_type])) // 2
-
     def __init__(self):
         """initialise une instance avec l'attribution de la phase à 0 ("Nord"),
         l'état à : 0 ("falling phase"), le type dépendant de la pièce en
@@ -374,7 +375,7 @@ class Tetrimino(Bag, Matrix):
         # définit la nuance de couleur du tetrimino
         self.shade = 0
         # position centrée horizontalement
-        self.x = Tetrimino.start_center(self.type)
+        self.x = start_center(self.type)
         # dans la skyline (en haut de la matrice)
         self.y = 0
         # incrémente le nombre de tetrimino créé de 1
@@ -546,7 +547,7 @@ class Tetrimino(Bag, Matrix):
             # on change de phase
             phase = (phase + 1) % 2
         return first, phase
-    
+
     def display(self, surface):
         """affiche l'instance de tetrimino en fonction de ses spécificités."""
         tetrimino_shape = self.ROTATION_PHASIS[self.type][self.phasis]
@@ -757,10 +758,10 @@ class NextQueue(Bag, Matrix):
         self.t_x = self.x + (self.w - self.t_w) // 2
         self.next_y = [self.y_1 + (self.w - self.t_h) // 2]
         space = (self.h_2 - 5 * self.t_h) // 6
-        y = self.y_2 + space
+        y_axis = self.y_2 + space
         for _ in range(5):
-            t_place = y
-            y += self.t_h + space
+            t_place = y_axis
+            y_axis += self.t_h + space
             self.next_y.append(t_place)
 
     def display(self, surface):
