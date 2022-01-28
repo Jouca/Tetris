@@ -10,7 +10,8 @@ import tkinter
 import sys
 import time
 import pygame
-from modules.solene import Bag, HoldQueue, Matrix, MenuButton, NextQueue, Tetrimino, Window, MenuButton, Data, Chronometer
+from solene import Bag, HoldQueue, Matrix, NextQueue
+from solene import Tetrimino, Window, MenuButton, Data, Chronometer
 
 
 # initialisation de pygame
@@ -44,7 +45,7 @@ pygame.display.flip()"""
 
 # personnalisation de la fenêtre
 pygame.display.set_caption("TETRIS")
-pygame.display.set_icon(icon)
+# pygame.display.set_icon(icon)
 window_size = pygame.display.get_surface().get_size()
 
 
@@ -61,12 +62,19 @@ def display_all(window, obj):
     mis à jour."""
     frame = pygame.Surface(window.size)
     # affichage de l'image pour le boutton des menu
-    menu_image = pygame.transform.scale(menubutton, (obj[4].w, obj[4].h))
-    frame.blit(menu_image, (obj[4].x, obj[4].y))
+    menu_image = pygame.transform.scale(menubutton,
+                                        (obj[4].rect.w,
+                                        obj[4].rect.h))
+    frame.blit(menu_image, (obj[4].rect.x, obj[4].rect.y))
     for element in obj:
         element.display(frame)
+    # dessin de la ghost piece
+    obj[1].draw_ghost_piece(frame, obj[0])
+    # frame sur la fenêtre
     tetris_window.blit(frame, (0, 0))
+    # rafraichissement de la fenêtre pygame
     pygame.display.flip()
+
 
 # ## instanciation à mettre dans une fonction ?
 bag = Bag()
@@ -78,7 +86,6 @@ menu_button = MenuButton(game_window)
 data = Data(game_window)
 
 tetrimino = Tetrimino()
-shade_phase = 1
 
 game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
 
@@ -87,7 +94,8 @@ display_all(game_window, game_object)
 
 time_before_refresh = Chronometer()
 lock_down_chrono = Chronometer()
-lock_phase_first = 1
+SHADE_PHASE = 1
+LOCK_PHASE_FIRST = 1
 
 while True:
 
@@ -135,7 +143,7 @@ while True:
             if event.key == pygame.K_n:
                 matrix + tetrimino
                 tetrimino = Tetrimino()
-                shade_phase = 1
+                SHADE_PHASE = 1
                 display_all(game_window, game_object)
                 matrix.clear_lines(data)
                 display_all(game_window, game_object)
@@ -171,13 +179,14 @@ while True:
 
     if tetrimino.state == 1:
         # permet de jouer sur la couleur du tetrimino
-        lock_phase_first, shade_phase = tetrimino.lock_phase(matrix, lock_down_chrono, lock_phase_first, shade_phase)
+        values = tetrimino.lock_phase(matrix, lock_down_chrono,
+                                      LOCK_PHASE_FIRST, SHADE_PHASE)
+        LOCK_PHASE_FIRST, SHADE_PHASE = values
         # ##display_all(game_window, game_object)
         time.sleep(0.015)
-    
+
     # phase lock down
     elif tetrimino.state == 2:
-        print('POURQUOI' + str(lock_phase_first))
         matrix+tetrimino
         tetrimino = Tetrimino()
         display_all(game_window, game_object)
