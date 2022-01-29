@@ -1,5 +1,8 @@
-import pygame
+"""module codé par Diego (@Jouca) TG8, contenant diverses classes et
+fonctions utiles au bon fonctionnement du jeu Tetris."""
+
 import json
+import pygame
 
 class Spritesheet:
     """
@@ -71,11 +74,11 @@ class Button:
                     return True
         return False
 
-def clear_lines(tableau):
+def clear_lines(content):
     """
-    Permet de supprimer les lignes d'un tableau quand la ligne ne contient que
-    des 1, et de les décaler vers le bas et de garder le nombre de lignes
-    supprimé
+    Permet de supprimer les lignes d'un tableau `content` quand la ligne
+    ne contient une ligne remplies (valeur autre que 0), et de les décaler
+    vers le bas et de garder le nombre de lignes supprimées
 
     >>> clear_lines([
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -96,11 +99,11 @@ def clear_lines(tableau):
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     ] 3
     """
-    n = 0
-    copy_tableau = tableau.copy()
-    for i in range(len(tableau)):
-        if copy_tableau[i].count(0) == 0:
-            copy_tableau.pop(i)
-            copy_tableau.insert(0, [0] * len(tableau[0]))
-            n += 1
-    return copy_tableau, n
+    nb_line_clear = 0
+    copy_content = content.copy()
+    for i in range(len(content)):
+        if copy_content[i].count(0) == 0:
+            copy_content.pop(i)
+            copy_content.insert(0, [0] * len(content[0]))
+            nb_line_clear += 1
+    return copy_content, nb_line_clear
