@@ -1,4 +1,4 @@
-"""module codé par Zheng Solène TG8, contenant diverses classes et
+"""module codé par Solène TG8, contenant diverses classes et
 fonctions utiles au bon fonctionnement du jeu Tetris."""
 
 # pylint: disable=W0231
@@ -28,16 +28,16 @@ def display_visual_tetrimino(surface, place_properties, y_axis, t_type):
     - `surface`, un objet pygame.Surface ;
     - `place_properties`, un objet HoldQueue ou NextQueue, utile afin de
     récupérer des informations de l'emplacement du tetrimino visuel ;
-    - `y` : la position y, particulière de l'emplacement du tetrimino visuel
-    sous la forme d'un int ;
+    - `y_axis` : la position y, particulière de l'emplacement du tetrimino
+    visuel sous la forme d'un int ;
     - `t_type` : le type du tetrimino indiqué par un entier compris entre 1
     et 7 inclus"""
     tetrimino_shape = TETRIMINO_SHAPE[t_type]
     # ##color = COLOR[TETRIMINO_DATA[t_type]['color']]
     color = Tetrimino.COLOR_SHADE[t_type][0]
-    x_axis = place_properties.t_x
-    w_value = place_properties.t_w
-    h_value = place_properties.t_h
+    x_axis = place_properties.t_rect.x
+    w_value = place_properties.t_rect.w
+    h_value = place_properties.t_rect.h
     width = place_properties.width // 2 + 1
     # dans le cas où le tetrimino n'est ni 'I' ni 'O'
     # placé en début on gagne une comparaison :)
@@ -152,6 +152,7 @@ class Chronometer:
         """renvoie le booléen vrai si le temps indiqué sur
         le chronomètre correspond à la durée `duration` (float)
         comparée, autrement, il renvoie faux."""
+        # l'égalité entre int et float n'est pas efficace
         return time.time() - self.time > duration
 
     def reset(self):
@@ -188,6 +189,7 @@ class Matrix:
         """initialisation des différents attribut de la classe Matrix."""
         self.resize(window)
         self.content = [[0 for j in range(10)] for i in range(22)]
+        self.modelisation = [22 for i in range(10)]
         # création d'une matrice vide avec deux lignes pour la skyline
         self.higher_row = 22
 
@@ -212,14 +214,26 @@ class Matrix:
                     pos_y = tetrimino.y_coordinate + j
                     pos_x = tetrimino.x_coordinate + i
                     self.content[pos_y][pos_x] = tetrimino.type
-                    if tetrimino.y_coordinate + j < self.higher_row:
-                        self.higher_row = tetrimino.y_coordinate + j
-                        print(self.higher_row)
-
+                    # ajoute à modelisation au besoin afin de créer
+                    # un sorte de cartographie des plus haut à chaque fois
+                    if pos_y < self.modelisation[pos_x]:
+                        self.modelisation[pos_x] = pos_y
+                        if self.modelisation[pos_x] < self.higher_row:
+                            self.higher_row = self.modelisation[pos_x]
+    
     def clear_lines(self, data):
-        """voir dans `diego.py`"""
+        """voir dans `diego.py` suivi d'une modification de l'attribut
+        modelisation, ainsi que highter_row, la ligne la plus haute afin
+        de respecter la cohérence."""
         self.content, nb_line_cleared = clear_lines(self.content)
-        data.add_to_line_clear(nb_line_cleared)
+        # dans le cas où il y a un line clear
+        if nb_line_cleared > 0:
+            # ajoute le nombre de line_clear aux informations du jeu
+            data.add_to_line_clear(nb_line_cleared)
+            for i in range(10):
+                if self.modelisation[i] != 22:
+                    self.modelisation[i] += 1
+            self.higher_row -= 1
 
     def resize(self, window):
         """redimmensionne les valeurs utile à la représentation
@@ -323,19 +337,53 @@ class Matrix:
                                          self.rect.y - self.cell_size,
                                          self.rect.w,
                                          self.cell_size))
+
+    # ##faire en sorte de ne pas tout le temps appeler cette fonction
+    # ## placer plutôt dans la classe tetrimino ?
+    def lower_tetrimino_pos(self, tetrimino):
+        """renvoie la position la plus basse pouvant être atteinte par
+        `tetrimino` afin de déterminer la position des ordonnées de la ghost
+        piece dans matrix. La méthode prend en paramètre `tetrimino` une
+        instance de la classe Tetrimino."""
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[tetrimino.type][tetrimino.phasis]
+        # récupère la véritable largeur concernée par le tetrimino
+        t_first_column = tetrimino.leftmost()
+        t_last_column = tetrimino.rightmost()
+        # nouvelle liste extraite de la liste modélisant les mino les plus
+        # haut par colonne dans matrix. Extraction des colonnes situées sous
+        # le tetrimino visuel 
+        new_list = self.modelisation[t_first_column:t_last_column + 1]
+        # variable utile pour la méthode test_around de l'objet `tetrimino`
+        # afin d'éviter de calculer longueur à chaque tour de boucle
+        nb_column = len(tetrimino_shape)
+        # stockage de la valeur de l'attribut y_coordinate de `tetrimino`
+        y_coordinate = tetrimino.get_y()
+        # on place le tetrimino à la colonne la plus haute possible
+        y_value_attempt = min(new_list) - nb_column
+        i = 1
+        # du moment que le tetrimino peut être placé sans accroc
+        while tetrimino.test_around(self, tetrimino_shape, nb_column):
+            # on incrémente pour faire descendre le tetrimino d'une ligne
+            tetrimino.set_y(y_value_attempt + i)
+            i += 1
+        # on rétablit la valeur initiale de la coordonnée y du tetrimino
+        tetrimino.set_y(y_coordinate)
+        # on renvoie la valeur d'ordonnée trouvée
+        return y_value_attempt + i - 2
     
-    # optimiser
+    # ## optimiser
     def draw_ghost_piece(self, surface, tetrimino):
         """dessin de la ghost piece."""
         color = Tetrimino.COLOR_SHADE[tetrimino.type][tetrimino.shade]
         line_to_draw = Tetrimino.BORDER[tetrimino.type][tetrimino.phasis]
+        pos_y = self.lower_tetrimino_pos(tetrimino)
         # dessin des lignes en haut
         for element in line_to_draw[0]:
             coordinates = element[0]
             line_lenght = element[1] * self.cell_size
             try:
-                x = self.cell[tetrimino.x_coordinate + coordinates[1]][tetrimino.y_coordinate + coordinates[0]].x - 1
-                y = self.cell[tetrimino.x_coordinate + coordinates[1]][tetrimino.y_coordinate + coordinates[0] + 5].y
+                x = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].x
+                y = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].y
                 pygame.draw.line(surface, color,
                              (x, y),
                              (x + line_lenght, y), 3)
@@ -347,8 +395,8 @@ class Matrix:
             coordinates = element[0]
             line_lenght = element[1] * self.cell_size
             try:
-                x = self.cell_size + self.cell[tetrimino.x_coordinate + coordinates[1]][tetrimino.y_coordinate + coordinates[0]].x - 1
-                y = self.cell[tetrimino.x_coordinate + coordinates[1]][tetrimino.y_coordinate + coordinates[0] + 5].y
+                x = self.cell_size + self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].x
+                y = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].y
                 pygame.draw.line(surface, color,
                              (x, y),
                              (x, y + line_lenght), 3)
@@ -360,8 +408,8 @@ class Matrix:
             coordinates = element[0]
             line_lenght = element[1] * self.cell_size
             try:
-                x = self.cell[tetrimino.x_coordinate + coordinates[1]][tetrimino.y_coordinate + coordinates[0]].x - 1
-                y = self.cell_size + self.cell[tetrimino.x_coordinate + coordinates[1]][tetrimino.y_coordinate + coordinates[0] + 5].y
+                x = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].x
+                y = self.cell_size + self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].y
                 pygame.draw.line(surface, color,
                              (x, y),
                              (x + line_lenght, y), 3)
@@ -373,15 +421,14 @@ class Matrix:
             coordinates = element[0]
             line_lenght = element[1] * self.cell_size
             try:
-                x = self.cell[tetrimino.x_coordinate + coordinates[1]][tetrimino.y_coordinate + coordinates[0]].x - 1
-                y = self.cell[tetrimino.x_coordinate + coordinates[1]][tetrimino.y_coordinate + coordinates[0] + 5].y
+                x = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].x
+                y = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].y
                 pygame.draw.line(surface, color,
                              (x, y),
                              (x, y + line_lenght), 3)
             # pour le moment
             except KeyError:
                 pass
-
 
 def start_center(tetrimino_type):
     """indique l'indice permettant de centrer un tetrimino
@@ -437,7 +484,6 @@ class Tetrimino(Bag, Matrix):
         self.x_coordinate = start_center(self.type)
         # dans la skyline (en haut de la matrice)
         self.y_coordinate = 0
-        print(Tetrimino.BORDER[3])
         # incrémente le nombre de tetrimino créé de 1
         Tetrimino.count += 1
         # ##à enlever en fin
@@ -823,16 +869,18 @@ class NextQueue(Bag, Matrix):
         self.rect_1 = pygame.Rect(x_axis, y_axis_1, w_value, h_value_1)
         self.rect_2 = pygame.Rect(x_axis, y_axis_2, w_value, h_value_2)
         # liste des positions 'y' des différents emplacement des tetriminos
-        self.t_w = self.cell_size * 3
-        self.t_h = self.cell_size * 2
-        self.t_x = x_axis + (w_value - self.t_w) // 2
-        self.next_y = [y_axis_1 + (w_value - self.t_h) // 2]
-        space = (h_value_2 - 5 * self.t_h) // 6
+        # ## optimiser avec changement de la fonction display_visual_tetrimino
+        t_w = self.cell_size * 3
+        t_h = self.cell_size * 2
+        t_x = x_axis + (w_value - t_w) // 2
+        self.next_y = [y_axis_1 + (w_value - t_h) // 2]
+        space = (h_value_2 - 5 * t_h) // 6
         current_y = y_axis_2 + space
         for _ in range(5):
             t_place = current_y
-            current_y += self.t_h + space
+            current_y += t_h + space
             self.next_y.append(t_place)
+        self.t_rect = pygame.Rect(t_x, 0, t_w, t_h)
 
     def display(self, surface):
         """affiche des encadrés correspondant à la next queue dans lesquelles
