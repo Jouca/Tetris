@@ -3,15 +3,15 @@ trimestre pour la spécialité NSI."""
 
 # pylint: disable=E1101
 # (no-member) erreur apparaissant pour les constantes de pygame référant aux
-# touche de clavier et boutton de fenêtre, ...
+# touches de clavier et boutons de fenêtre, ...
 
 # importations des librairies python
 import tkinter
 import sys
 import time
 import pygame
-from solene import Bag, HoldQueue, Matrix, NextQueue
-from solene import Tetrimino, Window, MenuButton, Data, Chronometer
+from modules.solene import Bag, HoldQueue, Matrix, NextQueue
+from modules.solene import Tetrimino, Window, MenuButton, Data, Chronometer
 
 
 # initialisation de pygame
@@ -36,7 +36,7 @@ WINDOW_WIDTH = round(WINDOW_HEIGHT * 1.8)
 tetris_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.RESIZABLE, 64)
 
 # importation d'images
-# icon = pygame.image.load("image/logo.ico").convert_alpha()
+icon = pygame.image.load("image/logo.ico").convert_alpha()
 # prop = pygame.image.load("prop2.png").convert_alpha()
 menubutton = pygame.image.load("image/menubutton.png").convert_alpha()
 
@@ -70,7 +70,8 @@ def display_all(window, obj):
         element.display(frame)
     # dessin de la ghost piece
     if obj[0].state != 2:
-        obj[1].draw_ghost_piece(frame, obj[0])
+        if obj[1].draw_ghost_piece(frame, obj[0]) == "ERROR snif :')":
+            pygame.image.save(tetris_window, "screenshot.jpeg")
     # frame sur la fenêtre
     tetris_window.blit(frame, (0, 0))
     # rafraichissement de la fenêtre pygame
@@ -143,7 +144,10 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_n:
                 matrix + tetrimino
+                ###########################
                 tetrimino = Tetrimino()
+                hold_queue.allow_hold()
+                ###########################
                 SHADE_PHASE = 1
                 display_all(game_window, game_object)
                 matrix.clear_lines(data)
@@ -173,7 +177,9 @@ while True:
                     if temp:
                         tetrimino.set_type(temp)
                         tetrimino.set_y(0)
+                    # si vide
                     else:
+                        # création d'un nouveau tetrimino
                         tetrimino = Tetrimino()
 
             display_all(game_window, game_object)
@@ -186,14 +192,17 @@ while True:
         LOCK_PHASE_FIRST, SHADE_PHASE = values
         display_all(game_window, game_object)
         time.sleep(0.015)
+
     # phase lock down
     elif tetrimino.state == 2:
         matrix+tetrimino
         tetrimino = Tetrimino()
+        hold_queue.allow_hold()
         display_all(game_window, game_object)
         matrix.clear_lines(data)
         display_all(game_window, game_object)
         time_before_refresh.reset()
+
     # dans le cas où le tetrimino est en falling phase
     else:
         display_all(game_window, game_object)
@@ -201,4 +210,5 @@ while True:
             tetrimino.fall(matrix)
             # on reinitialise le chrono
             time_before_refresh.reset()
+    # ##pour tester au besoin
     # display_all(game_window, game_object)
