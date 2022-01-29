@@ -69,7 +69,8 @@ def display_all(window, obj):
     for element in obj:
         element.display(frame)
     # dessin de la ghost piece
-    obj[1].draw_ghost_piece(frame, obj[0])
+    if obj[0].state != 2:
+        obj[1].draw_ghost_piece(frame, obj[0])
     # frame sur la fenêtre
     tetris_window.blit(frame, (0, 0))
     # rafraichissement de la fenêtre pygame
@@ -175,16 +176,16 @@ while True:
                     else:
                         tetrimino = Tetrimino()
 
-            # ##display_all(game_window, game_object)
-
+            display_all(game_window, game_object)
+    
+    # phase précédant le lock down
     if tetrimino.state == 1:
         # permet de jouer sur la couleur du tetrimino
         values = tetrimino.lock_phase(matrix, lock_down_chrono,
                                       LOCK_PHASE_FIRST, SHADE_PHASE)
         LOCK_PHASE_FIRST, SHADE_PHASE = values
-        # ##display_all(game_window, game_object)
+        display_all(game_window, game_object)
         time.sleep(0.015)
-
     # phase lock down
     elif tetrimino.state == 2:
         matrix+tetrimino
@@ -193,12 +194,11 @@ while True:
         matrix.clear_lines(data)
         display_all(game_window, game_object)
         time_before_refresh.reset()
+    # dans le cas où le tetrimino est en falling phase
     else:
-        # l'égalité entre int et float n'est pas efficace
-        # ##if time_before_refresh.time_elapsed() > data.refresh:
+        display_all(game_window, game_object)
         if time_before_refresh == data.refresh:
             tetrimino.fall(matrix)
             # on reinitialise le chrono
             time_before_refresh.reset()
-            # ##display_all(game_window, game_object)
-    display_all(game_window, game_object)
+    # display_all(game_window, game_object)
