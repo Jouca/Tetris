@@ -38,31 +38,27 @@ class Spritesheet:
         return image
 
 class Button:
-    def __init__(self, x, y, width, heigh, text, size, font, color):
+    def __init__(self, rect, text, size, color):
         """
         Exemple :
-        Button(100, 100, 50, 50, "Test", 20, "arial", (255, 255, 255))
+        Button((200, 200, 100, 100), "Test", 60, (255, 255, 255))
         """
-        self.x = x
-        self.y = y
-        self.width = width
-        self.heigh = heigh
         self.text = text
         self.size = size
         self.font = pygame.font.SysFont(
-            font,
-            self.textSize,
+            "./others/Anton-Regular.ttf",
+            self.size,
             bold = True
         )
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.heigh)
+        self.rect = pygame.Rect(rect)
         self.text_image = self.font.render(self.text, 1 , color)
 
     def draw(self, screen):
         """
         Permet de dessiner le bouton
         """
-        pygame.draw.rect(screen, (255, 255, 255, 3), self.rect)
-        screen.blit(self.text_image, (self.width/2, self.heigh/2))
+        pygame.draw.rect(screen, (255, 255, 255), self.rect, 3)
+        screen.blit(self.text_image, (self.text_image.get_rect(center = self.rect.center)))
 
     def event_handler(self, event):
         """
