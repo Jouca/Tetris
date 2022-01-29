@@ -1,3 +1,6 @@
+import pygame
+import json
+
 class Spritesheet:
     """
     Objet s'occupant d'un fichier type spritesheet.
@@ -34,6 +37,43 @@ class Spritesheet:
         image = self.get_sprite(x_position, y_position, w_position, h_position)
         return image
 
+class Button:
+    def __init__(self, x, y, width, heigh, text, size, font, color):
+        """
+        Exemple :
+        Button(100, 100, 50, 50, "Test", 20, "arial", (255, 255, 255))
+        """
+        self.x = x
+        self.y = y
+        self.width = width
+        self.heigh = heigh
+        self.text = text
+        self.size = size
+        self.font = pygame.font.SysFont(
+            font,
+            self.textSize,
+            bold = True
+        )
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.heigh)
+        self.text_image = self.font.render(self.text, 1 , color)
+
+    def draw(self, screen):
+        """
+        Permet de dessiner le bouton
+        """
+        pygame.draw.rect(screen, (255, 255, 255, 3), self.rect)
+        screen.blit(self.text_image, (self.width/2, self.heigh/2))
+
+    def event_handler(self, event):
+        """
+        Permet de détecter si le joueur a fait un clique gauche
+        sur le bouton.
+        """
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                if self.rect.collidepoint(event.pos):
+                    return True
+        return False
 
 def clear_lines(tableau):
     """
