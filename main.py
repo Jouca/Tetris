@@ -78,137 +78,138 @@ def display_all(window, obj):
     pygame.display.flip()
 
 
-# ## instanciation à mettre dans une fonction ?
-bag = Bag()
-game_window = Window(window_size)
-matrix = Matrix(game_window)
-next_queue = NextQueue(game_window)
-hold_queue = HoldQueue(game_window)
-menu_button = MenuButton(game_window)
-data = Data(game_window)
+def gameplay():
+    """gameplay du jeu tetris"""
+    # ## instanciation à mettre dans une fonction ?
+    bag = Bag()
+    game_window = Window(window_size)
+    matrix = Matrix(game_window)
+    next_queue = NextQueue(game_window)
+    hold_queue = HoldQueue(game_window)
+    menu_button = MenuButton(game_window)
+    data = Data(game_window)
 
-tetrimino = Tetrimino()
+    tetrimino = Tetrimino(matrix)
 
-game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
-
-display_all(game_window, game_object)
-
-
-time_before_refresh = Chronometer()
-lock_down_chrono = Chronometer()
-SHADE_PHASE = 1
-LOCK_PHASE_FIRST = 1
-
-while True:
-
-    # stocke la valeur actuelle de la taille de la fenêtre
-    window_current_size = pygame.display.get_surface().get_size()
     game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
-    current_time = time.time()
 
-    # évènements pygame
-    for event in pygame.event.get():
-        # appui sur la croix de la fenêtre
-        if event.type == pygame.QUIT:
-            # fermeture de la fenêtre
-            pygame.quit()
-            sys.exit()
+    display_all(game_window, game_object)
 
-        '''# appui sur le boutton redimensionner de la fenêtre
-        if event.type == pygame.VIDEORESIZE:
-            try:
-                print(game_window.size, FULLSCREEN_SIZE)
-                if game_window.size == FULLSCREEN_SIZE:
-                    pygame.draw.rect(tetris_window, (0, 0, 250),
-                                     pygame.Rect(0, 0, 1700, 200))
-                    pygame.display.flip()
-                    time.sleep(3)
-                    pygame.quit()
-                    sys.exit()
-            except NameError:
-                FULLSCREEN_SIZE = pygame.display.get_surface().get_size()'''
 
-        # dans le cas où l'utilisateur change la taille de la fenêtre
-        if game_window.size != window_current_size:
-            # mise à jour des attributs de l'objet Window
-            game_window.change_size(window_current_size)
-            print(game_window.size)
-            # reaffichage avec changement des tailles et emplacement des objets
-            resize_all(game_window, game_object)
-            display_all(game_window, game_object)
+    time_before_refresh = Chronometer()
+    lock_down_chrono = Chronometer()
+    SHADE_PHASE = 1
+    LOCK_PHASE_FIRST = 1
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            print(pygame.mouse.get_pos())
+    while True:
 
-        # ##guise de test
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_n:
-                matrix + tetrimino
-                ###########################
-                tetrimino = Tetrimino()
-                hold_queue.allow_hold()
-                ###########################
-                SHADE_PHASE = 1
+        # stocke la valeur actuelle de la taille de la fenêtre
+        window_current_size = pygame.display.get_surface().get_size()
+        game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
+        current_time = time.time()
+
+        # évènements pygame
+        for event in pygame.event.get():
+            # appui sur la croix de la fenêtre
+            if event.type == pygame.QUIT:
+                # fermeture de la fenêtre
+                pygame.quit()
+                sys.exit()
+
+            '''# appui sur le boutton redimensionner de la fenêtre
+            if event.type == pygame.VIDEORESIZE:
+                try:
+                    print(game_window.size, FULLSCREEN_SIZE)
+                    if game_window.size == FULLSCREEN_SIZE:
+                        pygame.draw.rect(tetris_window, (0, 0, 250),
+                                        pygame.Rect(0, 0, 1700, 200))
+                        pygame.display.flip()
+                        time.sleep(3)
+                        pygame.quit()
+                        sys.exit()
+                except NameError:
+                    FULLSCREEN_SIZE = pygame.display.get_surface().get_size()'''
+
+            # dans le cas où l'utilisateur change la taille de la fenêtre
+            if game_window.size != window_current_size:
+                # mise à jour des attributs de l'objet Window
+                game_window.change_size(window_current_size)
+                print(game_window.size)
+                # reaffichage avec changement des tailles et emplacement des objets
+                resize_all(game_window, game_object)
                 display_all(game_window, game_object)
-                matrix.clear_lines(data)
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print(pygame.mouse.get_pos())
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_SPACE:
+                    tetrimino.hard_drop(matrix)
+
+                if event.key == pygame.K_DOWN:
+                    tetrimino.fall(matrix)
+
+                if event.key == pygame.K_RIGHT:
+                    tetrimino.move_right(matrix)
+
+                if event.key == pygame.K_LEFT:
+                    tetrimino.move_left(matrix)
+
+                if event.key == pygame.K_z:
+                    tetrimino.turn_left(matrix)
+
+                if event.key == pygame.K_UP:
+                    tetrimino.turn_right(matrix)
+
+                if event.key == pygame.K_c:
+                    if hold_queue.can_hold:
+                        temp = hold_queue.get_t_type()
+                        hold_queue.hold(tetrimino)
+                        # dans le cas où la hold queue n'est pas vide
+                        if temp:
+                            tetrimino.set_type(temp)
+                            tetrimino.set_y(0)
+                        # si vide
+                        else:
+                            # création d'un nouveau tetrimino
+                            tetrimino = Tetrimino(matrix)
+
                 display_all(game_window, game_object)
-                hold_queue.can_hold = True
-
-            if event.key == pygame.K_DOWN:
-                tetrimino.fall(matrix)
-
-            if event.key == pygame.K_RIGHT:
-                tetrimino.move_right(matrix)
-
-            if event.key == pygame.K_LEFT:
-                tetrimino.move_left(matrix)
-
-            if event.key == pygame.K_z:
-                tetrimino.turn_left(matrix)
-
-            if event.key == pygame.K_UP:
-                tetrimino.turn_right(matrix)
-
-            if event.key == pygame.K_c:
-                if hold_queue.can_hold:
-                    temp = hold_queue.get_t_type()
-                    hold_queue.hold(tetrimino)
-                    # dans le cas où la hold queue n'est pas vide
-                    if temp:
-                        tetrimino.set_type(temp)
-                        tetrimino.set_y(0)
-                    # si vide
-                    else:
-                        # création d'un nouveau tetrimino
-                        tetrimino = Tetrimino()
-
+        
+        # phase précédant le lock down
+        if tetrimino.state == 1:
+            # permet de jouer sur la couleur du tetrimino
+            values = tetrimino.lock_phase(matrix, lock_down_chrono,
+                                        LOCK_PHASE_FIRST, SHADE_PHASE)
+            LOCK_PHASE_FIRST, SHADE_PHASE = values
             display_all(game_window, game_object)
-    
-    # phase précédant le lock down
-    if tetrimino.state == 1:
-        # permet de jouer sur la couleur du tetrimino
-        values = tetrimino.lock_phase(matrix, lock_down_chrono,
-                                      LOCK_PHASE_FIRST, SHADE_PHASE)
-        LOCK_PHASE_FIRST, SHADE_PHASE = values
-        display_all(game_window, game_object)
-        time.sleep(0.015)
+            time.sleep(0.015)
 
-    # phase lock down
-    elif tetrimino.state == 2:
-        matrix+tetrimino
-        tetrimino = Tetrimino()
-        hold_queue.allow_hold()
-        display_all(game_window, game_object)
-        matrix.clear_lines(data)
-        display_all(game_window, game_object)
-        time_before_refresh.reset()
-
-    # dans le cas où le tetrimino est en falling phase
-    else:
-        display_all(game_window, game_object)
-        if time_before_refresh == data.refresh:
-            tetrimino.fall(matrix)
-            # on reinitialise le chrono
+        # phase lock down
+        elif tetrimino.state == 2:
+            # le tetrimino est lock dans matrix
+            tetrimino.lock_on_matrix(matrix)
+            # le tetrimino suivant est créé
+            tetrimino = Tetrimino(matrix)
+            hold_queue.allow_hold()
+            display_all(game_window, game_object)
+            # clear les lines s'il y a
+            matrix.clear_lines(data)
+            display_all(game_window, game_object)
+            # le chronomètre est raffraîchi
             time_before_refresh.reset()
-    # ##pour tester au besoin
-    # display_all(game_window, game_object)
+
+        # dans le cas où le tetrimino est en falling phase
+        else:
+            display_all(game_window, game_object)
+            if time_before_refresh == data.refresh:
+                tetrimino.fall(matrix)
+                # on reinitialise le chrono
+                time_before_refresh.reset()
+        # ##pour tester au besoin
+        # display_all(game_window, game_object)
+
+
+if __name__ == "__main__":
+    gameplay()
