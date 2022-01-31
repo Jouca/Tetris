@@ -33,7 +33,6 @@ def display_visual_tetrimino(surface, place_properties, y_axis, t_type):
     - `t_type` : le type du tetrimino indiqué par un entier compris entre 1
     et 7 inclus"""
     tetrimino_shape = TETRIMINO_SHAPE[t_type]
-    # ##color = COLOR[TETRIMINO_DATA[t_type]['color']]
     color = Tetrimino.COLOR_SHADE[t_type][0]
     x_axis = place_properties.t_rect.x
     w_value = place_properties.t_rect.w
@@ -183,7 +182,7 @@ class Bag:
 
 
 class Matrix:
-    """modélisation de matrix dans laquelle tombe les tetrimino."""
+    """modélisation de matrix dans laquelle tombent les tetrimino."""
 
     def __init__(self, window):
         """initialisation des différents attribut de la classe Matrix."""
@@ -200,26 +199,6 @@ class Matrix:
             stock += ' '.join(str(self.content[i]))
             stock += '\n'
         return stock
-
-    def __add__(self, tetrimino):
-        """méthode spéciale permettant d'utiliser l'opérateur '+' pour
-        lock down un `tetrimino`, un objet de la classe `Tetrimino`."""
-        t_type = tetrimino.type
-        t_phasis = tetrimino.phasis
-        tetrimino_shape = tetrimino.ROTATION_PHASIS[t_type][t_phasis]
-        tetrimino_lenght = len(tetrimino_shape)
-        for i in range(tetrimino_lenght):
-            for j in range(tetrimino_lenght):
-                if tetrimino_shape[j][i] == 1:
-                    pos_y = tetrimino.y_coordinate + j
-                    pos_x = tetrimino.x_coordinate + i
-                    self.content[pos_y][pos_x] = tetrimino.type
-                    # ajoute à modelisation au besoin afin de créer
-                    # un sorte de cartographie des plus haut à chaque fois
-                    if pos_y < self.modelisation[pos_x]:
-                        self.modelisation[pos_x] = pos_y
-                        if self.modelisation[pos_x] < self.higher_row:
-                            self.higher_row = self.modelisation[pos_x]
 
     def clear_lines(self, data):
         """voir dans `diego.py` suivi d'une modification de l'attribut
@@ -270,13 +249,11 @@ class Matrix:
     def display(self, surface):
         """dessine matrix selon ses attributs sur une surface `surface` devant
         être du type pygame.Surface."""
-
         for i in range(1, 22):
             for j in range(10):
                 current_cell = self.content[i][j]
                 if current_cell:
                     # affichage d'un mino de matrix
-                    # ##color = COLOR[TETRIMINO_DATA[current_cell]['color']]
                     color = Tetrimino.COLOR_SHADE[current_cell][0]
                     pygame.draw.rect(surface,
                                      color, self.cell[j][i])
@@ -338,50 +315,12 @@ class Matrix:
                                          self.rect.w,
                                          self.cell_size))
 
-    # ##faire en sorte de ne pas tout le temps appeler cette fonction
-    # ## placer plutôt dans la classe tetrimino ?
-    def lower_tetrimino_pos(self, tetrimino):
-        """renvoie la position la plus basse pouvant être atteinte par
-        `tetrimino` afin de déterminer la position des ordonnées de la ghost
-        piece dans matrix. La méthode prend en paramètre `tetrimino` une
-        instance de la classe Tetrimino."""
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[tetrimino.type][tetrimino.phasis]
-        # récupère la véritable largeur concernée par le tetrimino
-        t_first_column = tetrimino.leftmost()
-        t_last_column = tetrimino.rightmost()
-        # nouvelle liste extraite de la liste modélisant les mino les plus
-        # haut par colonne dans matrix. Extraction des colonnes situées sous
-        # le tetrimino visuel
-        new_list = self.modelisation[t_first_column:t_last_column + 1]
-        # variable utile pour la méthode test_around de l'objet `tetrimino`
-        # afin d'éviter de calculer longueur à chaque tour de boucle
-        nb_column = len(tetrimino_shape)
-        # stockage de la valeur de l'attribut y_coordinate de `tetrimino`
-        y_coordinate = tetrimino.get_y()
-        # on place le tetrimino à la colonne la plus haute possible
-        # ## try except pour test à enlever si rien
-        try:
-            y_value_attempt = min(new_list) - nb_column
-        except:
-            print(new_list, tetrimino.type, tetrimino.phasis)
-            return "ERROR snif :')"
-        i = 1
-        # du moment que le tetrimino peut être placé sans accroc
-        while tetrimino.test_around(self, tetrimino_shape, nb_column):
-            # on incrémente pour faire descendre le tetrimino d'une ligne
-            tetrimino.set_y(y_value_attempt + i)
-            i += 1
-        # on rétablit la valeur initiale de la coordonnée y du tetrimino
-        tetrimino.set_y(y_coordinate)
-        # on renvoie la valeur d'ordonnée trouvée
-        return y_value_attempt + i - 2
-
     # ## optimiser
     def draw_ghost_piece(self, surface, tetrimino):
         """dessin de la ghost piece."""
         color = Tetrimino.COLOR_SHADE[tetrimino.type][tetrimino.shade]
         line_to_draw = Tetrimino.BORDER[tetrimino.type][tetrimino.phasis]
-        pos_y = self.lower_tetrimino_pos(tetrimino)
+        pos_y = tetrimino.lower_pos
         # dessin des lignes en haut
         for element in line_to_draw[0]:
             coordinates = element[0]
@@ -474,7 +413,7 @@ class Tetrimino(Bag, Matrix):
             changed_color = change_color_luminosity(previous_color, 14)
             COLOR_SHADE[tetrimino_type][shade] = changed_color
 
-    def __init__(self):
+    def __init__(self, matrix):
         """initialise une instance avec l'attribution de la phase à 0 ("Nord"),
         l'état à : 0 ("falling phase"), le type dépendant de la pièce en
         attente de l'instance de Bag et les attributs `x` et `y` tels qu'ils
@@ -489,6 +428,7 @@ class Tetrimino(Bag, Matrix):
         self.x_coordinate = start_center(self.type)
         # dans la skyline (en haut de la matrice)
         self.y_coordinate = 0
+        self.lower_tetrimino_pos(matrix)
         # incrémente le nombre de tetrimino créé de 1
         Tetrimino.count += 1
         # ##à enlever en fin
@@ -505,7 +445,7 @@ class Tetrimino(Bag, Matrix):
         stock += f'\n type du tetrimino : {TETRIMINO_SHAPE[self.type]}'
         return stock
 
-    # si 2 --> test pour voir si line clear ou autre, puis passage au
+    # ## si 2 --> test pour voir si line clear ou autre, puis passage au
     # tetrimino suivant version non finie, il reste à déterminer les cas
     # où le tetrimino sort de la matrice !
     def __current_state__(self):
@@ -515,6 +455,27 @@ class Tetrimino(Bag, Matrix):
         - 1 si le tetrimino est en 'lock phase', phase où le tetrimino
         s'apprête à se figer dans la matrice avec un temps escompté
         - 2 lorsque le tetrimino est en 'completion phase'"""
+    
+    def lock_on_matrix(self, matrix):
+        """Méthode permettant de lock un tetrimino (celui de l'instance),
+        dans sur la matrix de jeu. `matrix` est une instance de la classe
+        Matrix."""
+        t_type = self.type
+        t_phasis = self.phasis
+        tetrimino_shape = self.ROTATION_PHASIS[t_type][t_phasis]
+        tetrimino_lenght = len(tetrimino_shape)
+        for i in range(tetrimino_lenght):
+            for j in range(tetrimino_lenght):
+                if tetrimino_shape[j][i] == 1:
+                    pos_y = self.y_coordinate + j
+                    pos_x = self.x_coordinate + i
+                    matrix.content[pos_y][pos_x] = self.type
+                    # ajoute à modelisation au besoin afin de créer
+                    # un sorte de cartographie des plus haut à chaque fois
+                    if pos_y < matrix.modelisation[pos_x]:
+                        matrix.modelisation[pos_x] = pos_y
+                        if matrix.modelisation[pos_x] < matrix.higher_row:
+                            matrix.higher_row = matrix.modelisation[pos_x]
 
     def can_fall(self, matrix):
         """test afin de vérifier si un tetrimino peut tomber.
@@ -618,6 +579,20 @@ class Tetrimino(Bag, Matrix):
         self.x_coordinate = coordinates[0]
         self.y_coordinate = coordinates[1]
         return False
+    
+    # ## incrémentation score
+    def hard_drop(self):
+        self.y_coordinate = self.lower_pos
+        self.state = 2
+    
+    # ## voir si amélioration possible
+    def soft_drop(self, matrix, data):
+        if self.can_fall(matrix):
+            data.score_increase(1)
+            return
+        # le test a échoué, le tetrimino ne peut pas tomber,
+        # on passe en lock phase
+        self.state = 1
 
     # fonction améliorable
     def lock_phase(self, matrix, chrono, first, phase):
@@ -658,6 +633,43 @@ class Tetrimino(Bag, Matrix):
             # on change de phase
             phase = (phase + 1) % 2
         return first, phase
+    
+    # ## soucis à fix
+    def lower_tetrimino_pos(self, matrix):
+        """renvoie la position la plus basse pouvant être atteinte par
+        l'instance afin de déterminer la position des ordonnées de la ghost
+        piece dans `matrix`. La méthode prend en paramètre `matrix` une
+        instance de la classe Matrix."""
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        # récupère la véritable largeur concernée par le tetrimino
+        t_first_column = self.leftmost()
+        t_last_column = self.rightmost()
+        # nouvelle liste extraite de la liste modélisant les mino les plus
+        # haut par colonne dans matrix. Extraction des colonnes situées sous
+        # le tetrimino visuel dans une nouvelle liste
+        new_list = matrix.modelisation[t_first_column:t_last_column + 1]
+        # variable utile pour la méthode test_around de l'objet `tetrimino`
+        # afin d'éviter de calculer la longueur à chaque tour de boucle
+        nb_column = len(tetrimino_shape)
+        # stockage de la valeur de l'attribut y_coordinate de `tetrimino`
+        y_coordinate = self.y_coordinate
+        # on place le tetrimino à la colonne la plus haute possible
+        # ## try except pour test à enlever si rien
+        try:
+            y_value_attempt = min(new_list) - nb_column
+        except:
+            print(new_list, self.type, self.phasis)
+            return "ERROR snif :')"
+        i = 1
+        # du moment que le tetrimino peut être placé sans accroc
+        while self.test_around(matrix, tetrimino_shape, nb_column):
+            # on incrémente pour faire descendre le tetrimino d'une ligne
+            self.y_coordinate = y_value_attempt + i
+            i += 1
+        # on rétablit la valeur initiale de la coordonnée y du tetrimino
+        self.y_coordinate = y_coordinate
+        # on renvoie la valeur d'ordonnée trouvée
+        self.lower_pos = y_value_attempt + i - 2
 
     def display(self, surface):
         """affiche l'instance de tetrimino en fonction de ses spécificités."""
@@ -718,6 +730,8 @@ class Tetrimino(Bag, Matrix):
         if self.leftmost() > 0:
             self.x_coordinate -= 1
             if self.test_around(matrix, tetrimino_shape, nb_column):
+                # redéfini emplacement de la ghost piece
+                self.lower_tetrimino_pos(matrix)
                 return
             # le test a échoué, le tetrimino ne peut pas aller à gauche
             self.x_coordinate += 1
@@ -728,6 +742,8 @@ class Tetrimino(Bag, Matrix):
         nb_column = len(tetrimino_shape)
         self.x_coordinate += 1
         if self.test_around(matrix, tetrimino_shape, nb_column):
+            # redéfini emplacement de la ghost piece
+            self.lower_tetrimino_pos(matrix)
             return
         # le test a échoué, le tetrimino ne peut pas aller à droite
         self.x_coordinate -= 1
@@ -739,6 +755,8 @@ class Tetrimino(Bag, Matrix):
         phasis = (self.phasis - 1) % 4
         if self.super_rotation_system(matrix, phasis):
             self.phasis = phasis
+            # redéfini emplacement de la ghost piece
+            self.lower_tetrimino_pos(matrix)
 
     def turn_right(self, matrix):
         """permet de tourner le tetrimino de 90° dans le sens
@@ -746,6 +764,8 @@ class Tetrimino(Bag, Matrix):
         phasis = (self.phasis + 1) % 4
         if self.super_rotation_system(matrix, phasis):
             self.phasis = phasis
+            # redéfini emplacement de la ghost piece
+            self.lower_tetrimino_pos(matrix)
 
     def set_type(self, new_type):
         """change le type d'un tetrimino pour `new_type` un entier
@@ -913,7 +933,7 @@ class NextQueue(Bag, Matrix):
                                      self.next_y[i - 1], self.content[-i])
 
 
-# ## à changer, utiliser classe boutton retravaillé par Bastien
+# ## à changer, utiliser classe Button retravaillé par Bastien
 class MenuButton(HoldQueue):
     """crée le boutton de jeu."""
 
@@ -945,7 +965,7 @@ class Data(HoldQueue):
         """méthode constructeur de la classe. Initialise le score les données
         d'une parties."""
         self.resize(window)
-        self.score = 0
+        self.score = '0'.zfill(10)
         self.level = 1
         self.line_clear = 0
         self.set_refresh()
@@ -954,6 +974,29 @@ class Data(HoldQueue):
         """met à jour la valeur du temps entre chaque frame du jeu en accord
         avec la guideline officiel du jeu."""
         self.refresh = (0.8 - (self.level - 1) * 0.007) ** (self.level - 1)
+    
+    """SCORING (aide-mémoire) :
+    The player scores points by performing Single, Double, Triple, and Tetris Line Clears, as well as 
+    T-Spins and Mini T-Spins. Soft and Hard Drops also award points. There is a special bonus for 
+    Back-to-Backs, which is when two actions such as a Tetris and T-Spin Double (see complete 
+    list below) take place without a Single, Double, or Triple Line Clear occurring between them. 
+    Scoring for Line Clears, T-Spins, and Mini T-Spins are level dependent, while Hard and Soft Drop 
+    point values remain constant. Levels typically start at 1 and end at 15.
+
+    Action              Action Total        Description
+    Single              100 x Level         1 line of Blocks is cleared.
+    Double              300 x Level         2 lines of Blocks are simultaneously cleared.
+    Triple              500 x Level         3 lines of Blocks are simultaneously cleared.
+    Tetris              800 x Level         4 lines of Blocks are simultaneously cleared.
+    Mini T-Spin         100 x Level         An easier T-Spin with no Line Clear. 
+    Mini T-Spin Single  200 x Level         An easier T-Spin clearing 1 line of Blocks.
+    T-Spin              400 x Level         T-Tetrimino is spun into a T-Slot with no Line Clear.
+    T-Spin Single       800 x Level         T-Spin clearing 1 line of Blocks.
+    T-Spin Double       1200 x Level        T-Spin simultaneously clearing 2 lines of 10 Blocks.
+    T-Spin Triple       1600 x Level        T-Spin simultaneously clearing 3 lines of 10 Blocks.
+    Back-to-Back Bonus  0.5 x Action        Total Bonus for Tetrises, T-Spin Line Clears, and Mini T-Spin Line Clears performed consecutively in a B2B sequence.
+    Soft Drop           1 x n               Tetrimino is Soft Dropped for n lines
+    Hard Drop           2 x m               Tetrimino is Hard Dropped for m lines"""
 
     def resize(self, window):
         """change les attributs relatifs aux dimensions de l'encadré."""
@@ -968,6 +1011,9 @@ class Data(HoldQueue):
         h_value = self.cell_size * 21 - y_axis + window.margin
         self.rect = pygame.Rect(x_axis, y_axis, w_value, h_value)
         # changer en information pour le texte
+        self.margin = 10
+        self.message = 'HI THERE'
+
         """# informations de l'emplacement tetrimino
         self.t_w = self.cell_size * 3
         self.t_h = self.cell_size * 2
@@ -977,3 +1023,8 @@ class Data(HoldQueue):
     def add_to_line_clear(self, value_to_add):
         """ajoute `value_to_add` au nombre de line_clear."""
         self.line_clear += value_to_add
+
+    def score_increase(self, value_to_add):
+        score = int(self.score) + value_to_add
+        self.score = str(score).zfill(10)
+        
