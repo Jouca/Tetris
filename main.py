@@ -10,6 +10,7 @@ import tkinter
 import sys
 import time
 import pygame
+import pygame.freetype
 from modules.solene import Bag, HoldQueue, Matrix, NextQueue
 from modules.solene import Tetrimino, Window, MenuButton, Data, Chronometer
 
@@ -31,6 +32,9 @@ FULLSCREEN_WIDTH = tk.winfo_screenwidth()
 WINDOW_HEIGHT = round(tk.winfo_screenheight() * 2/3)
 WINDOW_WIDTH = round(WINDOW_HEIGHT * 1.8)
 
+# font du jeu
+game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 18)
+scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 30)
 
 # définition de la fenêtre pygame de taille dynamique
 tetris_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.RESIZABLE, 64)
@@ -61,7 +65,7 @@ def display_all(window, obj):
     contenant les objets dont les caractéristiques ont été
     mis à jour."""
     frame = pygame.Surface(window.size)
-    # affichage de l'image pour le boutton des menu
+    # affichage de l'image pour le boutton des menus, ## voir arrangement
     menu_image = pygame.transform.scale(menubutton,
                                         (obj[4].rect.w,
                                         obj[4].rect.h))
@@ -74,7 +78,25 @@ def display_all(window, obj):
             pygame.image.save(tetris_window, "screenshot.jpeg")
     # frame sur la fenêtre
     tetris_window.blit(frame, (0, 0))
+    # ## voir à supprimer
+    display_game_data(obj[5])
     # rafraichissement de la fenêtre pygame
+    pygame.display.flip()
+
+
+def display_game_data(data):
+    # création d'une d'un objet pygame.Surface de la taille de l'encadré data
+    frame = pygame.Surface((data.rect.w - 2 * data.width, data.rect.h - 2 * data.width))
+    # ## en guise de test
+    frame.fill(0x440000)
+    message_erreur = scoring_data_name.render(data.message, 1, (255,255,255))
+    score = scoring_data_name.render(data.score, 1, (255,255,255))
+    rect = pygame.Surface(score.get_size())
+    rect.fill(0x004400)
+    frame.blit(rect, (data.margin, data.margin * 5))
+    frame.blit(message_erreur, (data.margin, data.margin))
+    frame.blit(score, (data.margin, data.margin * 5))
+    tetris_window.blit(frame, (data.rect.x + data.width , data.rect.y + data.width))
     pygame.display.flip()
 
 
@@ -106,7 +128,6 @@ def gameplay():
         # stocke la valeur actuelle de la taille de la fenêtre
         window_current_size = pygame.display.get_surface().get_size()
         game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
-        current_time = time.time()
 
         # évènements pygame
         for event in pygame.event.get():
@@ -145,10 +166,10 @@ def gameplay():
             if event.type == pygame.KEYDOWN:
 
                 if event.key == pygame.K_SPACE:
-                    tetrimino.hard_drop(matrix)
+                    tetrimino.hard_drop()
 
                 if event.key == pygame.K_DOWN:
-                    tetrimino.fall(matrix)
+                    tetrimino.soft_drop(matrix, data)
 
                 if event.key == pygame.K_RIGHT:
                     tetrimino.move_right(matrix)
@@ -209,6 +230,7 @@ def gameplay():
                 time_before_refresh.reset()
         # ##pour tester au besoin
         # display_all(game_window, game_object)
+        display_game_data(data)
 
 
 if __name__ == "__main__":
