@@ -1,3 +1,12 @@
+'''- la méthode lower_tetrimino_pos a été déplacé dans la classe Tetrimino où elle est plus appropriée notamment comme attribut utile à l'action hard drop. De plus elle n'est plus appelée à chaque tour de boucle ce qui est meilleur au niveau des performances du jeu ;
+- ajout de la méthode hard_drop permettant au joueur de réaliser un hard drop, action de faire tomber le tetrimino directement à la position la plus basse possible dans matrix avant que celui-ci ne soit bloqué ;
+- déplacement de la méthode __add__ dans tetrimino renommé en lock_on_matrix afin que le code gagne en clarté.
+- ajout méthode soft_drop dans la classe Tetrimino.
+- début des modifications afin d'implémenter le score et autres informations de jeu (logique et graphique)'''
+
+# supprimer des attributs avec delattr(self, 'field_to_delete') super().__init__(*args, **kwargs)
+# à fix soucis hard drop en continu
+
 """module codé par Solène (@periergeia) TG8, contenant diverses classes et
 fonctions utiles au bon fonctionnement du jeu Tetris."""
 
@@ -16,9 +25,13 @@ import random
 import colorsys
 import time
 import pygame
+import pygame.freetype
 from others.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT
 from modules.diego import clear_lines
 from modules.paul import border_dict
+
+# initialisation de pygame pour pygame.freetype
+pygame.init()
 
 
 def display_visual_tetrimino(surface, place_properties, y_axis, t_type):
@@ -111,7 +124,6 @@ def change_color_luminosity(color, rate_of_change):
     return tuple(final_color)
 
 
-# j'aurais préféré mettre une
 class Window:
     """objet stockant les propriétés de la fenêtre."""
 
@@ -373,6 +385,7 @@ class Matrix:
             # pour le moment
             except KeyError:
                 pass
+
 
 def start_center(tetrimino_type):
     """indique l'indice permettant de centrer un tetrimino
@@ -961,14 +974,25 @@ class Data(HoldQueue):
     attributs permettant de tracer l'encadré d'affichage du score, niveau,
     nombre de line clear."""
 
-    def __init__(self, window):
+    game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 30)
+    scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 30)
+
+    def __init__(self, window, data_text_list):
         """méthode constructeur de la classe. Initialise le score les données
         d'une parties."""
         self.resize(window)
+        self.create_font_rect_dict(data_text_list)
         self.score = '0'.zfill(10)
         self.level = 1
         self.line_clear = 0
         self.set_refresh()
+    
+    def create_font_rect_dict(self, data_text_list):
+        font_rect_value = []
+        for element in data_text_list:
+            data_name = Data.scoring_data_name.render(element, 1, (255,255,255))
+            font_rect_value.append(data_name.get_size())
+        self.font_rect_dict = font_rect_value
 
     def set_refresh(self):
         """met à jour la valeur du temps entre chaque frame du jeu en accord
@@ -1011,7 +1035,8 @@ class Data(HoldQueue):
         h_value = self.cell_size * 21 - y_axis + window.margin
         self.rect = pygame.Rect(x_axis, y_axis, w_value, h_value)
         # changer en information pour le texte
-        self.margin = 10
+        self.margin = h_value // 11
+        print(self.margin)
         self.message = 'HI THERE'
 
         """# informations de l'emplacement tetrimino
@@ -1019,6 +1044,9 @@ class Data(HoldQueue):
         self.t_h = self.cell_size * 2
         self.t_x = self.x + (self.w - self.t_w) // 2
         self.t_y = self.y + (self.w - self.t_h) // 2"""
+    
+    def font_resize(self, current_size):
+        ...
 
     def add_to_line_clear(self, value_to_add):
         """ajoute `value_to_add` au nombre de line_clear."""
