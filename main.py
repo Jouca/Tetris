@@ -1,6 +1,3 @@
-'''
-'''
-
 """fichier python principal du jeu Tetris codé en tant que projet de deuxième
 trimestre pour la spécialité NSI."""
 
@@ -56,32 +53,39 @@ pygame.display.set_caption("TETRIS")
 window_size = pygame.display.get_surface().get_size()
 
 
-def resize_all(window_ob, obj):
-    """"redimensionne tous les objets nécéssitant d'être
-    redimensionnés."""
+def resize_all(window, obj):
+    """"redimensionne toutes les choses nécéssitant d'être
+    redimensionnées."""
+    # redimensionne chaque objet avec leur méthode resize
     for element in obj[1:]:
-        element.resize(window_ob)
+        element.resize(window)
+    # redimensionne les emplacements des fonts pour l'affichage des
+    # informations du jeu en cours
+    obj[-1].font_resize(window.size)
 
 
 def display_all(window, obj):
     """raffraîchit le jeu en faisant afficher une frame,
     contenant les objets dont les caractéristiques ont été
     mis à jour."""
+    # création d'une frame
     frame = pygame.Surface(window.size)
-    # affichage de l'image pour le boutton des menus, ## voir arrangement
+    # affichage de l'image pour le boutton des menus, ## voir arrangement ?
     menu_image = pygame.transform.scale(menubutton,
                                         (obj[4].rect.w,
                                         obj[4].rect.h))
     frame.blit(menu_image, (obj[4].rect.x, obj[4].rect.y))
+    # affiche chaque objet avec leur méthode display
     for element in obj:
         element.display(frame)
     # dessin de la ghost piece
     if obj[0].state != 2:
+        # ## test à enlever si pas de soucis
         if obj[1].draw_ghost_piece(frame, obj[0]) == "ERROR snif :')":
             pygame.image.save(tetris_window, "screenshot.jpeg")
     # frame sur la fenêtre
     tetris_window.blit(frame, (0, 0))
-    # ## voir à supprimer
+    # ## voir à supprimer ?
     display_game_data(obj[5])
     # rafraichissement de la fenêtre pygame
     pygame.display.flip()
@@ -94,13 +98,64 @@ def display_game_data(data):
     frame.fill(0x440000)
     message_erreur = scoring_data_name.render(data.message, 1, (255,255,255))
     score = scoring_data_name.render(data.score, 1, (255,255,255))
+    score_w, score_h = score.get_size() ##
+
+    # ##data.resize_font(score.get_size())
+    score = pygame.transform.scale(score, (score_w //2, score_h //2)) ##
+    
     rect = pygame.Surface(score.get_size())
     rect.fill(0x004400)
+    
     frame.blit(rect, (data.margin, data.margin * 5))
     frame.blit(message_erreur, (data.margin, data.margin))
     frame.blit(score, (data.margin, data.margin * 5))
     tetris_window.blit(frame, (data.rect.x + data.width , data.rect.y + data.width))
     pygame.display.flip()
+
+
+# ## voir à déplacer dans un autre fichier ?
+def get_file_lst(lang, line, file_name, as_string=True):
+    """ renvoie une liste de chaîne de caractères séparées par '|' lorsque
+    `line` est spécifiée, sinon elle renvoie la liste de toutes les chaînes
+    du fichier texte spécifiés dans le répertoire `lang` contenu dans le
+    répertoire "game_string", portant le nom `file_name`, `as_string` s'il
+    vaut True convertit la liste en un string avec pour séparateur, le saut
+    de ligne """
+    # voir à enlever partie si non string en commun
+    if lang == '/':
+        file = open(f'others/game_string/{file_name}.txt', 'r', encoding='utf-8')
+    else:
+        path = 'others/game_string/{}/{}.txt'.format(lang, file_name)
+        file = open(path, 'r', encoding='utf-8')
+    file_as_list = list(file)
+    file.close()
+    try:
+        list_element_line = file_as_list[line-1][:-1].split('|')
+        if as_string:
+            text = ''
+            for element in list_element_line:
+                text += element
+                text += '\n'
+            return text[:-1]
+        return list_element_line
+    except TypeError:
+        return file_as_list
+
+
+def get_str(lang, file_name, line=None):
+    """permet d'obtenir la chaîne de caractère voulue spécifiée par la ligne
+    `line` dans le fichier `file_name`."""
+    file = get_file_lst(lang, None, file_name)
+    return file[line-1][:-1]
+
+
+# mieux si dans classe, ici pour le moment cause : soucis chemin fichiers
+def data_name_list(lang):
+    return get_file_lst(lang, 1, 'data_name', False)
+
+
+# déplacer plus haut lors réorganisation
+lang = 'EN'
 
 
 def gameplay():
@@ -112,7 +167,8 @@ def gameplay():
     next_queue = NextQueue(game_window)
     hold_queue = HoldQueue(game_window)
     menu_button = MenuButton(game_window)
-    data = Data(game_window)
+    # voir à déplacer ?
+    data = Data(game_window, data_name_list(lang))
 
     tetrimino = Tetrimino(matrix)
 
