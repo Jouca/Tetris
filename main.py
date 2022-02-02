@@ -33,8 +33,8 @@ WINDOW_HEIGHT = round(tk.winfo_screenheight() * 2/3)
 WINDOW_WIDTH = round(WINDOW_HEIGHT * 1.8)
 
 # font du jeu
-game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 18)
-scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 30)
+game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 15)
+scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 15)
 
 # définition de la fenêtre pygame de taille dynamique
 tetris_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.RESIZABLE, 64)
@@ -61,7 +61,7 @@ def resize_all(window, obj):
         element.resize(window)
     # redimensionne les emplacements des fonts pour l'affichage des
     # informations du jeu en cours
-    obj[-1].font_resize(window.size)
+    obj[-1].font_resize()
 
 
 def display_all(window, obj):
@@ -92,25 +92,70 @@ def display_all(window, obj):
 
 
 def display_game_data(data):
+    # utiliser autre méthode si possible
+    temp = [1, None, 0, 1, None, 0, 0, 0, 1, 0, 1, 0, 1]
+    # création d'une d'un objet pygame.Surface de la taille de l'encadré data
+    frame = pygame.Surface((data.rect.w - 2 * data.width, data.rect.h - 2 * data.width))
+    # ## en guise de test
+    frame.fill(0x440000)
+    score = scoring_data_name.render(data.score, 1, (255,255,255))
+
+    rect2 = pygame.Surface(data.font_place)  # 5/13 = 0.2173
+    rect2.fill(0x004444)
+    frame.blit(rect2, (data.margin // 2, data.margin))
+
+    y = data.margin
+    font_h = data.font_rect_dict[0].get_size()
+    i = 0
+    for e in temp:
+        if e == 1:
+            frame.blit(data.font_rect_dict[i], (data.margin, y))
+            i += 1
+            y += font_h[1]
+        elif e == None:
+            frame.blit(score, (data.margin, y))
+            y += font_h[1]
+        else:
+            y += data.space_between_string
+
+    tetris_window.blit(frame, (data.rect.x + data.width , data.rect.y + data.width))
+    pygame.display.flip()
+
+
+'''def display_game_data(data):
     # création d'une d'un objet pygame.Surface de la taille de l'encadré data
     frame = pygame.Surface((data.rect.w - 2 * data.width, data.rect.h - 2 * data.width))
     # ## en guise de test
     frame.fill(0x440000)
     message_erreur = scoring_data_name.render(data.message, 1, (255,255,255))
     score = scoring_data_name.render(data.score, 1, (255,255,255))
-    score_w, score_h = score.get_size() ##
 
     # ##data.resize_font(score.get_size())
-    score = pygame.transform.scale(score, (score_w //2, score_h //2)) ##
-    
+    # score = pygame.transform.scale(score, (score_w //2, score_h //2)) ##
+
+    y = 8
+    for i in range(5):
+        frame.blit(data.font_rect_dict[i], (data.margin, y))
+        size = data.font_rect_dict[i].get_size()
+        y += size[1]
+
+    rect2 = pygame.Surface(data.font_place)  # 5/13 = 0.2173
+    rect2.fill(0x004444)
+    frame.blit(rect2, (data.margin // 2, data.margin))
+
+    w, h = message_erreur.get_size()
+    rect3 = pygame.Surface((w, h-(round(2 * (0.218 * h)))))  # 5/13 = 0.2173
+    rect3.fill(0x000044)
+    frame.blit(rect3, (data.margin, data.margin + 0.218 * h))
+
     rect = pygame.Surface(score.get_size())
     rect.fill(0x004400)
-    
     frame.blit(rect, (data.margin, data.margin * 5))
+
     frame.blit(message_erreur, (data.margin, data.margin))
     frame.blit(score, (data.margin, data.margin * 5))
     tetris_window.blit(frame, (data.rect.x + data.width , data.rect.y + data.width))
-    pygame.display.flip()
+    pygame.display.flip()'''
 
 
 # ## voir à déplacer dans un autre fichier ?
