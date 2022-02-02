@@ -1,12 +1,3 @@
-'''- la méthode lower_tetrimino_pos a été déplacé dans la classe Tetrimino où elle est plus appropriée notamment comme attribut utile à l'action hard drop. De plus elle n'est plus appelée à chaque tour de boucle ce qui est meilleur au niveau des performances du jeu ;
-- ajout de la méthode hard_drop permettant au joueur de réaliser un hard drop, action de faire tomber le tetrimino directement à la position la plus basse possible dans matrix avant que celui-ci ne soit bloqué ;
-- déplacement de la méthode __add__ dans tetrimino renommé en lock_on_matrix afin que le code gagne en clarté.
-- ajout méthode soft_drop dans la classe Tetrimino.
-- début des modifications afin d'implémenter le score et autres informations de jeu (logique et graphique)'''
-
-# supprimer des attributs avec delattr(self, 'field_to_delete') super().__init__(*args, **kwargs)
-# à fix soucis hard drop en continu
-
 """module codé par Solène (@periergeia) TG8, contenant diverses classes et
 fonctions utiles au bon fonctionnement du jeu Tetris."""
 
@@ -974,8 +965,8 @@ class Data(HoldQueue):
     attributs permettant de tracer l'encadré d'affichage du score, niveau,
     nombre de line clear."""
 
-    game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 30)
-    scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 30)
+    game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 15)
+    scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 15)
 
     def __init__(self, window, data_text_list):
         """méthode constructeur de la classe. Initialise le score les données
@@ -987,12 +978,22 @@ class Data(HoldQueue):
         self.line_clear = 0
         self.set_refresh()
     
+    # ##voir à changer nom si non liste décision finale
     def create_font_rect_dict(self, data_text_list):
         font_rect_value = []
         for element in data_text_list:
             data_name = Data.scoring_data_name.render(element, 1, (255,255,255))
-            font_rect_value.append(data_name.get_size())
+            # font_rect_value.append(data_name.get_size())
+            font_rect_value.append(data_name)
         self.font_rect_dict = font_rect_value
+        self.font_resize()
+    
+    def font_resize(self):
+        font_place = self.font_rect_dict[0].get_size()
+        font_total_place = 7 * font_place[1]
+        self.space_between_string = (self.font_place[1] - font_total_place) // 6
+        '''for i in range():
+        self.font_rect_dict'''
 
     def set_refresh(self):
         """met à jour la valeur du temps entre chaque frame du jeu en accord
@@ -1038,15 +1039,12 @@ class Data(HoldQueue):
         self.margin = h_value // 11
         print(self.margin)
         self.message = 'HI THERE'
-
+        self.font_place = (w_value - self.margin, h_value - 2 * self.margin)
         """# informations de l'emplacement tetrimino
         self.t_w = self.cell_size * 3
         self.t_h = self.cell_size * 2
         self.t_x = self.x + (self.w - self.t_w) // 2
         self.t_y = self.y + (self.w - self.t_h) // 2"""
-    
-    def font_resize(self, current_size):
-        ...
 
     def add_to_line_clear(self, value_to_add):
         """ajoute `value_to_add` au nombre de line_clear."""
