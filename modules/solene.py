@@ -212,6 +212,9 @@ class Matrix:
         if nb_line_cleared > 0:
             # ajoute le nombre de line_clear aux informations du jeu
             data.add_to_line_clear(nb_line_cleared)
+            # ## placer dans constantes ?
+            POINT = {1: 100, 2: 300, 3: 500, 4: 800}
+            data.score_increase(data.level * POINT[nb_line_cleared])
             for i in range(10):
                 if self.modelisation[i] != 22:
                     self.modelisation[i] += 1
@@ -848,6 +851,7 @@ class HoldQueue(Matrix):
         t_x = self.rect.x + (self.rect.w - t_w) // 2
         t_y = self.rect.y + (self.rect.w - t_h) // 2
         self.t_rect = pygame.Rect(t_x, t_y, t_w, t_h)
+        print(f'1                  {self.rect}')
 
     def display(self, surface):
         """affichage de l'encadré associé à la hold queue, avec si y a le
@@ -965,8 +969,8 @@ class Data(HoldQueue):
     attributs permettant de tracer l'encadré d'affichage du score, niveau,
     nombre de line clear."""
 
-    game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 15)
-    scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 15)
+    game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 18)
+    scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 18)
 
     def __init__(self, window, data_text_list):
         """méthode constructeur de la classe. Initialise le score les données
@@ -975,6 +979,7 @@ class Data(HoldQueue):
         self.create_font_rect_dict(data_text_list)
         self.score = '0'.zfill(10)
         self.level = 1
+        # ## ajouter self.goal voir pour organisation
         self.line_clear = 0
         self.set_refresh()
     
@@ -991,6 +996,8 @@ class Data(HoldQueue):
     def font_resize(self):
         font_place = self.font_rect_dict[0].get_size()
         font_total_place = 7 * font_place[1]
+        print(f'font_total_place : {font_total_place}')
+        print(f'font_place : {self.font_place[1]}')
         self.space_between_string = (self.font_place[1] - font_total_place) // 6
         '''for i in range():
         self.font_rect_dict'''
@@ -1027,19 +1034,16 @@ class Data(HoldQueue):
         """change les attributs relatifs aux dimensions de l'encadré."""
         # informations générales de l'emplacement de l'encadré
         super().resize(window)
-        x_axis = self.rect.x - self.rect.w
-        # ##si la marge n'est pas respectée
-        if x_axis > window.margin:
-            pass
-        w_value = self.rect.w * 2
+        x_axis = 3 * window.margin
+        w_value = self.rect.w + self.rect.x - x_axis
         y_axis = self.rect.y + self.rect.h * 2
         h_value = self.cell_size * 21 - y_axis + window.margin
         self.rect = pygame.Rect(x_axis, y_axis, w_value, h_value)
         # changer en information pour le texte
         self.margin = h_value // 11
-        print(self.margin)
         self.message = 'HI THERE'
         self.font_place = (w_value - self.margin, h_value - 2 * self.margin)
+        print(f'data.font_place = {self.font_place}')
         """# informations de l'emplacement tetrimino
         self.t_w = self.cell_size * 3
         self.t_h = self.cell_size * 2
