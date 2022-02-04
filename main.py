@@ -31,13 +31,14 @@ tk.withdraw()
 FULLSCREEN_WIDTH = tk.winfo_screenwidth()
 WINDOW_HEIGHT = round(tk.winfo_screenheight() * 2/3)
 WINDOW_WIDTH = round(WINDOW_HEIGHT * 1.8)
+WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 
 # font du jeu
-game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 15)
-scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 15)
+game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 18)
+scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 18)
 
 # définition de la fenêtre pygame de taille dynamique
-tetris_window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.RESIZABLE, 64)
+tetris_window = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE, 64)
 
 # importation d'images
 icon = pygame.image.load("image/logo.ico").convert_alpha()
