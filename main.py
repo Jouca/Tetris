@@ -6,30 +6,24 @@ trimestre pour la spécialité NSI."""
 # touches de clavier et boutons de fenêtre, ...
 
 # importations des librairies python
-import tkinter
 import sys
 import time
 import pygame
 import pygame.freetype
 from modules.solene import Bag, HoldQueue, Matrix, NextQueue
-from modules.solene import Tetrimino, Window, MenuButton, Data, Chronometer
+from modules.solene import Tetrimino, MenuButton, Data, Chronometer
 
 
 # initialisation de pygame
 pygame.init()
 
-# préréglage du module mixer
+'''# préréglage du module mixer
 pygame.mixer.pre_init(44100, -16, 2, 1024)
-pygame.mixer.music.set_volume(0.4)
-
-# création d'un objet tkinter afin de récupérer
-# les données liées à la taille de l'écran
-tk = tkinter.Tk()
-tk.withdraw()
+pygame.mixer.music.set_volume(0.4)'''
 
 
-FULLSCREEN_WIDTH = tk.winfo_screenwidth()
-WINDOW_HEIGHT = round(tk.winfo_screenheight() * 2/3)
+FULLSCREEN_WIDTH = pygame.display.get_desktop_sizes()[0][1]
+WINDOW_HEIGHT = round(FULLSCREEN_WIDTH * 2/3)
 WINDOW_WIDTH = round(WINDOW_HEIGHT * 1.8)
 WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 
@@ -37,11 +31,17 @@ WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 18)
 scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 18)
 
+
 # définition de la fenêtre pygame de taille dynamique
-tetris_window = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE, 64)
+tetris_window = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
+window_data = {'size' : WINDOW_SIZE,
+               'width': WINDOW_WIDTH,
+               'height': WINDOW_HEIGHT,
+               'margin': round(0.05 * WINDOW_HEIGHT)}
+
 
 # importation d'images
-icon = pygame.image.load("image/logo.ico").convert_alpha()
+icon = pygame.image.load("image/window_logo.png").convert_alpha()
 # prop = pygame.image.load("prop2.png").convert_alpha()
 menubutton = pygame.image.load("image/menubutton.png").convert_alpha()
 
@@ -50,8 +50,7 @@ pygame.display.flip()"""
 
 # personnalisation de la fenêtre
 pygame.display.set_caption("TETRIS")
-# pygame.display.set_icon(icon)
-window_size = pygame.display.get_surface().get_size()
+pygame.display.set_icon(icon)
 
 
 def resize_all(window, obj):
@@ -70,7 +69,7 @@ def display_all(window, obj):
     contenant les objets dont les caractéristiques ont été
     mis à jour."""
     # création d'une frame
-    frame = pygame.Surface(window.size)
+    frame = pygame.Surface(window['size'])
     # affichage de l'image pour le boutton des menus, ## voir arrangement ?
     menu_image = pygame.transform.scale(menubutton,
                                         (obj[4].rect.w,
@@ -97,8 +96,6 @@ def display_game_data(data):
     temp = [1, None, 0, 1, None, 0, 0, 0, 1, 0, 1, 0, 1]
     # création d'une d'un objet pygame.Surface de la taille de l'encadré data
     frame = pygame.Surface((data.rect.w - 2 * data.width, data.rect.h - 2 * data.width))
-    # ## en guise de test
-    frame.fill(0x440000)
     score = scoring_data_name.render(data.score, 1, (255,255,255))
 
     rect2 = pygame.Surface(data.font_place)  # 5/13 = 0.2173
@@ -110,11 +107,20 @@ def display_game_data(data):
     i = 0
     for e in temp:
         if e == 1:
-            frame.blit(data.font_rect_dict[i], (data.margin, y))
+            a, b = data.font_dict[i].get_size()
+            rect = pygame.Surface((a, b))  # 5/13 = 0.2173
+            rect.fill(0x660044)
+            frame.blit(rect, (data.margin // 2, y))
+            frame.blit(data.font_dict[i], (data.margin // 2, y))
             i += 1
             y += font_h[1]
         elif e == None:
-            frame.blit(score, (data.margin, y))
+            a, b = score.get_size()
+            rect = pygame.Surface((a, b))  # 5/13 = 0.2173
+            rect.fill(0x6666)
+            frame.blit(rect, (data.margin // 2, y))
+
+            frame.blit(score, (data.margin // 2, y))
             y += font_h[1]
         else:
             y += data.space_between_string
@@ -200,27 +206,38 @@ def data_name_list(lang):
     return get_file_lst(lang, 1, 'data_name', False)
 
 
+def game_pause():
+    pass
+
 # déplacer plus haut lors réorganisation
 lang = 'EN'
 
+# provisoire, sans les menus
+level = 4
+mode_B = False
 
-def gameplay():
+
+def gameplay(tetris_window):
     """gameplay du jeu tetris"""
+    w_width, w_height = tetris_window.get_size()
+    window_data = {'size' : (w_width, w_height),
+                   'width': w_width,
+                   'height': w_height,
+                   'margin': round(0.05 * w_height)}
     # ## instanciation à mettre dans une fonction ?
     bag = Bag()
-    game_window = Window(window_size)
-    matrix = Matrix(game_window)
-    next_queue = NextQueue(game_window)
-    hold_queue = HoldQueue(game_window)
-    menu_button = MenuButton(game_window)
+    matrix = Matrix(window_data, level, mode_B)
+    next_queue = NextQueue(window_data)
+    hold_queue = HoldQueue(window_data)
+    menu_button = MenuButton(window_data)
     # voir à déplacer ?
-    data = Data(game_window, data_name_list(lang))
+    data = Data(window_data, data_name_list(lang), level, mode_B)
 
     tetrimino = Tetrimino(matrix)
 
     game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
 
-    display_all(game_window, game_object)
+    display_all(window_data, game_object)
 
 
     time_before_refresh = Chronometer()
@@ -230,8 +247,6 @@ def gameplay():
 
     while True:
 
-        # stocke la valeur actuelle de la taille de la fenêtre
-        window_current_size = pygame.display.get_surface().get_size()
         game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
 
         # évènements pygame
@@ -241,37 +256,34 @@ def gameplay():
                 # fermeture de la fenêtre
                 pygame.quit()
                 sys.exit()
-
-            '''# appui sur le boutton redimensionner de la fenêtre
-            if event.type == pygame.VIDEORESIZE:
-                try:
-                    print(game_window.size, FULLSCREEN_SIZE)
-                    if game_window.size == FULLSCREEN_SIZE:
-                        pygame.draw.rect(tetris_window, (0, 0, 250),
-                                        pygame.Rect(0, 0, 1700, 200))
-                        pygame.display.flip()
-                        time.sleep(3)
-                        pygame.quit()
-                        sys.exit()
-                except NameError:
-                    FULLSCREEN_SIZE = pygame.display.get_surface().get_size()'''
-
+            
             # dans le cas où l'utilisateur change la taille de la fenêtre
-            if game_window.size != window_current_size:
-                # mise à jour des attributs de l'objet Window
-                game_window.change_size(window_current_size)
-                print(game_window.size)
+            if event.type == pygame.VIDEORESIZE:
+                width, height = event.size
+                if width / height < 1.1:
+                    width = round(1.8 * height)
+                if width < 545 or height < 303:
+                    width = 545
+                    height = 303
+                window_size = (width, height)
+                tetris_window = pygame.display.set_mode(window_size, pygame.RESIZABLE)
+                window_data = {'size' : window_size, 'width': width, 'height': height, 'margin': round(0.05 * height)}
+                print(window_data)
                 # reaffichage avec changement des tailles et emplacement des objets
-                resize_all(game_window, game_object)
-                display_all(game_window, game_object)
+                resize_all(window_data, game_object)
+                display_all(window_data, game_object)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 print(pygame.mouse.get_pos())
 
             if event.type == pygame.KEYDOWN:
 
+                if event.key in (pygame.K_F1, pygame.K_ESCAPE):
+                    print('OK')
+                    game_pause()
+
                 if event.key == pygame.K_SPACE:
-                    tetrimino.hard_drop()
+                    tetrimino.hard_drop(data)
 
                 if event.key == pygame.K_DOWN:
                     tetrimino.soft_drop(matrix, data)
@@ -282,13 +294,13 @@ def gameplay():
                 if event.key == pygame.K_LEFT:
                     tetrimino.move_left(matrix)
 
-                if event.key == pygame.K_z:
+                if event.key == pygame.K_w or (event.mod and pygame.KMOD_CTRL):
                     tetrimino.turn_left(matrix)
 
-                if event.key == pygame.K_UP:
+                if event.key in (pygame.K_UP, pygame.K_x):
                     tetrimino.turn_right(matrix)
 
-                if event.key == pygame.K_c:
+                if event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
                     if hold_queue.can_hold:
                         temp = hold_queue.get_t_type()
                         hold_queue.hold(tetrimino)
@@ -301,7 +313,7 @@ def gameplay():
                             # création d'un nouveau tetrimino
                             tetrimino = Tetrimino(matrix)
 
-                display_all(game_window, game_object)
+                display_all(window_data, game_object)
         
         # phase précédant le lock down
         if tetrimino.state == 1:
@@ -309,7 +321,7 @@ def gameplay():
             values = tetrimino.lock_phase(matrix, lock_down_chrono,
                                         LOCK_PHASE_FIRST, SHADE_PHASE)
             LOCK_PHASE_FIRST, SHADE_PHASE = values
-            display_all(game_window, game_object)
+            display_all(window_data, game_object)
             time.sleep(0.015)
 
         # phase lock down
@@ -319,24 +331,24 @@ def gameplay():
             # le tetrimino suivant est créé
             tetrimino = Tetrimino(matrix)
             hold_queue.allow_hold()
-            display_all(game_window, game_object)
+            display_all(window_data, game_object)
             # clear les lines s'il y a
             matrix.clear_lines(data)
-            display_all(game_window, game_object)
+            display_all(window_data, game_object)
             # le chronomètre est raffraîchi
             time_before_refresh.reset()
 
         # dans le cas où le tetrimino est en falling phase
         else:
-            display_all(game_window, game_object)
+            display_all(window_data, game_object)
             if time_before_refresh == data.refresh:
                 tetrimino.fall(matrix)
                 # on reinitialise le chrono
                 time_before_refresh.reset()
         # ##pour tester au besoin
-        # display_all(game_window, game_object)
+        # display_all(window_data, game_object)
         display_game_data(data)
 
 
 if __name__ == "__main__":
-    gameplay()
+    gameplay(tetris_window)
