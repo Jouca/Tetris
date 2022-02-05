@@ -115,28 +115,6 @@ def change_color_luminosity(color, rate_of_change):
     return tuple(final_color)
 
 
-class Window:
-    """objet stockant les propriétés de la fenêtre."""
-
-    def __init__(self, window_size):
-        """initialisation de l'instance."""
-        self.change_size(window_size)
-        # pylint n'est pas content lorsque l'on ne définit pas
-        # l'attribut margin dans la méthode constructeur
-        self.update_margin()
-
-    def change_size(self, new_size):
-        """la taille de la fenêtre est mise à jour."""
-        self.width = new_size[0]
-        self.height = new_size[1]
-        self.size = new_size
-        self.update_margin()
-
-    def update_margin(self):
-        """met à jour la valeur de la marge."""
-        self.margin = round(0.05 * self.height)
-
-
 class Chronometer:
     """modélise un chronomètre."""
 
@@ -187,13 +165,15 @@ class Bag:
 class Matrix:
     """modélisation de matrix dans laquelle tombent les tetrimino."""
 
-    def __init__(self, window):
+    def __init__(self, window, level, mode_B):
         """initialisation des différents attribut de la classe Matrix."""
         self.resize(window)
         self.content = [[0 for j in range(10)] for i in range(22)]
         self.modelisation = [22 for i in range(10)]
         # création d'une matrice vide avec deux lignes pour la skyline
         self.higher_row = 22
+        if mode_B:
+            return
 
     # ##temporaire
     def __str__(self):
@@ -225,12 +205,12 @@ class Matrix:
         graphique de matrix. La fonction permet la création d'un dictionnaire
         pratique à la représentation des mino."""
         # pourrait être enlevé, mais mieux pour compréhension étapes
-        remaining_height_spaces = window.height - 2 * window.margin
+        remaining_height_spaces = window['height'] - 2 * window['margin']
         self.cell_size = remaining_height_spaces // 21
         rect_width = self.cell_size * 10
         rect_height = self.cell_size * 21
-        rect_x = (window.width - rect_width) // 2
-        rect_y = (window.height - rect_height) // 2
+        rect_x = (window['width'] - rect_width) // 2
+        rect_y = (window['height'] - rect_height) // 2
         self.rect = pygame.Rect(rect_x, rect_y, rect_width, rect_height)
         self.width = round(self.cell_size * 3/10)
         # création d'un attribut de classe de type dictionnaire
@@ -588,7 +568,9 @@ class Tetrimino(Bag, Matrix):
         return False
     
     # ## incrémentation score
-    def hard_drop(self):
+    def hard_drop(self, data):
+        print(self.y_coordinate, self.lower_pos)
+        data.score_increase((self.lower_pos - self.y_coordinate) * 2)
         self.y_coordinate = self.lower_pos
         self.state = 2
     
@@ -839,9 +821,9 @@ class HoldQueue(Matrix):
         classe Window."""
         # informations générales de l'emplacement de la hold queue
         super().resize(window)
-        remaining_space = window.width - (self.rect.x + self.rect.w) - window.margin
+        remaining_space = window['width'] - (self.rect.x + self.rect.w) - window['margin']
         w_value = self.rect.h = round(self.cell_size * 3.7)
-        x_axis = (remaining_space - w_value) * 0.7 + window.margin
+        x_axis = (remaining_space - w_value) * 0.7 + window['margin']
         self.width = self.rect.h // 39 + 1
         self.rect = pygame.Rect(x_axis, self.rect.y, w_value, self.rect.h)
         # informations de l'emplacement tetrimino
@@ -894,7 +876,7 @@ class NextQueue(Bag, Matrix):
         grâce à la mise à jour des attributs de l'instance concernant cela."""
         super().resize(window)
         matrix_place = self.rect.x + self.rect.w
-        remaining_space = window.width - matrix_place - window.margin
+        remaining_space = window['width'] - matrix_place - window['margin']
         # évaluation des paramètres utiles pour définir les encadrés
         w_value = round(self.cell_size * 3.7)
         h_value = (w_value, round(self.rect.h*0.9) - w_value)
@@ -942,7 +924,7 @@ class NextQueue(Bag, Matrix):
 
 
 # ## à changer, utiliser classe Button retravaillé par Bastien
-class MenuButton(HoldQueue):
+class MenuButton(HoldQueue, NextQueue):
     """crée le boutton de jeu."""
 
     def __init__(self, window):
@@ -954,10 +936,11 @@ class MenuButton(HoldQueue):
         classe Window."""
         # informations générales de l'emplacement de la hold queue
         super().resize(window)
-        w_value = self.rect.h = self.rect.w // 2
-        x_axis = window.width - window.margin - self.rect.w
-        self.width = self.rect.h // 39 + 1
-        self.rect = pygame.Rect(x_axis, self.rect.y, w_value, self.rect.h)
+        w_value = self.rect_1.h = self.rect_1.w // 2
+        remaining_space = window['width'] - self.rect_1.x - self.rect_1.w - w_value
+        x_axis = self.rect_1.x + self.rect.w + (remaining_space // 2)
+        self.width = self.rect_1.h // 39 + 1
+        self.rect = pygame.Rect(x_axis, self.rect_1.y, w_value, self.rect_1.h)
 
     # ###
     def bind(self):
@@ -972,14 +955,14 @@ class Data(HoldQueue):
     game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 18)
     scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 18)
 
-    def __init__(self, window, data_text_list):
-        """méthode constructeur de la classe. Initialise le score les données
-        d'une parties."""
+    def __init__(self, window, data_text_list, level, mode):
+        """méthode constructeur de la classe. Initialise le score
+        et les données d'une parties."""
         self.resize(window)
         self.create_font_rect_dict(data_text_list)
         self.score = '0'.zfill(10)
-        self.level = 1
-        # ## ajouter self.goal voir pour organisation
+        self.level = level
+        self.goal = level * 5 if mode == 'A' else 25
         self.line_clear = 0
         self.set_refresh()
     
@@ -991,16 +974,18 @@ class Data(HoldQueue):
             # font_rect_value.append(data_name.get_size())
             font_rect_value.append(data_name)
         self.font_rect_dict = font_rect_value
+        self.font_dict = self.font_rect_dict
         self.font_resize()
     
     def font_resize(self):
-        font_place = self.font_rect_dict[0].get_size()
-        font_total_place = 7 * font_place[1]
-        print(f'font_total_place : {font_total_place}')
-        print(f'font_place : {self.font_place[1]}')
+        font_height = round((0.86 * self.font_place[1]) / 7)
+        for i in range(5):
+            element_w, element_h = self.font_rect_dict[i].get_size()
+            font_width = round((element_w * font_height) / element_h)
+            self.font_dict[i] = pygame.transform.scale(self.font_rect_dict[i],
+                                                            (font_width, font_height))
+        font_total_place = 7 * font_height
         self.space_between_string = (self.font_place[1] - font_total_place) // 6
-        '''for i in range():
-        self.font_rect_dict'''
 
     def set_refresh(self):
         """met à jour la valeur du temps entre chaque frame du jeu en accord
@@ -1034,16 +1019,24 @@ class Data(HoldQueue):
         """change les attributs relatifs aux dimensions de l'encadré."""
         # informations générales de l'emplacement de l'encadré
         super().resize(window)
-        x_axis = 3 * window.margin
-        w_value = self.rect.w + self.rect.x - x_axis
+        x_axis = self.rect.x - self.rect.w
+        w_value = self.rect.w * 2
+        # ##si la marge n'est pas respectée
+        if x_axis < window['margin']:
+            x_axis = window['margin']
+            w_value = self.rect.w + self.rect.x - x_axis
         y_axis = self.rect.y + self.rect.h * 2
-        h_value = self.cell_size * 21 - y_axis + window.margin
+        h_value = self.cell_size * 21 - y_axis + window['margin']
         self.rect = pygame.Rect(x_axis, y_axis, w_value, h_value)
         # changer en information pour le texte
         self.margin = h_value // 11
         self.message = 'HI THERE'
         self.font_place = (w_value - self.margin, h_value - 2 * self.margin)
         print(f'data.font_place = {self.font_place}')
+        try:
+            self.font_resize()
+        except:
+            pass
         """# informations de l'emplacement tetrimino
         self.t_w = self.cell_size * 3
         self.t_h = self.cell_size * 2
