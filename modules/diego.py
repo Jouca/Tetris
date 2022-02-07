@@ -45,13 +45,14 @@ class Button:
         """
         Exemple :
         Button((200, 200, 100, 100), "Test", 60, (255, 255, 255))
+                 x    y    -    |
         """
         self.text = text
         self.size = size
         self.font = pygame.font.SysFont(
             "./others/Anton-Regular.ttf",
             self.size,
-            bold = True
+            bold = False
         )
         self.rect = pygame.Rect(rect)
         self.text_image = self.font.render(self.text, 1 , color)
@@ -60,7 +61,9 @@ class Button:
         """
         Permet de dessiner le bouton
         """
-        pygame.draw.rect(screen, (255, 255, 255), self.rect, 3)
+        pygame.draw.rect(screen, (150, 150, 150), self.rect)
+
+        
         screen.blit(self.text_image, (self.text_image.get_rect(center = self.rect.center)))
 
     def event_handler(self, event):
