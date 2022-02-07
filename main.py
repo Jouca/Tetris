@@ -1,9 +1,6 @@
 """fichier python principal du jeu Tetris codé en tant que projet de deuxième
 trimestre pour la spécialité NSI."""
 
-# pylint: disable=E1101
-# (no-member) erreur apparaissant pour les constantes de pygame référant aux
-# touches de clavier et boutons de fenêtre, ...
 
 # importations des librairies python
 import sys
@@ -13,6 +10,9 @@ import pygame.freetype
 from modules.solene import Bag, HoldQueue, Matrix, NextQueue
 from modules.solene import Tetrimino, MenuButton, Data, Chronometer
 
+# pylint: disable=E1101
+# (no-member) erreur apparaissant pour les constantes de pygame référant aux
+# touches de clavier et boutons de fenêtre, ...
 
 # initialisation de pygame
 pygame.init()
@@ -27,10 +27,6 @@ WINDOW_HEIGHT = round(FULLSCREEN_WIDTH * 2/3)
 WINDOW_WIDTH = round(WINDOW_HEIGHT * 1.8)
 WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
 
-# font du jeu
-game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 18)
-scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 18)
-
 
 # définition de la fenêtre pygame de taille dynamique
 tetris_window = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
@@ -41,9 +37,9 @@ window_data = {'size' : WINDOW_SIZE,
 
 
 # importation d'images
-icon = pygame.image.load("image/window_logo.png").convert_alpha()
+icon = pygame.image.load("./image/window_logo.png").convert_alpha()
 # prop = pygame.image.load("prop2.png").convert_alpha()
-menubutton = pygame.image.load("image/menubutton.png").convert_alpha()
+menubutton = pygame.image.load("./image/menubutton.png").convert_alpha()
 
 """tetris_window.blit(prop, (55, 16))
 pygame.display.flip()"""
@@ -59,12 +55,10 @@ def resize_all(window, obj):
     # redimensionne chaque objet avec leur méthode resize
     for element in obj[1:]:
         element.resize(window)
-    # redimensionne les emplacements des fonts pour l'affichage des
-    # informations du jeu en cours
-    obj[-1].font_resize()
+    obj[-1].values_relative_position()
 
 
-def display_all(window, obj):
+def display_all(window, chronometer, obj):
     """raffraîchit le jeu en faisant afficher une frame,
     contenant les objets dont les caractéristiques ont été
     mis à jour."""
@@ -86,124 +80,59 @@ def display_all(window, obj):
     # frame sur la fenêtre
     tetris_window.blit(frame, (0, 0))
     # ## voir à supprimer ?
-    display_game_data(obj[5])
+    display_game_data(obj[5], chronometer)
     # rafraichissement de la fenêtre pygame
     pygame.display.flip()
 
 
-def display_game_data(data):
+def display_game_data(data, chronometer):
+    # création d'un objet pygame.Surface de la taille de l'encadré data
+    frame = pygame.Surface((data.rect.w - 2 * data.width, data.rect.h - 2 * data.width))
+
+    frame.blit(data.surface, (0, 0))
+    data.update(chronometer, frame)
+    tetris_window.blit(frame, (data.rect.x + data.width , data.rect.y + data.width))
+    pygame.display.flip()
+
+'''def display_game_data(data):
     # utiliser autre méthode si possible
     temp = [1, None, 0, 1, None, 0, 0, 0, 1, 0, 1, 0, 1]
-    # création d'une d'un objet pygame.Surface de la taille de l'encadré data
+    # création d'un objet pygame.Surface de la taille de l'encadré data
     frame = pygame.Surface((data.rect.w - 2 * data.width, data.rect.h - 2 * data.width))
-    score = scoring_data_name.render(data.score, 1, (255,255,255))
+    score = data.values_surface[0]
+    time = data.values_surface[1]
 
     rect2 = pygame.Surface(data.font_place)  # 5/13 = 0.2173
     rect2.fill(0x004444)
     frame.blit(rect2, (data.margin // 2, data.margin))
 
     y = data.margin
-    font_h = data.font_rect_dict[0].get_size()
+    font_h = data.name_surface[0].get_size()
     i = 0
     for e in temp:
         if e == 1:
-            a, b = data.font_dict[i].get_size()
+            a, b = data.name_surface[i].get_size()
             rect = pygame.Surface((a, b))  # 5/13 = 0.2173
             rect.fill(0x660044)
+
             frame.blit(rect, (data.margin // 2, y))
-            frame.blit(data.font_dict[i], (data.margin // 2, y))
+            frame.blit(data.name_surface[i], (data.margin // 2, y))
+
             i += 1
             y += font_h[1]
         elif e == None:
-            a, b = score.get_size()
+            a, b = time.get_size()
             rect = pygame.Surface((a, b))  # 5/13 = 0.2173
             rect.fill(0x6666)
             frame.blit(rect, (data.margin // 2, y))
 
-            frame.blit(score, (data.margin // 2, y))
+            frame.blit(time, (data.margin // 2, y))
             y += font_h[1]
         else:
             y += data.space_between_string
 
     tetris_window.blit(frame, (data.rect.x + data.width , data.rect.y + data.width))
-    pygame.display.flip()
-
-
-'''def display_game_data(data):
-    # création d'une d'un objet pygame.Surface de la taille de l'encadré data
-    frame = pygame.Surface((data.rect.w - 2 * data.width, data.rect.h - 2 * data.width))
-    # ## en guise de test
-    frame.fill(0x440000)
-    message_erreur = scoring_data_name.render(data.message, 1, (255,255,255))
-    score = scoring_data_name.render(data.score, 1, (255,255,255))
-
-    # ##data.resize_font(score.get_size())
-    # score = pygame.transform.scale(score, (score_w //2, score_h //2)) ##
-
-    y = 8
-    for i in range(5):
-        frame.blit(data.font_rect_dict[i], (data.margin, y))
-        size = data.font_rect_dict[i].get_size()
-        y += size[1]
-
-    rect2 = pygame.Surface(data.font_place)  # 5/13 = 0.2173
-    rect2.fill(0x004444)
-    frame.blit(rect2, (data.margin // 2, data.margin))
-
-    w, h = message_erreur.get_size()
-    rect3 = pygame.Surface((w, h-(round(2 * (0.218 * h)))))  # 5/13 = 0.2173
-    rect3.fill(0x000044)
-    frame.blit(rect3, (data.margin, data.margin + 0.218 * h))
-
-    rect = pygame.Surface(score.get_size())
-    rect.fill(0x004400)
-    frame.blit(rect, (data.margin, data.margin * 5))
-
-    frame.blit(message_erreur, (data.margin, data.margin))
-    frame.blit(score, (data.margin, data.margin * 5))
-    tetris_window.blit(frame, (data.rect.x + data.width , data.rect.y + data.width))
     pygame.display.flip()'''
-
-
-# ## voir à déplacer dans un autre fichier ?
-def get_file_lst(lang, line, file_name, as_string=True):
-    """ renvoie une liste de chaîne de caractères séparées par '|' lorsque
-    `line` est spécifiée, sinon elle renvoie la liste de toutes les chaînes
-    du fichier texte spécifiés dans le répertoire `lang` contenu dans le
-    répertoire "game_string", portant le nom `file_name`, `as_string` s'il
-    vaut True convertit la liste en un string avec pour séparateur, le saut
-    de ligne """
-    # voir à enlever partie si non string en commun
-    if lang == '/':
-        file = open(f'others/game_string/{file_name}.txt', 'r', encoding='utf-8')
-    else:
-        path = 'others/game_string/{}/{}.txt'.format(lang, file_name)
-        file = open(path, 'r', encoding='utf-8')
-    file_as_list = list(file)
-    file.close()
-    try:
-        list_element_line = file_as_list[line-1][:-1].split('|')
-        if as_string:
-            text = ''
-            for element in list_element_line:
-                text += element
-                text += '\n'
-            return text[:-1]
-        return list_element_line
-    except TypeError:
-        return file_as_list
-
-
-def get_str(lang, file_name, line=None):
-    """permet d'obtenir la chaîne de caractère voulue spécifiée par la ligne
-    `line` dans le fichier `file_name`."""
-    file = get_file_lst(lang, None, file_name)
-    return file[line-1][:-1]
-
-
-# mieux si dans classe, ici pour le moment cause : soucis chemin fichiers
-def data_name_list(lang):
-    return get_file_lst(lang, 1, 'data_name', False)
 
 
 def game_pause():
@@ -213,7 +142,7 @@ def game_pause():
 lang = 'EN'
 
 # provisoire, sans les menus
-level = 4
+level = 1
 mode_B = False
 
 
@@ -224,26 +153,27 @@ def gameplay(tetris_window):
                    'width': w_width,
                    'height': w_height,
                    'margin': round(0.05 * w_height)}
-    # ## instanciation à mettre dans une fonction ?
+    game_type = (level, mode_B)
     bag = Bag()
-    matrix = Matrix(window_data, level, mode_B)
+    game_chrono = Chronometer()
+    matrix = Matrix(window_data, game_type)
     next_queue = NextQueue(window_data)
     hold_queue = HoldQueue(window_data)
     menu_button = MenuButton(window_data)
-    # voir à déplacer ?
-    data = Data(window_data, data_name_list(lang), level, mode_B)
+    data = Data(window_data, lang, game_chrono, game_type)
 
     tetrimino = Tetrimino(matrix)
 
     game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
 
-    display_all(window_data, game_object)
+    display_all(window_data, game_chrono, game_object)
 
 
     time_before_refresh = Chronometer()
     lock_down_chrono = Chronometer()
     SHADE_PHASE = 1
     LOCK_PHASE_FIRST = 1
+    softdrop = False
 
     while True:
 
@@ -260,44 +190,57 @@ def gameplay(tetris_window):
             # dans le cas où l'utilisateur change la taille de la fenêtre
             if event.type == pygame.VIDEORESIZE:
                 width, height = event.size
+                if width < 545:
+                    width = 545
                 if width / height < 1.1:
                     width = round(1.8 * height)
-                if width < 545 or height < 303:
-                    width = 545
+                if height < 303:
                     height = 303
                 window_size = (width, height)
                 tetris_window = pygame.display.set_mode(window_size, pygame.RESIZABLE)
-                window_data = {'size' : window_size, 'width': width, 'height': height, 'margin': round(0.05 * height)}
-                print(window_data)
+                window_data = {'size' : window_size,
+                               'width': width,
+                               'height': height,
+                               'margin': round(0.05 * height)}
+                print(f'current window size :   {window_data}')
                 # reaffichage avec changement des tailles et emplacement des objets
                 resize_all(window_data, game_object)
-                display_all(window_data, game_object)
-
+                display_all(window_data, game_chrono, game_object)
+            
+            # ## à enlever en fin
             if event.type == pygame.MOUSEBUTTONDOWN:
                 print(pygame.mouse.get_pos())
 
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN:
+                    softdrop = False
+                    data.set_fall_speed()
+
             if event.type == pygame.KEYDOWN:
 
-                if event.key in (pygame.K_F1, pygame.K_ESCAPE):
-                    print('OK')
+                key_mod = pygame.key.get_mods()
+                key = pygame.key.get_pressed()
+                
+                if key[pygame.K_F1] or key[pygame.K_ESCAPE]:
                     game_pause()
 
-                if event.key == pygame.K_SPACE:
+                if key[pygame.K_SPACE]:
                     tetrimino.hard_drop(data)
 
-                if event.key == pygame.K_DOWN:
-                    tetrimino.soft_drop(matrix, data)
+                if key[pygame.K_DOWN]:
+                    softdrop = True
+                    data.fall_speed /= 20  # ## pas bon
 
-                if event.key == pygame.K_RIGHT:
+                if key[pygame.K_RIGHT]:
                     tetrimino.move_right(matrix)
 
-                if event.key == pygame.K_LEFT:
+                if key[pygame.K_LEFT]:
                     tetrimino.move_left(matrix)
 
-                if event.key == pygame.K_w or (event.mod and pygame.KMOD_CTRL):
+                if key[pygame.K_w] or (key_mod and pygame.KMOD_CTRL):
                     tetrimino.turn_left(matrix)
 
-                if event.key in (pygame.K_UP, pygame.K_x):
+                if key[pygame.K_UP] or key[pygame.K_x]:
                     tetrimino.turn_right(matrix)
 
                 if event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
@@ -313,7 +256,7 @@ def gameplay(tetris_window):
                             # création d'un nouveau tetrimino
                             tetrimino = Tetrimino(matrix)
 
-                display_all(window_data, game_object)
+                display_all(window_data, game_chrono, game_object)
         
         # phase précédant le lock down
         if tetrimino.state == 1:
@@ -321,7 +264,7 @@ def gameplay(tetris_window):
             values = tetrimino.lock_phase(matrix, lock_down_chrono,
                                         LOCK_PHASE_FIRST, SHADE_PHASE)
             LOCK_PHASE_FIRST, SHADE_PHASE = values
-            display_all(window_data, game_object)
+            display_all(window_data, game_chrono, game_object)
             time.sleep(0.015)
 
         # phase lock down
@@ -331,23 +274,29 @@ def gameplay(tetris_window):
             # le tetrimino suivant est créé
             tetrimino = Tetrimino(matrix)
             hold_queue.allow_hold()
-            display_all(window_data, game_object)
+            display_all(window_data, game_chrono, game_object)
             # clear les lines s'il y a
             matrix.clear_lines(data)
-            display_all(window_data, game_object)
+            display_all(window_data, game_chrono, game_object)
             # le chronomètre est raffraîchi
             time_before_refresh.reset()
 
         # dans le cas où le tetrimino est en falling phase
         else:
-            display_all(window_data, game_object)
-            if time_before_refresh == data.refresh:
-                tetrimino.fall(matrix)
+            # dans le cas où le joueur souhaite faire un softdrop
+            # spécifié par le fait que la touche flèche bas est
+            # maintenue pressée
+            if time_before_refresh == data.fall_speed:
+                # score incrémenté de 1 lorsque le tetrimino peut tomber
+                if tetrimino.fall(matrix) and softdrop:
+                    data.score_increase(1)
                 # on reinitialise le chrono
                 time_before_refresh.reset()
+            # reaffichage de l'écran
+            display_all(window_data, game_chrono, game_object)
         # ##pour tester au besoin
         # display_all(window_data, game_object)
-        display_game_data(data)
+        display_game_data(data, game_chrono)
 
 
 if __name__ == "__main__":
