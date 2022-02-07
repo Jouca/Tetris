@@ -1,6 +1,28 @@
 """module codé par Solène (@periergeia) TG8, contenant diverses classes et
 fonctions utiles au bon fonctionnement du jeu Tetris."""
 
+
+import sys
+
+# importation de librairies python utiles
+import random
+import colorsys
+import time
+import termcolor  # ##à enlever, utile pour test avec print
+import pygame
+import pygame.freetype
+try:
+    sys.path.append("..")
+    from modules.collect_file_s_text import get_file_lst
+    from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT, FONT_HEIGHT, DATA_KEYS
+    from modules.diego import clear_lines
+    from modules.paul import border_dict
+except ModuleNotFoundError:
+    from collect_file_s_text import get_file_lst
+    from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT, FONT_HEIGHT, DATA_KEYS
+    from diego import clear_lines
+    from paul import border_dict
+
 # pylint: disable=W0231
 # (super-init-not-called), il m'est inutile de faire appel à la méthode
 # constructeur des classes parent vu que leur méthode constructeur font appel
@@ -10,16 +32,8 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 # les classes parents sont avant tout pratique pour les positions relatives
 # des différents objets entre eux.
 
+# supprimer des attributs avec delattr(self, 'field_to_delete') super().__init__(*args, **kwargs)
 
-# importation de librairies python utiles
-import random
-import colorsys
-import time
-import pygame
-import pygame.freetype
-from others.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT
-from modules.diego import clear_lines
-from modules.paul import border_dict
 
 # initialisation de pygame pour pygame.freetype
 pygame.init()
@@ -108,7 +122,8 @@ def change_color_luminosity(color, rate_of_change):
     représentant les valeurs rgb (chaque entier est compris entre 0 et 255)."""
     red, green, blue = color
     hue, saturation, lightness = colorsys.rgb_to_hsv(red, green, blue)
-    temp_color = colorsys.hsv_to_rgb(hue, saturation, lightness - rate_of_change)
+    lightness = lightness - rate_of_change
+    temp_color = colorsys.hsv_to_rgb(hue, saturation, lightness)
     final_color = [0, 0, 0]
     for i, primary in enumerate(temp_color):
         final_color[i] = round(primary)
@@ -126,18 +141,36 @@ class Chronometer:
     def time_elapsed(self):
         """renvoie le temps passé depuis l'initialisation
         du chronomètre"""
-        return time.time() - self.time
+        return time.time_ns() - self.time
+
+    def get_chrono_value(self):
+        """renvoie les valeurs en durée du nombre d'heures,
+        de minutes, de secondes et de millisecondes de la partie."""
+        time_elapsed = self.time_elapsed()
+        # durées stockées dans des variables
+        milliseconds = str(time_elapsed % 10 ** 9 % 10 ** 5)[:3]
+        seconds = int((time_elapsed / 10 ** 9) % 60)
+        minutes = int((time_elapsed / 60 / 10 ** 9) % 60)
+        hours = int((time_elapsed / 3600 / 10 ** 9) % 24)
+        # évalue si l'affichage du nombre d'heure est nécéssaire
+        if hours:
+            chrono_format = '{h:02d} : {m:02d} : {s:02d}, {x}'
+        else:
+            chrono_format = '{m:02d} : {s:02d}, {x}'
+        chrono_value = chrono_format.format(h=hours, m=minutes,
+                                            s=seconds, x=milliseconds)
+        return chrono_value
 
     def __eq__(self, duration):
         """renvoie le booléen vrai si le temps indiqué sur
-        le chronomètre correspond à la durée `duration` (float)
+        le chronomètre correspond à la durée `duration` (float) en seconde
         comparée, autrement, il renvoie faux."""
         # l'égalité entre int et float n'est pas efficace
-        return time.time() - self.time > duration
+        return time.time_ns() - self.time > duration * 10 ** 9
 
     def reset(self):
         """reinitialise le chronomètre."""
-        self.time = time.time()
+        self.time = time.time_ns()
 
 
 class Bag:
@@ -165,14 +198,15 @@ class Bag:
 class Matrix:
     """modélisation de matrix dans laquelle tombent les tetrimino."""
 
-    def __init__(self, window, level, mode_B):
+    def __init__(self, window, game_type):
         """initialisation des différents attribut de la classe Matrix."""
         self.resize(window)
         self.content = [[0 for j in range(10)] for i in range(22)]
         self.modelisation = [22 for i in range(10)]
         # création d'une matrice vide avec deux lignes pour la skyline
         self.higher_row = 22
-        if mode_B:
+        level, mode_b = game_type
+        if mode_b:
             return
 
     # ##temporaire
@@ -193,8 +227,9 @@ class Matrix:
             # ajoute le nombre de line_clear aux informations du jeu
             data.add_to_line_clear(nb_line_cleared)
             # ## placer dans constantes ?
-            POINT = {1: 100, 2: 300, 3: 500, 4: 800}
-            data.score_increase(data.level * POINT[nb_line_cleared])
+            MULTIPLY_BY = {1: 100, 2: 300, 3: 500, 4: 800}
+            level = int(data.values['lines'])
+            data.score_increase(level * MULTIPLY_BY[nb_line_cleared])
             for i in range(10):
                 if self.modelisation[i] != 22:
                     self.modelisation[i] += 1
@@ -258,13 +293,13 @@ class Matrix:
         # lignes horizontales du quadrillage de matrix
         for i in range(1, 22):
             grid_y = self.cell[1][i].y
-            pygame.draw.line(surface, (255, 255, 255),
+            pygame.draw.line(surface, COLOR['WHITE'],
                              (self.rect.x, grid_y),
                              (self.rect.x + self.rect.w, grid_y))
         # lignes verticales du quadrillage de matrix
         for i in range(1, 10):
             grid_x = self.cell[i][1].x
-            pygame.draw.line(surface, (255, 255, 255),
+            pygame.draw.line(surface, COLOR['WHITE'],
                              (grid_x, self.rect.y),
                              (grid_x, self.rect.y + self.rect.h - self.width))
 
@@ -354,8 +389,8 @@ class Matrix:
                 x = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].x
                 y = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].y
                 pygame.draw.line(surface, color,
-                             (x, y),
-                             (x, y + line_lenght), 3)
+                                 (x, y),
+                                 (x, y + line_lenght), 3)
             # pour le moment
             except KeyError:
                 pass
@@ -442,7 +477,7 @@ class Tetrimino(Bag, Matrix):
         - 1 si le tetrimino est en 'lock phase', phase où le tetrimino
         s'apprête à se figer dans la matrice avec un temps escompté
         - 2 lorsque le tetrimino est en 'completion phase'"""
-    
+
     def lock_on_matrix(self, matrix):
         """Méthode permettant de lock un tetrimino (celui de l'instance),
         dans sur la matrix de jeu. `matrix` est une instance de la classe
@@ -566,22 +601,13 @@ class Tetrimino(Bag, Matrix):
         self.x_coordinate = coordinates[0]
         self.y_coordinate = coordinates[1]
         return False
-    
+
     # ## incrémentation score
     def hard_drop(self, data):
         print(self.y_coordinate, self.lower_pos)
         data.score_increase((self.lower_pos - self.y_coordinate) * 2)
         self.y_coordinate = self.lower_pos
         self.state = 2
-    
-    # ## voir si amélioration possible
-    def soft_drop(self, matrix, data):
-        if self.can_fall(matrix):
-            data.score_increase(1)
-            return
-        # le test a échoué, le tetrimino ne peut pas tomber,
-        # on passe en lock phase
-        self.state = 1
 
     # fonction améliorable
     def lock_phase(self, matrix, chrono, first, phase):
@@ -622,7 +648,7 @@ class Tetrimino(Bag, Matrix):
             # on change de phase
             phase = (phase + 1) % 2
         return first, phase
-    
+
     # ## soucis à fix
     def lower_tetrimino_pos(self, matrix):
         """renvoie la position la plus basse pouvant être atteinte par
@@ -706,10 +732,11 @@ class Tetrimino(Bag, Matrix):
         la classe Matrix."""
         # teste si le tetrimino est apte à tomber
         if self.can_fall(matrix):
-            return
+            return True
         # le test a échoué, le tetrimino ne peut pas tomber,
         # on passe en lock phase
         self.state = 1
+        return False
 
     def move_left(self, matrix):
         """déplace d'une case vers la gauche le tetrimino."""
@@ -833,7 +860,6 @@ class HoldQueue(Matrix):
         t_x = self.rect.x + (self.rect.w - t_w) // 2
         t_y = self.rect.y + (self.rect.w - t_h) // 2
         self.t_rect = pygame.Rect(t_x, t_y, t_w, t_h)
-        print(f'1                  {self.rect}')
 
     def display(self, surface):
         """affichage de l'encadré associé à la hold queue, avec si y a le
@@ -946,108 +972,199 @@ class MenuButton(HoldQueue, NextQueue):
     def bind(self):
         """affichage dans le cas où le boutton est appuyé."""
 
+# fonctions plus pour la lisibilité du code
+def find_align_center_x(lenght, remaining_place):
+    return (remaining_place - lenght) // 2
+
+
+def find_align_right_x(lenght, remaining_place):
+    return remaining_place - lenght
+
 
 class Data(HoldQueue):
     """regroupe les données relatifs aux informations du jeu, ainsi que les
     attributs permettant de tracer l'encadré d'affichage du score, niveau,
-    nombre de line clear."""
+    nombre de line clear, ...
 
-    game_score = pygame.freetype.Font("others/Anton-Regular.ttf", 18)
-    scoring_data_name = pygame.font.Font("others/Anton-Regular.ttf", 18)
+    attributs des instances:
+    - font
+    - margin
+    - name
+    - rect
+    - space_between_string   # à supprimer
+    - values
+    - values_surface
+    - width
 
-    def __init__(self, window, data_text_list, level, mode):
+    à supprimer :
+    cell_size
+    """
+
+    def __init__(self, window, lang, chronometer, game_type):
         """méthode constructeur de la classe. Initialise le score
         et les données d'une parties."""
+        level, mode_b = game_type
+        goal = 25 if mode_b else level * 5
+        first_values = [0, 0, level, goal]
+        self.values = {DATA_KEYS[i]: first_values[i] for i in range(4)}
+        self.name = get_file_lst(lang, 1, 'data_name', False)
         self.resize(window)
-        self.create_font_rect_dict(data_text_list)
-        self.score = '0'.zfill(10)
-        self.level = level
-        self.goal = level * 5 if mode == 'A' else 25
-        self.line_clear = 0
-        self.set_refresh()
-    
-    # ##voir à changer nom si non liste décision finale
-    def create_font_rect_dict(self, data_text_list):
-        font_rect_value = []
-        for element in data_text_list:
-            data_name = Data.scoring_data_name.render(element, 1, (255,255,255))
-            # font_rect_value.append(data_name.get_size())
-            font_rect_value.append(data_name)
-        self.font_rect_dict = font_rect_value
-        self.font_dict = self.font_rect_dict
-        self.font_resize()
-    
-    def font_resize(self):
-        font_height = round((0.86 * self.font_place[1]) / 7)
-        for i in range(5):
-            element_w, element_h = self.font_rect_dict[i].get_size()
-            font_width = round((element_w * font_height) / element_h)
-            self.font_dict[i] = pygame.transform.scale(self.font_rect_dict[i],
-                                                            (font_width, font_height))
-        font_total_place = 7 * font_height
-        self.space_between_string = (self.font_place[1] - font_total_place) // 6
+        self.values_surface = [None, 0]
+        self.chrono_value(chronometer)
+        self.values_relative_position()  # ##
+        self.set_fall_speed()
 
-    def set_refresh(self):
+    def change_text_language(self, lang):
+        self.name = get_file_lst(lang, 1, 'data_name', False)
+        self.font_resize()
+
+    def font_resize(self):
+        w_value, h_value = self.rect.w, self.rect.h
+        # attribution d'une marge locale
+        local_margin = h_value // 11
+        # ## font place en tant que variable plutôt qu'attribut ?
+        font_place = (w_value - local_margin, h_value - 2 * local_margin)
+        # taille que devrait avoir la hauteur du texte
+        font_height = round((0.86 * font_place[1]) / 7)
+        # détermine la taille de font qui sied le mieux
+        if font_height < 19:
+            font_size = 12
+        else:
+            i = 0
+            while font_height > FONT_HEIGHT[i]:
+                i += 1
+            font_size = i + 12
+        # redéfinition de l'attribut font selon les résultats obtenus
+        self.font = pygame.font.Font("others/Anton-Regular.ttf", font_size)
+        name_surface = []
+        for i in range(5):
+            name_surface.append(self.font.render(self.name[i], 1, COLOR['WHITE']))
+        space_between_string = (font_place[1] - 7 * font_height) // 6
+
+        # création d'un objet surface servant de calque afin d'optimiser le jeu
+        surface = pygame.Surface((w_value - 2 * self.width, h_value - 2 * self.width))
+        rect2 = pygame.Surface(font_place)
+        rect2.fill(0x001100)
+        surface.blit(rect2, (local_margin // 2, local_margin))
+        on_x_axis = local_margin // 2  # ##à changer
+        temp = [1, None, 0, 1, None, 0, 0, 0, 1, 0, 1, 0, 1]
+        y = local_margin
+        self.position = []
+        font_h = name_surface[0].get_size()
+        i = 0
+        for e in temp:
+            if e == 1:
+                a, b = name_surface[i].get_size()  # ##
+                rect = pygame.Surface((a, b))   # ##
+                rect.fill(0x660044)   # ##
+                surface.blit(rect, (on_x_axis, y))   # ##
+                surface.blit(name_surface[i], (on_x_axis, y))
+                if i > 1:
+                    self.position.append(y)
+                i += 1
+                y += font_h[1]
+            elif e == None:
+                self.position.append(y)
+                y += font_h[1]
+            else:
+                y += space_between_string
+
+        self.surface = surface
+
+    def values_relative_position(self):
+
+        w_value, h_value = self.rect.w, self.rect.h
+        # attribution d'une marge locale
+        local_margin = h_value // 11
+
+        nb_zero_to_fill = [10, 3, 2, 3]
+        chrono_save = self.values_surface[1]
+        self.values_surface = [self.font.render(str(self.values[DATA_KEYS[i]]).zfill(nb_zero_to_fill[i]), 1, COLOR['WHITE']) for i in range(4)]
+        self.values_surface.insert(1, chrono_save)
+
+        pos_x = []
+        termcolor.cprint(self.position, 'red')
+        temp_chrono = Chronometer()  # ##
+        self.chrono_value(temp_chrono)  # ##
+        pos_x.append(find_align_center_x(self.values_surface[0].get_size()[0], w_value))
+        pos_x.append(find_align_center_x(self.values_surface[1].get_size()[0], w_value))
+        for i in range(2, 5):
+            pos_x.append(find_align_right_x(self.values_surface[i].get_size()[0], w_value - local_margin))
+
+        for i in range(5):
+            self.position[i] = ((pos_x[i], self.position[i]))
+
+    def set_fall_speed(self):
         """met à jour la valeur du temps entre chaque frame du jeu en accord
         avec la guideline officiel du jeu."""
-        self.refresh = (0.8 - (self.level - 1) * 0.007) ** (self.level - 1)
-    
+        level = self.values['level']
+        self.fall_speed = (0.8 - (level - 1) * 0.007) ** (level - 1)
+
     """SCORING (aide-mémoire) :
-    The player scores points by performing Single, Double, Triple, and Tetris Line Clears, as well as 
-    T-Spins and Mini T-Spins. Soft and Hard Drops also award points. There is a special bonus for 
-    Back-to-Backs, which is when two actions such as a Tetris and T-Spin Double (see complete 
-    list below) take place without a Single, Double, or Triple Line Clear occurring between them. 
-    Scoring for Line Clears, T-Spins, and Mini T-Spins are level dependent, while Hard and Soft Drop 
-    point values remain constant. Levels typically start at 1 and end at 15.
+    There is a special bonus for Back-to-Backs, which is when two actions such as a Tetris and T-Spin Double (see complete
+    list below) take place without a Single, Double, or Triple Line Clear occurring between them.
 
     Action              Action Total        Description
-    Single              100 x Level         1 line of Blocks is cleared.
-    Double              300 x Level         2 lines of Blocks are simultaneously cleared.
-    Triple              500 x Level         3 lines of Blocks are simultaneously cleared.
-    Tetris              800 x Level         4 lines of Blocks are simultaneously cleared.
-    Mini T-Spin         100 x Level         An easier T-Spin with no Line Clear. 
+    Mini T-Spin         100 x Level         An easier T-Spin with no Line Clear.
     Mini T-Spin Single  200 x Level         An easier T-Spin clearing 1 line of Blocks.
     T-Spin              400 x Level         T-Tetrimino is spun into a T-Slot with no Line Clear.
     T-Spin Single       800 x Level         T-Spin clearing 1 line of Blocks.
     T-Spin Double       1200 x Level        T-Spin simultaneously clearing 2 lines of 10 Blocks.
     T-Spin Triple       1600 x Level        T-Spin simultaneously clearing 3 lines of 10 Blocks.
-    Back-to-Back Bonus  0.5 x Action        Total Bonus for Tetrises, T-Spin Line Clears, and Mini T-Spin Line Clears performed consecutively in a B2B sequence.
-    Soft Drop           1 x n               Tetrimino is Soft Dropped for n lines
-    Hard Drop           2 x m               Tetrimino is Hard Dropped for m lines"""
+    Back-to-Back Bonus  0.5 x Action        Total Bonus for Tetrises, T-Spin Line Clears, and Mini
+                                            T-Spin Line Clears performed consecutively in a B2B sequence."""
 
     def resize(self, window):
         """change les attributs relatifs aux dimensions de l'encadré."""
         # informations générales de l'emplacement de l'encadré
         super().resize(window)
         x_axis = self.rect.x - self.rect.w
-        w_value = self.rect.w * 2
-        # ##si la marge n'est pas respectée
+        # dans le cas où la marge n'est pas respectée
         if x_axis < window['margin']:
             x_axis = window['margin']
             w_value = self.rect.w + self.rect.x - x_axis
+        else:
+            w_value = self.rect.w * 2
         y_axis = self.rect.y + self.rect.h * 2
         h_value = self.cell_size * 21 - y_axis + window['margin']
         self.rect = pygame.Rect(x_axis, y_axis, w_value, h_value)
-        # changer en information pour le texte
-        self.margin = h_value // 11
-        self.message = 'HI THERE'
-        self.font_place = (w_value - self.margin, h_value - 2 * self.margin)
-        print(f'data.font_place = {self.font_place}')
-        try:
-            self.font_resize()
-        except:
-            pass
-        """# informations de l'emplacement tetrimino
-        self.t_w = self.cell_size * 3
-        self.t_h = self.cell_size * 2
-        self.t_x = self.x + (self.w - self.t_w) // 2
-        self.t_y = self.y + (self.w - self.t_h) // 2"""
+        # redimensionnement des textes et repositionnement
+        self.font_resize()
+
+    def chrono_value(self, chronometer):
+        """met à jour les attributs de l'instance."""
+        chrono_value = chronometer.get_chrono_value()
+        self.values_surface[1] = self.font.render(chrono_value, 1,
+                                                  COLOR['WHITE'])
+
+    def update(self, chronometer, surface):
+        self.chrono_value(chronometer)
+        for i in range(5):
+            a, b = self.values_surface[i].get_size()
+            rect = pygame.Surface((a, b))  # 5/13 = 0.2173
+            rect.fill(0x660000)
+            surface.blit(rect, self.position[i])
+            surface.blit(self.values_surface[i], self.position[i])
 
     def add_to_line_clear(self, value_to_add):
         """ajoute `value_to_add` au nombre de line_clear."""
-        self.line_clear += value_to_add
+        self.values['lines'] += value_to_add
+        self.values_surface[2] = self.font.render(str(self.values['lines']).zfill(3), 1,
+                                                  COLOR['WHITE'])
+        # ##enlever pour goal suivant ? samedi
+        self.values['goal'] -= value_to_add
+        if self.values['goal'] < 1:
+            self.values['level'] += 1
+            self.set_fall_speed()
+            self.values['goal'] = self.values['level'] * 5
+            self.values_surface[3] = self.font.render(str(self.values['level']).zfill(2), 1,
+                                                  COLOR['WHITE'])
+        self.values_surface[4] = self.font.render(str(self.values['goal']).zfill(3), 1,
+                                                  COLOR['WHITE'])
 
     def score_increase(self, value_to_add):
-        score = int(self.score) + value_to_add
-        self.score = str(score).zfill(10)
-        
+        """augmente l'attribut score de `value_to_add` devant
+        être un entier."""
+        self.values['score'] += value_to_add
+        self.values_surface[0] = self.font.render(str(self.values['score']).zfill(10), 1,
+                                                  COLOR['WHITE'])
