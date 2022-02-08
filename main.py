@@ -224,26 +224,26 @@ def gameplay(tetris_window):
                 if key[pygame.K_F1] or key[pygame.K_ESCAPE]:
                     game_pause()
 
-                if key[pygame.K_SPACE]:
+                elif key[pygame.K_SPACE]:
                     tetrimino.hard_drop(data)
 
-                if key[pygame.K_DOWN]:
+                elif key[pygame.K_DOWN]:
                     softdrop = True
                     data.fall_speed /= 20  # ## pas bon
 
-                if key[pygame.K_RIGHT]:
+                elif key[pygame.K_RIGHT]:
                     tetrimino.move_right(matrix)
 
-                if key[pygame.K_LEFT]:
+                elif key[pygame.K_LEFT]:
                     tetrimino.move_left(matrix)
 
-                if key[pygame.K_w] or (key_mod and pygame.KMOD_CTRL):
+                elif key[pygame.K_w] or (key_mod and pygame.KMOD_CTRL):
                     tetrimino.turn_left(matrix)
 
-                if key[pygame.K_UP] or key[pygame.K_x]:
+                elif key[pygame.K_UP] or key[pygame.K_x]:
                     tetrimino.turn_right(matrix)
 
-                if event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
+                elif event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
                     if hold_queue.can_hold:
                         temp = hold_queue.get_t_type()
                         hold_queue.hold(tetrimino)
