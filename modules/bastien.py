@@ -1,18 +1,40 @@
-import black
 import pygame
+import sys
 from diego import Button
+from solene import get_font_size
 
 pygame.init()
 
-continuer = True
-screen = pygame.display.set_mode((1000, 500), pygame.RESIZABLE)
+
+# CODE DANS main.py
+#########################################################
+FULLSCREEN_WIDTH = pygame.display.get_desktop_sizes()[0][1]
+WINDOW_HEIGHT = round(FULLSCREEN_WIDTH * 2/3)
+WINDOW_WIDTH = round(WINDOW_HEIGHT * 1.8)
+WINDOW_SIZE = (WINDOW_WIDTH, WINDOW_HEIGHT)
+
+
+# définition de la fenêtre pygame de taille dynamique
+tetris_window = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
+window_data = {'size' : WINDOW_SIZE,
+               'width': WINDOW_WIDTH,
+               'height': WINDOW_HEIGHT,
+               'margin': round(0.05 * WINDOW_HEIGHT)}
+
+icon = pygame.image.load("./image/window_logo.png").convert_alpha()
+menubutton = pygame.image.load("./image/menubutton.png").convert_alpha()
+
 pygame.display.set_caption("TETRIS")
-image = pygame.image.load("./image_save/LOGOPROVISOIRE.png").convert_alpha()
-pygame.display.set_icon(image)
+pygame.display.set_icon(icon)
+
+
+################################################################
+
+
 
 ### import img ###
-logo = pygame.image.load('./image_save/logo.jpg').convert_alpha()
-logo = pygame.transform.scale(logo, (300, 150))
+logo = pygame.image.load('./image/logo.jpg').convert_alpha()
+menu_background = pygame.image.load('./image/menu_background2.png').convert_alpha()
 ### import img ###
 
 ### import font ###
@@ -20,44 +42,122 @@ myfont = pygame.font.SysFont("./others/Anton-Regular.ttf", 30)
 ### import font ###
 
 
-def mainmenu():
-    play = Button((195, 220, 605,  100), "JOUER", 50, (250, 250, 250))
-    help = Button((505, 340, 295, 100), "AIDE", 50, (250, 250, 250))
-    classement = Button((195, 340, 295, 100), "CLASSEMENT", 50, (250, 250, 250))
-
-    screen.blit(logo, (350, 50))
-    play.draw(screen)
-    help.draw(screen)
-    classement.draw(screen)
-    if play.event_handler(event):
-        
-        screen.fill((0, 0, 0))
-        menuplay()
-    pygame.display.flip()
-    """classement.draw(screen)
-    if play.event_handler():
+def loop_starter_pack(event):
+    # appui sur la croix de la fenêtre
+    if event.type == pygame.QUIT:
+        # fermeture de la fenêtre
+        pygame.quit()
+        sys.exit()
     
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                continuer = False
-                print("test")"""
+    # dans le cas où l'utilisateur change la taille de la fenêtre
+    if event.type == pygame.VIDEORESIZE:
+        width, height = event.size
+        if width < 545:
+            width = 545
+        if width / height < 1.1:
+            width = round(1.8 * height)
+        if height < 303:
+            height = 303
+        window_size = (width, height)
+        tetris_window = pygame.display.set_mode(window_size, pygame.RESIZABLE)
 
-def menuplay():
-    screen.fill((0, 0, 0))
+
+def create_main_menu(window):
+    logo_height = window.get_height() // 4
+    logo_size = (round(340 * logo_height / 153), logo_height)
+    logo_to_display = pygame.transform.scale(logo, logo_size)
+    logo_pos = (window.get_width() - logo_size[0]) // 2, round(window.get_height() * 0.15)
+
+    window_w = window.get_width()
+    
+    play_button = Button(window, (logo_pos[0] / window_w,
+                         0.45, logo_size[0] / window_w, 0.15), "JOUER")
+    ranking_button = Button(window,
+                            (logo_pos[0] / window_w,
+                             0.65,
+                             (logo_size[0] / window_w) * 0.65,
+                             0.15),
+                            "CLASSEMENT")
+    help_button = Button(window,
+                         (logo_pos[0] / window_w + (logo_size[0] / window_w) * 0.65,
+                          0.65,
+                          (logo_size[0] / window_w) * 0.35,
+                          0.15),
+                         "AIDE")
+    
+    frame = pygame.Surface(window.get_size())
+    frame.blit(logo_to_display, (logo_pos))
+    play_button.draw(frame)
+    help_button.draw(frame)
+    ranking_button.draw(frame)
+    window.blit(frame, (0, 0))
     pygame.display.flip()
-    pygame.draw.rect(screen, (0, 0, 0), pygame.Rect(0, 0, 10000, 40000))
+    return play_button, ranking_button, help_button
+
+def main_menu(window):
+    play_button, ranking_button, help_button = create_main_menu(window)
+    # évènements pygame
+    proceed = True
+    while proceed:
+        for event in pygame.event.get():
+            loop_starter_pack(event)
+            if event.type == pygame.VIDEORESIZE:
+                play_button, ranking_button, help_button = create_main_menu(window)
+            if play_button.is_pressed(event):
+                game_choice_menu(window)
+                proceed = False
+                return
+            if ranking_button.is_pressed(event):
+                menuplay()
+                proceed = False
+                return
+            if help_button.is_pressed(event):
+                menuplay()
+                proceed = False
+                return
+
+
+def create_game_choice_menu(window):
+    window_w = window.get_width()
+    mode_a_button = Button(window,
+                            (0.175,
+                             0.4,
+                             0.3,
+                             0.3),
+                            "MODE A")
+    mode_b_button = Button(window,
+                         (0.525,
+                          0.4,
+                          0.3,
+                          0.3),
+                         "MODE B")
+
+    frame = pygame.Surface(window.get_size())
+    frame.blit(menu_background, (0, 0))
+    mode_a_button.draw(frame)
+    mode_b_button.draw(frame)
+    window.blit(frame, (0, 0))
     pygame.display.flip()
-    aa = Button((195, 230, 605,  100), "aa", 50, (250, 250, 250))
-    modeA = Button((195, 200, 295, 190), "MODE A", 50, (250, 250, 250))
-    modeB = Button((505, 200, 295, 190), "MODE B", 50, (250, 250, 250))
-    screen.blit(logo, (350, 50))
-    modeA.draw(screen)
-    modeB.draw(screen)
-    """aa.draw(screen)"""
-    if modeA.event_handler(event):
-        print("try")
-    pygame.display.flip()
+    return mode_a_button, mode_b_button
+
+
+def game_choice_menu(window):
+    mode_a_button, mode_b_button = create_game_choice_menu(window)
+    proceed = True
+    while proceed:
+        for event in pygame.event.get():
+            loop_starter_pack(event)
+            if event.type == pygame.VIDEORESIZE:
+                mode_a_button, mode_b_button = create_game_choice_menu(window)
+            if mode_a_button.is_pressed(event):
+                game_choice_menu(window)
+                proceed = False
+                return
+            elif mode_b_button.is_pressed(event):
+                menuplay()
+                proceed = False
+                return
+
 
 def menuhelp():
     pygame.draw.rect(screen, (50, 50, 50), pygame.Rect(150, 50, 700, 400))
@@ -87,9 +187,18 @@ def menuderoulant():
     options.draw(screen)
     pygame.display.flip()
 
-while continuer:
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            continuer = False
-    mainmenu()
+
+
+
+lang = 'EN'
+
+# provisoire, sans les menus
+level = 1
+mode_B = False
+
+
+if __name__ == "__main__":
+    main_menu(tetris_window)
+
+
