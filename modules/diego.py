@@ -4,6 +4,9 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 import json
 import pygame
 
+from constant import COLOR
+from useful import get_font_size
+
 class Spritesheet:
     """
     Objet s'occupant d'un fichier type spritesheet.
@@ -40,8 +43,28 @@ class Spritesheet:
         image = self.get_sprite(x_position, y_position, w_position, h_position)
         return image
 
+
 class Button:
-    def __init__(self, rect, text, size, color):
+
+    def __init__(self, window, relative_position, text):
+        """
+        Exemple :
+        Button((200, 200, 100, 100), "Test", 60, (255, 255, 255))
+                 x    y    -    |
+        """
+        self.text = text
+        window_w, window_h = window.get_size()
+        x_value = round(relative_position[0] * window_w)
+        y_value = round(relative_position[1] * window_h)
+        w_value = round(relative_position[2] * window_w)
+        h_value = round(relative_position[3] * window_h)
+        self.rect = pygame.Rect(x_value, y_value, w_value, h_value)
+        self.size = get_font_size(round(self.rect.h * 0.6))
+        self.font = pygame.font.SysFont("./others/Anton-Regular.ttf",
+                                        self.size)
+        self.text_image = self.font.render(self.text, 1 , COLOR['WHITE'])
+
+    '''def __init__(self, rect, text, size, color):
         """
         Exemple :
         Button((200, 200, 100, 100), "Test", 60, (255, 255, 255))
@@ -55,18 +78,18 @@ class Button:
             bold = False
         )
         self.rect = pygame.Rect(rect)
-        self.text_image = self.font.render(self.text, 1 , color)
+        self.text_image = self.font.render(self.text, 1 , color)'''
+    def resize(self, window):
+        ...
 
     def draw(self, screen):
         """
         Permet de dessiner le bouton
         """
-        pygame.draw.rect(screen, (150, 150, 150), self.rect)
-
-        
+        pygame.draw.rect(screen, (150, 150, 150), self.rect, 4)
         screen.blit(self.text_image, (self.text_image.get_rect(center = self.rect.center)))
 
-    def event_handler(self, event):
+    def is_pressed(self, event):
         """
         Permet de détecter si le joueur a fait un clique gauche
         sur le bouton.
