@@ -1,7 +1,11 @@
+"""module codé par Bastien (@BLASTQ) TG8, contenant des fonctions pour
+les menus du jeu Tetris. Repassage du code par Solène, (@periergeia)."""
+
 import pygame
 import sys
 from diego import Button
-from solene import get_font_size
+from useful import get_font_size
+from constant import COLOR
 
 pygame.init()
 
@@ -94,6 +98,7 @@ def create_main_menu(window):
     pygame.display.flip()
     return play_button, ranking_button, help_button
 
+
 def main_menu(window):
     play_button, ranking_button, help_button = create_main_menu(window)
     # évènements pygame
@@ -118,22 +123,27 @@ def main_menu(window):
 
 
 def create_game_choice_menu(window):
-    window_w = window.get_width()
+    font_height = round(0.15 * window.get_height())
+    font_size = get_font_size(font_height)
+    font = pygame.font.SysFont("./others/Anton-Regular.ttf", font_size)
+    statement = font.render('SELECTIONNEZ  UN  MODE', 1 , COLOR['WHITE'])
+    menu_background_to_display = pygame.transform.scale(menu_background, window.get_size())
     mode_a_button = Button(window,
                             (0.175,
                              0.4,
                              0.3,
-                             0.3),
-                            "MODE A")
+                             0.4),
+                            "MODE  A", font_size)
     mode_b_button = Button(window,
                          (0.525,
                           0.4,
                           0.3,
-                          0.3),
-                         "MODE B")
+                          0.4),
+                         "MODE  B", font_size)
 
     frame = pygame.Surface(window.get_size())
-    frame.blit(menu_background, (0, 0))
+    frame.blit(menu_background_to_display, (0, 0))
+    frame.blit(statement, ((window.get_width() - statement.get_width()) // 2, round(0.175 * window.get_height())))
     mode_a_button.draw(frame)
     mode_b_button.draw(frame)
     window.blit(frame, (0, 0))
@@ -157,6 +167,10 @@ def game_choice_menu(window):
                 menuplay()
                 proceed = False
                 return
+            '''elif back_button.is_pressed(event):
+                main_menu()
+                proceed = False
+                return'''
 
 
 def menuhelp():
