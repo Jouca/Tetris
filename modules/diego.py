@@ -1,10 +1,15 @@
 """module codé par Diego (@Jouca) TG8, contenant diverses classes et
 fonctions utiles au bon fonctionnement du jeu Tetris."""
 
+
 import json
 import pygame
-from constant import COLOR
-from useful import get_font_size
+try:
+    from constant import COLOR
+    from useful import get_font_size
+except ModuleNotFoundError:
+    from modules.constant import COLOR
+    from modules.useful import get_font_size
 
 
 class Spritesheet:
