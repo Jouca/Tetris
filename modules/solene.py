@@ -2,27 +2,31 @@
 fonctions utiles au bon fonctionnement du jeu Tetris."""
 
 
-import sys
-
 # importation de librairies python utiles
+# ##import sys
 import random
 import colorsys
 import time
 import termcolor  # ##à enlever, utile pour test avec print
 import pygame
 import pygame.freetype
+
 try:
-    sys.path.append("..")
-    from modules.collect_file_s_text import get_file_lst
-    from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT, FONT_HEIGHT, DATA_KEYS
-    from modules.diego import clear_lines
-    from modules.paul import border_dict
-except ModuleNotFoundError:
     from collect_file_s_text import get_file_lst
-    from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT, FONT_HEIGHT, DATA_KEYS
+    from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT, DATA_KEYS
     from diego import clear_lines
     from paul import border_dict
+    from useful import get_font_size, loop_starter_pack
+except ModuleNotFoundError:
+    # ##sys.path.append("..")
+    from modules.collect_file_s_text import get_file_lst
+    from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT, DATA_KEYS
+    from modules.diego import clear_lines
+    from modules.paul import border_dict
+    from modules.useful import get_font_size, loop_starter_pack
 
+
+# pylint: disable=E1101
 # pylint: disable=W0231
 # (super-init-not-called), il m'est inutile de faire appel à la méthode
 # constructeur des classes parent vu que leur méthode constructeur font appel
@@ -35,8 +39,196 @@ except ModuleNotFoundError:
 # supprimer des attributs avec delattr(self, 'field_to_delete') super().__init__(*args, **kwargs)
 
 
-# initialisation de pygame pour pygame.freetype
-pygame.init()
+def resize_all(window_data, obj):
+    """"redimensionne toutes les choses nécéssitant d'être
+    redimensionnées."""
+    # redimensionne chaque objet avec leur méthode resize
+    for element in obj[1:]:
+        element.resize(window_data)
+    obj[-1].values_relative_position()
+
+
+def display_all(window, chronometer, obj):
+    """raffraîchit le jeu en faisant afficher une frame,
+    contenant les objets dont les caractéristiques ont été
+    mis à jour."""
+    #  ###############provisoire
+    menubutton = pygame.image.load("./image/menubutton.png").convert_alpha()
+    # création d'une surface
+    frame = pygame.Surface(window.get_size())
+    # affichage de l'image pour le boutton des menus, ## voir arrangement ?
+    menu_image = pygame.transform.scale(menubutton,
+                                        (obj[4].rect.w,
+                                        obj[4].rect.h))
+    frame.blit(menu_image, (obj[4].rect.x, obj[4].rect.y))
+    # affiche chaque objet avec leur méthode display
+    for element in obj:
+        element.display(frame)
+    # dessin de la ghost piece
+    if obj[0].state != 2:
+        # ## test à enlever si pas de soucis
+        if obj[1].draw_ghost_piece(frame, obj[0]) == "ERROR snif :')":
+            pygame.image.save(window, "screenshot.jpeg")
+    # frame sur la fenêtre
+    window.blit(frame, (0, 0))
+    # ## voir à supprimer ?
+    display_game_data(window, obj[5], chronometer)
+    # rafraichissement de la fenêtre pygame
+    pygame.display.flip()
+
+
+def display_game_data(window, data, chronometer):
+    """affiche les données de jeu dans l'encadré de Data."""
+    frame_size = (data.rect.w - 2 * data.width, data.rect.h - 2 * data.width)
+    # création d'un objet pygame.Surface de la taille de l'encadré data
+    frame = pygame.Surface(frame_size)
+    frame.blit(data.surface, (0, 0))
+    data.update(chronometer, frame)
+    window.blit(frame, (data.rect.x + data.width, data.rect.y + data.width))
+    pygame.display.flip()
+
+
+def game_pause():
+    """crée un visuel permettant au joueur de comprendre que le
+    jeu est mis en pause."""
+
+
+def gameplay(window, game_type, lang):
+    """gameplay du jeu tetris."""
+    w_width, w_height = window.get_size()
+    window_data = {'size': (w_width, w_height),
+                   'width': w_width,
+                   'height': w_height,
+                   'margin': round(0.05 * w_height)}
+    bag = Bag()
+    game_chrono = Chronometer()
+    matrix = Matrix(window_data, game_type)
+    next_queue = NextQueue(window_data)
+    hold_queue = HoldQueue(window_data)
+    menu_button = MenuButton(window_data)
+    data = Data(window_data, lang, game_chrono, game_type)
+
+    tetrimino = Tetrimino(matrix)
+
+    game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
+
+    display_all(window, game_chrono, game_object)
+
+
+    time_before_refresh = Chronometer()
+    lock_down_chrono = Chronometer()
+    SHADE_PHASE = 1
+    LOCK_PHASE_FIRST = 1
+    softdrop = False
+
+    while True:
+
+        game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
+
+        # évènements pygame
+        for event in pygame.event.get():
+            window = loop_starter_pack(window, event)
+            if event.type == pygame.VIDEORESIZE:
+                window_w, window_h = window.get_size()
+                window_data = {'size': (window_w, window_h),
+                               'width': window_w,
+                               'height': window_h,
+                               'margin': round(0.05 * window_h)}
+                print(f'current window size :   {window_data}')
+                # reaffichage avec changement des tailles et emplacement des objets
+                resize_all(window_data, game_object)
+                display_all(window, game_chrono, game_object)
+
+            # ## à enlever en fin
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print(pygame.mouse.get_pos())
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN:
+                    softdrop = False
+                    data.set_fall_speed()
+
+            if event.type == pygame.KEYDOWN:
+
+                key_mod = pygame.key.get_mods()
+                key = pygame.key.get_pressed()
+
+                if key[pygame.K_F1] or key[pygame.K_ESCAPE]:
+                    game_pause()
+
+                elif key[pygame.K_SPACE]:
+                    tetrimino.hard_drop(data)
+
+                elif key[pygame.K_DOWN]:
+                    softdrop = True
+                    data.fall_speed /= 20  # ## pas bon
+
+                elif key[pygame.K_RIGHT]:
+                    tetrimino.move_right(matrix)
+
+                elif key[pygame.K_LEFT]:
+                    tetrimino.move_left(matrix)
+
+                elif key[pygame.K_w] or (key_mod and pygame.KMOD_CTRL):
+                    tetrimino.turn_left(matrix)
+
+                elif key[pygame.K_UP] or key[pygame.K_x]:
+                    tetrimino.turn_right(matrix)
+
+                elif event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
+                    if hold_queue.can_hold:
+                        temp = hold_queue.get_t_type()
+                        hold_queue.hold(tetrimino)
+                        # dans le cas où la hold queue n'est pas vide
+                        if temp:
+                            tetrimino.set_type(temp)
+                            tetrimino.set_y(0)
+                        # si vide
+                        else:
+                            # création d'un nouveau tetrimino
+                            tetrimino = Tetrimino(matrix)
+
+                display_all(window, game_chrono, game_object)
+
+        # phase précédant le lock down
+        if tetrimino.state == 1:
+            # permet de jouer sur la couleur du tetrimino
+            values = tetrimino.lock_phase(matrix, lock_down_chrono,
+                                        LOCK_PHASE_FIRST, SHADE_PHASE)
+            LOCK_PHASE_FIRST, SHADE_PHASE = values
+            display_all(window, game_chrono, game_object)
+            time.sleep(0.015)
+
+        # phase lock down
+        elif tetrimino.state == 2:
+            # le tetrimino est lock dans matrix
+            tetrimino.lock_on_matrix(matrix)
+            # le tetrimino suivant est créé
+            tetrimino = Tetrimino(matrix)
+            hold_queue.allow_hold()
+            display_all(window, game_chrono, game_object)
+            # clear les lines s'il y a
+            matrix.clear_lines(data)
+            display_all(window, game_chrono, game_object)
+            # le chronomètre est raffraîchi
+            time_before_refresh.reset()
+
+        # dans le cas où le tetrimino est en falling phase
+        else:
+            # dans le cas où le joueur souhaite faire un softdrop
+            # spécifié par le fait que la touche flèche bas est
+            # maintenue pressée
+            if time_before_refresh == data.fall_speed:
+                # score incrémenté de 1 lorsque le tetrimino peut tomber
+                if tetrimino.fall(matrix) and softdrop:
+                    data.score_increase(1)
+                # on reinitialise le chrono
+                time_before_refresh.reset()
+            # reaffichage de l'écran
+            display_all(window, game_chrono, game_object)
+        # ##pour tester au besoin
+        # display_all(window_data, game_object)
+        display_game_data(window, data, game_chrono)
 
 
 def display_visual_tetrimino(surface, place_properties, y_axis, t_type):
@@ -178,7 +370,6 @@ class Bag:
     représentés par un numéro correspondant à leur type."""
 
     content = list(range(1, 8))
-    # ##content = [5 for _ in range(10)]
     random.shuffle(content)
 
     def __len__(self):
@@ -205,10 +396,11 @@ class Matrix:
         self.modelisation = [22 for i in range(10)]
         # création d'une matrice vide avec deux lignes pour la skyline
         self.higher_row = 22
-        level, mode_b = game_type
-        if mode_b:
-            return
-
+        for i in range(game_type[1] * 2):
+            line = [random.randint(0, 9) for j in range(10)]
+            for j in range(10):
+                line[j] = 0 if line[j] > 7 else line[j]
+            self.content[21-i] = line
     # ##temporaire
     def __str__(self):
         stock = ''
@@ -227,9 +419,9 @@ class Matrix:
             # ajoute le nombre de line_clear aux informations du jeu
             data.add_to_line_clear(nb_line_cleared)
             # ## placer dans constantes ?
-            MULTIPLY_BY = {1: 100, 2: 300, 3: 500, 4: 800}
-            level = int(data.values['lines'])
-            data.score_increase(level * MULTIPLY_BY[nb_line_cleared])
+            multiply_by = {1: 100, 2: 300, 3: 500, 4: 800}
+            level = data.values['lines']
+            data.score_increase(level * multiply_by[nb_line_cleared])
             for i in range(10):
                 if self.modelisation[i] != 22:
                     self.modelisation[i] += 1
@@ -266,6 +458,53 @@ class Matrix:
                                                       y_axis + j * self.cell_size,
                                                       self.cell_size,
                                                       self.cell_size)
+        self.resize_grid_surface(window)
+
+    def resize_grid_surface(self, window):
+        """crée une surface redimensionnée selon les dimensions de la
+        fenêtre `window`, `window` est un dictionnaire contenant les
+        données relative à la fenêtre de jeu."""
+        grid_surface = pygame.Surface(window['size'])
+        grid_surface.set_colorkey((0, 0, 0))
+        # dessin de la grille
+        # lignes horizontales du quadrillage de matrix
+        for i in range(1, 22):
+            grid_y = self.cell[1][i].y
+            pygame.draw.line(grid_surface, COLOR['WHITE'],
+                             (self.rect.x, grid_y),
+                             (self.rect.x + self.rect.w, grid_y))
+        # lignes verticales du quadrillage de matrix
+        for i in range(1, 10):
+            grid_x = self.cell[i][1].x
+            pygame.draw.line(grid_surface, COLOR['WHITE'],
+                             (grid_x, self.rect.y),
+                             (grid_x, self.rect.y + self.rect.h - self.width))
+        # lignes de bords
+        # haut
+        pygame.draw.rect(grid_surface, (150, 0, 0),
+                         pygame.Rect(self.rect.x,
+                                     self.rect.y,
+                                     self.rect.w,
+                                     self.width))
+        # bas
+        pygame.draw.rect(grid_surface, (150, 150, 150),
+                         pygame.Rect(self.rect.x,
+                                     self.rect.y + self.rect.h - self.width,
+                                     self.rect.w,
+                                     self.width))
+        # gauche
+        pygame.draw.rect(grid_surface, (150, 150, 150),
+                         pygame.Rect(self.rect.x - self.width,
+                                     self.rect.y,
+                                     self.width,
+                                     self.rect.h))
+        # droite
+        pygame.draw.rect(grid_surface, (150, 150, 150),
+                         pygame.Rect(self.rect.x + 10 * self.cell_size,
+                                     self.rect.y,
+                                     self.width,
+                                     self.rect.h))
+        self.grid_surface = grid_surface
 
     def display(self, surface):
         """dessine matrix selon ses attributs sur une surface `surface` devant
@@ -280,7 +519,7 @@ class Matrix:
                                      color, self.cell[j][i])
 
         # demo toutes les cases, première et dernière de matrix visible
-        '''for e in self.cell:
+        '''for element in self.cell:
             for i in range(10):
                 for j in range(1, 22):
                     # ##couleurs sympa garder pour mode spécial ?
@@ -288,53 +527,7 @@ class Matrix:
                     pygame.draw.rect(surface, color, self.cell[i][j])
         pygame.draw.rect(surface, (250, 0, 0), self.cell[0][1])
         pygame.draw.rect(surface, (0, 250, 0), self.cell[9][21])'''
-
-        # dessin de la grille
-        # lignes horizontales du quadrillage de matrix
-        for i in range(1, 22):
-            grid_y = self.cell[1][i].y
-            pygame.draw.line(surface, COLOR['WHITE'],
-                             (self.rect.x, grid_y),
-                             (self.rect.x + self.rect.w, grid_y))
-        # lignes verticales du quadrillage de matrix
-        for i in range(1, 10):
-            grid_x = self.cell[i][1].x
-            pygame.draw.line(surface, COLOR['WHITE'],
-                             (grid_x, self.rect.y),
-                             (grid_x, self.rect.y + self.rect.h - self.width))
-
-        # lignes de bords
-        # haut
-        pygame.draw.rect(surface, (150, 0, 0),
-                         pygame.Rect(self.rect.x,
-                                     self.rect.y,
-                                     self.rect.w,
-                                     self.width))
-        # bas
-        pygame.draw.rect(surface, (150, 150, 150),
-                         pygame.Rect(self.rect.x,
-                                     self.rect.y + self.rect.h - self.width,
-                                     self.rect.w,
-                                     self.width))
-        # gauche
-        pygame.draw.rect(surface, (150, 150, 150),
-                         pygame.Rect(self.rect.x - self.width,
-                                     self.rect.y,
-                                     self.width,
-                                     self.rect.h))
-        # droite
-        pygame.draw.rect(surface, (150, 150, 150),
-                         pygame.Rect(self.rect.x + 10 * self.cell_size,
-                                     self.rect.y,
-                                     self.width,
-                                     self.rect.h))
-        # efface imperfection du rectangle initialement tracé
-        if self.higher_row == 0:
-            pygame.draw.rect(surface, (0, 0, 0),
-                             pygame.Rect(self.rect.x,
-                                         self.rect.y - self.cell_size,
-                                         self.rect.w,
-                                         self.cell_size))
+        surface.blit(self.grid_surface, (0, 0))
 
     # ## optimiser
     def draw_ghost_piece(self, surface, tetrimino):
@@ -450,7 +643,7 @@ class Tetrimino(Bag, Matrix):
         self.x_coordinate = start_center(self.type)
         # dans la skyline (en haut de la matrice)
         self.y_coordinate = 0
-        self.lower_tetrimino_pos(matrix)
+        self.find_lower_pos(matrix)
         # incrémente le nombre de tetrimino créé de 1
         Tetrimino.count += 1
         # ##à enlever en fin
@@ -602,9 +795,10 @@ class Tetrimino(Bag, Matrix):
         self.y_coordinate = coordinates[1]
         return False
 
-    # ## incrémentation score
     def hard_drop(self, data):
-        print(self.y_coordinate, self.lower_pos)
+        """permet au joueur de réaliser un hard drop en plaçant le
+        tetrimino en jeu directement à la position la plus basse
+        atteignable par la pièce."""
         data.score_increase((self.lower_pos - self.y_coordinate) * 2)
         self.y_coordinate = self.lower_pos
         self.state = 2
@@ -649,8 +843,7 @@ class Tetrimino(Bag, Matrix):
             phase = (phase + 1) % 2
         return first, phase
 
-    # ## soucis à fix
-    def lower_tetrimino_pos(self, matrix):
+    def find_lower_pos(self, matrix):
         """renvoie la position la plus basse pouvant être atteinte par
         l'instance afin de déterminer la position des ordonnées de la ghost
         piece dans `matrix`. La méthode prend en paramètre `matrix` une
@@ -685,6 +878,42 @@ class Tetrimino(Bag, Matrix):
         self.y_coordinate = y_coordinate
         # on renvoie la valeur d'ordonnée trouvée
         self.lower_pos = y_value_attempt + i - 2
+
+    '''def find_lower_pos(self, matrix):
+        """renvoie la position la plus basse pouvant être atteinte par
+        l'instance afin de déterminer la position des ordonnées de la ghost
+        piece dans `matrix`. La méthode prend en paramètre `matrix` une
+        instance de la classe Matrix."""
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        # récupère la véritable largeur concernée par le tetrimino
+        t_first_column = self.leftmost()
+        t_last_column = self.rightmost()
+        # nouvelle liste extraite de la liste modélisant les mino les plus
+        # haut par colonne dans matrix. Extraction des colonnes situées sous
+        # le tetrimino visuel dans une nouvelle liste
+        new_list = matrix.modelisation[t_first_column:t_last_column + 1]
+        # variable utile pour la méthode test_around de l'objet `tetrimino`
+        # afin d'éviter de calculer la longueur à chaque tour de boucle
+        nb_column = len(tetrimino_shape)
+        # stockage de la valeur de l'attribut y_coordinate de `tetrimino`
+        y_coordinate = self.y_coordinate
+        # on place le tetrimino à la colonne la plus haute possible
+        # ## try except pour test à enlever si rien
+        try:
+            y_value_attempt = min(new_list) - nb_column
+        except:
+            print(new_list, self.type, self.phasis)
+            return "ERROR snif :')"
+        i = 1
+        # du moment que le tetrimino peut être placé sans accroc
+        while self.test_around(matrix, tetrimino_shape, nb_column):
+            # on incrémente pour faire descendre le tetrimino d'une ligne
+            self.y_coordinate = y_value_attempt + i
+            i += 1
+        # on rétablit la valeur initiale de la coordonnée y du tetrimino
+        self.y_coordinate = y_coordinate
+        # on renvoie la valeur d'ordonnée trouvée
+        self.lower_pos = y_value_attempt + i - 2'''
 
     def display(self, surface):
         """affiche l'instance de tetrimino en fonction de ses spécificités."""
@@ -747,7 +976,7 @@ class Tetrimino(Bag, Matrix):
             self.x_coordinate -= 1
             if self.test_around(matrix, tetrimino_shape, nb_column):
                 # redéfini emplacement de la ghost piece
-                self.lower_tetrimino_pos(matrix)
+                self.find_lower_pos(matrix)
                 return
             # le test a échoué, le tetrimino ne peut pas aller à gauche
             self.x_coordinate += 1
@@ -759,7 +988,7 @@ class Tetrimino(Bag, Matrix):
         self.x_coordinate += 1
         if self.test_around(matrix, tetrimino_shape, nb_column):
             # redéfini emplacement de la ghost piece
-            self.lower_tetrimino_pos(matrix)
+            self.find_lower_pos(matrix)
             return
         # le test a échoué, le tetrimino ne peut pas aller à droite
         self.x_coordinate -= 1
@@ -772,7 +1001,7 @@ class Tetrimino(Bag, Matrix):
         if self.super_rotation_system(matrix, phasis):
             self.phasis = phasis
             # redéfini emplacement de la ghost piece
-            self.lower_tetrimino_pos(matrix)
+            self.find_lower_pos(matrix)
 
     def turn_right(self, matrix):
         """permet de tourner le tetrimino de 90° dans le sens
@@ -781,7 +1010,7 @@ class Tetrimino(Bag, Matrix):
         if self.super_rotation_system(matrix, phasis):
             self.phasis = phasis
             # redéfini emplacement de la ghost piece
-            self.lower_tetrimino_pos(matrix)
+            self.find_lower_pos(matrix)
 
     def set_type(self, new_type):
         """change le type d'un tetrimino pour `new_type` un entier
@@ -972,13 +1201,23 @@ class MenuButton(HoldQueue, NextQueue):
     def bind(self):
         """affichage dans le cas où le boutton est appuyé."""
 
+
 # fonctions plus pour la lisibilité du code
 def find_align_center_x(lenght, remaining_place):
+    """permet de trouver la position x tel que l'objet que l'on cherche
+    à aligner au centre soit centré. Prend en paramètre la taille de la largeur
+    de l'objet (`lenght`) et la largeur de l'objet sur lequel on cherche à
+    centrer (`remaining_place`)."""
     return (remaining_place - lenght) // 2
 
 
-def find_align_right_x(lenght, remaining_place):
-    return remaining_place - lenght
+# ## garder ?
+'''def find_align_right_x(lenght, remaining_place):
+    """permet de trouver la position x tel que l'objet que l'on cherche
+    à aligner soit à droite. Prend en paramètre la taille de la largeur
+    de l'objet (`lenght`) et la largeur de l'objet sur lequel on cherche à
+    centrer (`remaining_place`)."""
+    return remaining_place - lenght'''
 
 
 class Data(HoldQueue):
@@ -991,7 +1230,6 @@ class Data(HoldQueue):
     - margin
     - name
     - rect
-    - space_between_string   # à supprimer
     - values
     - values_surface
     - width
@@ -1003,8 +1241,8 @@ class Data(HoldQueue):
     def __init__(self, window, lang, chronometer, game_type):
         """méthode constructeur de la classe. Initialise le score
         et les données d'une parties."""
-        level, mode_b = game_type
-        goal = 25 if mode_b else level * 5
+        level, hight = game_type
+        goal = 25 if hight else level * 5
         first_values = [0, 0, level, goal]
         self.values = {DATA_KEYS[i]: first_values[i] for i in range(4)}
         self.name = get_file_lst(lang, 1, 'data_name', False)
@@ -1015,10 +1253,12 @@ class Data(HoldQueue):
         self.set_fall_speed()
 
     def change_text_language(self, lang):
+        """change la langue du texte selon `lang` une chaîne de caractère."""
         self.name = get_file_lst(lang, 1, 'data_name', False)
         self.font_resize()
 
     def font_resize(self):
+        """redimenssione les polices."""
         w_value, h_value = self.rect.w, self.rect.h
         # attribution d'une marge locale
         local_margin = h_value // 11
@@ -1026,14 +1266,7 @@ class Data(HoldQueue):
         font_place = (w_value - local_margin, h_value - 2 * local_margin)
         # taille que devrait avoir la hauteur du texte
         font_height = round((0.86 * font_place[1]) / 7)
-        # détermine la taille de font qui sied le mieux
-        if font_height < 19:
-            font_size = 12
-        else:
-            i = 0
-            while font_height > FONT_HEIGHT[i]:
-                i += 1
-            font_size = i + 12
+        font_size = get_font_size(font_height)
         # redéfinition de l'attribut font selon les résultats obtenus
         self.font = pygame.font.Font("others/Anton-Regular.ttf", font_size)
         name_surface = []
@@ -1043,36 +1276,28 @@ class Data(HoldQueue):
 
         # création d'un objet surface servant de calque afin d'optimiser le jeu
         surface = pygame.Surface((w_value - 2 * self.width, h_value - 2 * self.width))
-        rect2 = pygame.Surface(font_place)
-        rect2.fill(0x001100)
-        surface.blit(rect2, (local_margin // 2, local_margin))
-        on_x_axis = local_margin // 2  # ##à changer
         temp = [1, None, 0, 1, None, 0, 0, 0, 1, 0, 1, 0, 1]
-        y = local_margin
+        y_value = local_margin
         self.position = []
         font_h = name_surface[0].get_size()
         i = 0
-        for e in temp:
-            if e == 1:
-                a, b = name_surface[i].get_size()  # ##
-                rect = pygame.Surface((a, b))   # ##
-                rect.fill(0x660044)   # ##
-                surface.blit(rect, (on_x_axis, y))   # ##
-                surface.blit(name_surface[i], (on_x_axis, y))
+        for element in temp:
+            if element == 1:
+                surface.blit(name_surface[i], (local_margin // 2, y_value))
                 if i > 1:
-                    self.position.append(y)
+                    self.position.append(y_value)
                 i += 1
-                y += font_h[1]
-            elif e == None:
-                self.position.append(y)
-                y += font_h[1]
+                y_value += font_h[1]
+            elif element is None:
+                self.position.append(y_value)
+                y_value += font_h[1]
             else:
-                y += space_between_string
+                y_value += space_between_string
 
         self.surface = surface
 
     def values_relative_position(self):
-
+        """définit les positions des valeurs."""
         w_value, h_value = self.rect.w, self.rect.h
         # attribution d'une marge locale
         local_margin = h_value // 11
@@ -1081,15 +1306,24 @@ class Data(HoldQueue):
         chrono_save = self.values_surface[1]
         self.values_surface = [self.font.render(str(self.values[DATA_KEYS[i]]).zfill(nb_zero_to_fill[i]), 1, COLOR['WHITE']) for i in range(4)]
         self.values_surface.insert(1, chrono_save)
+        # ## recours boucle pour ne pas dépasser limite de 79 caractères
+        '''for i in range(4):
+            # ##besoin d'un nom à un caractère TvT
+            j = str(self.values[DATA_KEYS[i]]).zfill(nb_zero_to_fill[i])
+            self.values_surface.append(self.font.render(j, 1, COLOR['WHITE']))
+        self.values_surface.insert(1, chrono_save)'''
 
         pos_x = []
         termcolor.cprint(self.position, 'red')
         temp_chrono = Chronometer()  # ##
         self.chrono_value(temp_chrono)  # ##
-        pos_x.append(find_align_center_x(self.values_surface[0].get_size()[0], w_value))
-        pos_x.append(find_align_center_x(self.values_surface[1].get_size()[0], w_value))
+        print(self.values_surface)
+        for i in range(2):
+            obj_w_value = self.values_surface[i].get_size()[0]
+            pos_x.append(find_align_center_x(obj_w_value, w_value))
         for i in range(2, 5):
-            pos_x.append(find_align_right_x(self.values_surface[i].get_size()[0], w_value - local_margin))
+            obj_w_value = self.values_surface[i].get_size()[0]
+            pos_x.append(w_value - local_margin - obj_w_value)
 
         for i in range(5):
             self.position[i] = ((pos_x[i], self.position[i]))
@@ -1101,8 +1335,9 @@ class Data(HoldQueue):
         self.fall_speed = (0.8 - (level - 1) * 0.007) ** (level - 1)
 
     """SCORING (aide-mémoire) :
-    There is a special bonus for Back-to-Backs, which is when two actions such as a Tetris and T-Spin Double (see complete
-    list below) take place without a Single, Double, or Triple Line Clear occurring between them.
+    There is a special bonus for Back-to-Backs, which is when two actions such as a Tetris and
+    T-Spin Double (see complete list below) take place without a Single, Double, or Triple Line
+    Clear occurring between them.
 
     Action              Action Total        Description
     Mini T-Spin         100 x Level         An easier T-Spin with no Line Clear.
@@ -1112,7 +1347,8 @@ class Data(HoldQueue):
     T-Spin Double       1200 x Level        T-Spin simultaneously clearing 2 lines of 10 Blocks.
     T-Spin Triple       1600 x Level        T-Spin simultaneously clearing 3 lines of 10 Blocks.
     Back-to-Back Bonus  0.5 x Action        Total Bonus for Tetrises, T-Spin Line Clears, and Mini
-                                            T-Spin Line Clears performed consecutively in a B2B sequence."""
+                                            T-Spin Line Clears performed consecutively in a B2B
+                                            sequence."""
 
     def resize(self, window):
         """change les attributs relatifs aux dimensions de l'encadré."""
@@ -1132,39 +1368,40 @@ class Data(HoldQueue):
         self.font_resize()
 
     def chrono_value(self, chronometer):
-        """met à jour les attributs de l'instance."""
+        """la valeur du chronomètre est donnée selon celle de `chronometer`
+        une instance de la classe Chronometer."""
         chrono_value = chronometer.get_chrono_value()
         self.values_surface[1] = self.font.render(chrono_value, 1,
                                                   COLOR['WHITE'])
 
     def update(self, chronometer, surface):
+        """met à jour les attributs de l'instance."""
         self.chrono_value(chronometer)
         for i in range(5):
-            a, b = self.values_surface[i].get_size()
-            rect = pygame.Surface((a, b))  # 5/13 = 0.2173
-            rect.fill(0x660000)
-            surface.blit(rect, self.position[i])
             surface.blit(self.values_surface[i], self.position[i])
 
     def add_to_line_clear(self, value_to_add):
         """ajoute `value_to_add` au nombre de line_clear."""
         self.values['lines'] += value_to_add
-        self.values_surface[2] = self.font.render(str(self.values['lines']).zfill(3), 1,
-                                                  COLOR['WHITE'])
-        # ##enlever pour goal suivant ? samedi
+        lines = self.font.render(str(self.values['lines']).zfill(3), 1,
+                                 COLOR['WHITE'])
+        self.values_surface[2] = lines
         self.values['goal'] -= value_to_add
         if self.values['goal'] < 1:
             self.values['level'] += 1
             self.set_fall_speed()
             self.values['goal'] = self.values['level'] * 5
-            self.values_surface[3] = self.font.render(str(self.values['level']).zfill(2), 1,
-                                                  COLOR['WHITE'])
-        self.values_surface[4] = self.font.render(str(self.values['goal']).zfill(3), 1,
-                                                  COLOR['WHITE'])
+            level = self.font.render(str(self.values['level']).zfill(2), 1,
+                                     COLOR['WHITE'])
+            self.values_surface[3] = level
+        chrono = self.font.render(str(self.values['goal']).zfill(3), 1,
+                                  COLOR['WHITE'])
+        self.values_surface[4] = chrono
 
     def score_increase(self, value_to_add):
         """augmente l'attribut score de `value_to_add` devant
         être un entier."""
         self.values['score'] += value_to_add
-        self.values_surface[0] = self.font.render(str(self.values['score']).zfill(10), 1,
-                                                  COLOR['WHITE'])
+        score = self.font.render(str(self.values['score']).zfill(10), 1,
+                                 COLOR['WHITE'])
+        self.values_surface[0] = score
