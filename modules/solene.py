@@ -3,7 +3,6 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 
 
 # importation de librairies python utiles
-
 import random
 import colorsys
 import time
@@ -19,7 +18,6 @@ try:
     from paul import border_dict
     from useful import get_font_size, loop_starter_pack
 except ModuleNotFoundError:
-    # ##sys.path.append("..")
     from modules.collect_file_s_text import get_file_lst
     from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
     from modules.constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG
@@ -849,6 +847,33 @@ class Tetrimino(Bag, Matrix):
             phase = (phase + 1) % 2
         return first, phase
 
+    '''def find_lower_pos(self, matrix):
+        """renvoie la position la plus basse pouvant être atteinte par
+        l'instance afin de déterminer la position des ordonnées de la ghost
+        piece dans `matrix`. La méthode prend en paramètre `matrix` une
+        instance de la classe Matrix."""
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        # variable utile pour la méthode test_around de l'objet `tetrimino`
+        # afin d'éviter de calculer la longueur à chaque tour de boucle
+        nb_column = len(tetrimino_shape)
+        # stockage de la valeur de l'attribut y_coordinate de `tetrimino`
+        y_coordinate = self.y_coordinate
+        proceed = True
+        # du moment que le tetrimino peut être placé sans accroc
+        while proceed:
+            if self.test_around(matrix, tetrimino_shape, nb_column):
+            # on incrémente pour faire descendre le tetrimino d'une ligne
+                self.y_coordinate += 1
+                if self.y_coordinate > 20:
+                    proceed = False
+            else:
+                proceed = False
+        # on renvoie la valeur d'ordonnée trouvée
+        self.lower_pos = self.y_coordinate - 1
+        # on rétablit la valeur initiale de la coordonnée y du tetrimino
+        self.y_coordinate = y_coordinate'''
+    
+    
     def find_lower_pos(self, matrix):
         """renvoie la position la plus basse pouvant être atteinte par
         l'instance afin de déterminer la position des ordonnées de la ghost
@@ -874,42 +899,6 @@ class Tetrimino(Bag, Matrix):
         self.lower_pos = self.y_coordinate - 1
         # on rétablit la valeur initiale de la coordonnée y du tetrimino
         self.y_coordinate = y_coordinate
-
-    '''def find_lower_pos(self, matrix):
-        """renvoie la position la plus basse pouvant être atteinte par
-        l'instance afin de déterminer la position des ordonnées de la ghost
-        piece dans `matrix`. La méthode prend en paramètre `matrix` une
-        instance de la classe Matrix."""
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
-        # récupère la véritable largeur concernée par le tetrimino
-        t_first_column = self.leftmost()
-        t_last_column = self.rightmost()
-        # nouvelle liste extraite de la liste modélisant les mino les plus
-        # haut par colonne dans matrix. Extraction des colonnes situées sous
-        # le tetrimino visuel dans une nouvelle liste
-        new_list = matrix.modelisation[t_first_column:t_last_column + 1]
-        # variable utile pour la méthode test_around de l'objet `tetrimino`
-        # afin d'éviter de calculer la longueur à chaque tour de boucle
-        nb_column = len(tetrimino_shape)
-        # stockage de la valeur de l'attribut y_coordinate de `tetrimino`
-        y_coordinate = self.y_coordinate
-        # on place le tetrimino à la colonne la plus haute possible
-        # ## try except pour test à enlever si rien
-        try:
-            y_value_attempt = min(new_list) - nb_column
-        except:
-            print(new_list, self.type, self.phasis)
-            return "ERROR snif :')"
-        i = 1
-        # du moment que le tetrimino peut être placé sans accroc
-        while self.test_around(matrix, tetrimino_shape, nb_column):
-            # on incrémente pour faire descendre le tetrimino d'une ligne
-            self.y_coordinate = y_value_attempt + i
-            i += 1
-        # on rétablit la valeur initiale de la coordonnée y du tetrimino
-        self.y_coordinate = y_coordinate
-        # on renvoie la valeur d'ordonnée trouvée
-        self.lower_pos = y_value_attempt + i - 2'''
 
     def display(self, surface):
         """affiche l'instance de tetrimino en fonction de ses spécificités."""
