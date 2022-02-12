@@ -12,6 +12,18 @@ except ModuleNotFoundError:
     from modules.useful import get_font_size
 
 
+class GameStrings:
+    def __init__(self, language="FR"):
+        with open(f"./others/game_string/{language}/game_strings.json", "r", encoding="utf-8") as f:
+            self.data = json.load(f)
+    
+    def get_string(self, key):
+        return self.data[key]
+
+    def get_all_strings(self):
+        return self.data
+
+
 class Spritesheet:
     """classe s'occupant d'un fichier type spritesheet."""
 
@@ -44,7 +56,12 @@ class Spritesheet:
         sprite = self.data['frames'][name]['frame']
         x_position, y_position = sprite["x"], sprite["y"]
         w_position, h_position = sprite["w"], sprite["h"]
-        image = self.get_sprite(x_position, y_position, w_position, h_position)
+        image = self.get_sprite(
+            x_position,
+            y_position,
+            w_position,
+            h_position
+        )
         return image
 
 
@@ -69,15 +86,15 @@ class Button:
             la fenêtre (pour `w` égal à 0, le bouton est inexistant ce qui
             n'est pas très intéressant, lorsque `w` vaut 1, le bouton possède
             une largeur égale à celle de la fenêtre) ;
-            - valeur `h`, représente la longueur du bouton selon la longueur de
-            la fenêtre (pour `h` égal à 0, le bouton est inexistant ce qui
+            - valeur `h`, représente la longueur du bouton selon la longueur
+            de la fenêtre (pour `h` égal à 0, le bouton est inexistant ce qui
             n'est pas très intéressant, lorsque `w` vaut 1, le bouton possède
             une longueur égale à celle de la fenêtre)
         - `text` est le texte associé au bouton, doit être une chaîne de
         caractères ;
         - font_size, un entier spécifiant la taille de la police pour le texte
-        à afficher sur le bouton visuel, dans le cas où elle n'est pas indiqué,
-        la taille dépendra de la hauteur du bouton.
+        à afficher sur le bouton visuel, dans le cas où elle n'est pas
+        indiqué, la taille dépendra de la hauteur du bouton.
         >>> button = Button((0, 0, 1, 1), "Hello world !", 50)"""
         self.text = text
         window_w, window_h = window.get_size()
@@ -90,7 +107,7 @@ class Button:
         if not font_size:
             font_size = get_font_size(round(self.rect.h * 0.6))
         font = pygame.font.SysFont("./others/Anton-Regular.ttf", font_size)
-        self.text_image = font.render(self.text, 1 , COLOR['WHITE'])
+        self.text_image = font.render(self.text, 1, COLOR['WHITE'])
 
     def draw(self, surface):
         """permet de dessiner le bouton sur une surface `surface` devant
@@ -100,7 +117,7 @@ class Button:
         button_surface.set_alpha(175)
         surface.blit(button_surface, (self.rect.x, self.rect.y))
         pygame.draw.rect(surface, (150, 150, 150), self.rect, 4)
-        center_pos = self.text_image.get_rect(center = self.rect.center)
+        center_pos = self.text_image.get_rect(center=self.rect.center)
         surface.blit(self.text_image, center_pos)
 
     def is_pressed(self, event):

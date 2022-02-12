@@ -1,0 +1,13 @@
+{
+    "play": "PLAY",
+    "leaderboard": "LEADERBOARD",
+    "help": "HELP",
+    "select_mode": "SELECT MODE",
+    "mode_a": "MODE A",
+    "mode_b": "MODE B",
+    "score": "SCORE",
+    "time": "TIME",
+    "lines": "LINES",
+    "level": "LEVEL",
+    "goal": "GOAL"
+}

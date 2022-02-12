@@ -3,7 +3,7 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 
 
 # importation de librairies python utiles
-# ##import sys
+
 import random
 import colorsys
 import time
@@ -13,17 +13,23 @@ import pygame.freetype
 
 try:
     from collect_file_s_text import get_file_lst
-    from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT, DATA_KEYS
-    from diego import clear_lines
+    from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME
+    from constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG
+    from diego import clear_lines, GameStrings
     from paul import border_dict
     from useful import get_font_size, loop_starter_pack
 except ModuleNotFoundError:
     # ##sys.path.append("..")
     from modules.collect_file_s_text import get_file_lst
-    from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT, DATA_KEYS
-    from modules.diego import clear_lines
+    from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
+    from modules.constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG
+    from modules.constant import PHASIS_NAME
+    from modules.diego import clear_lines, GameStrings
     from modules.paul import border_dict
     from modules.useful import get_font_size, loop_starter_pack
+
+
+GAME_STRINGS = GameStrings(LANG)
 
 
 # pylint: disable=E1101
@@ -169,8 +175,7 @@ def gameplay(window, game_type, lang):
                 elif key[pygame.K_LEFT]:
                     tetrimino.move_left(matrix)
 
-                elif key[pygame.K_w] or (key_mod and pygame.KMOD_CTRL):
-                    tetrimino.turn_left(matrix)
+
 
                 elif key[pygame.K_UP] or key[pygame.K_x]:
                     tetrimino.turn_right(matrix)
@@ -183,6 +188,7 @@ def gameplay(window, game_type, lang):
                         if temp:
                             tetrimino.set_type(temp)
                             tetrimino.set_y(0)
+                            tetrimino.find_lower_pos(matrix)
                         # si vide
                         else:
                             # création d'un nouveau tetrimino
@@ -849,35 +855,25 @@ class Tetrimino(Bag, Matrix):
         piece dans `matrix`. La méthode prend en paramètre `matrix` une
         instance de la classe Matrix."""
         tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
-        # récupère la véritable largeur concernée par le tetrimino
-        t_first_column = self.leftmost()
-        t_last_column = self.rightmost()
-        # nouvelle liste extraite de la liste modélisant les mino les plus
-        # haut par colonne dans matrix. Extraction des colonnes situées sous
-        # le tetrimino visuel dans une nouvelle liste
-        new_list = matrix.modelisation[t_first_column:t_last_column + 1]
         # variable utile pour la méthode test_around de l'objet `tetrimino`
         # afin d'éviter de calculer la longueur à chaque tour de boucle
         nb_column = len(tetrimino_shape)
         # stockage de la valeur de l'attribut y_coordinate de `tetrimino`
         y_coordinate = self.y_coordinate
-        # on place le tetrimino à la colonne la plus haute possible
-        # ## try except pour test à enlever si rien
-        try:
-            y_value_attempt = min(new_list) - nb_column
-        except:
-            print(new_list, self.type, self.phasis)
-            return "ERROR snif :')"
-        i = 1
+        proceed = True
         # du moment que le tetrimino peut être placé sans accroc
-        while self.test_around(matrix, tetrimino_shape, nb_column):
+        while proceed:
+            if self.test_around(matrix, tetrimino_shape, nb_column):
             # on incrémente pour faire descendre le tetrimino d'une ligne
-            self.y_coordinate = y_value_attempt + i
-            i += 1
+                self.y_coordinate += 1
+                if self.y_coordinate > 20:
+                    proceed = False
+            else:
+                proceed = False
+        # on renvoie la valeur d'ordonnée trouvée
+        self.lower_pos = self.y_coordinate - 1
         # on rétablit la valeur initiale de la coordonnée y du tetrimino
         self.y_coordinate = y_coordinate
-        # on renvoie la valeur d'ordonnée trouvée
-        self.lower_pos = y_value_attempt + i - 2
 
     '''def find_lower_pos(self, matrix):
         """renvoie la position la plus basse pouvant être atteinte par
@@ -1245,7 +1241,7 @@ class Data(HoldQueue):
         goal = 25 if hight else level * 5
         first_values = [0, 0, level, goal]
         self.values = {DATA_KEYS[i]: first_values[i] for i in range(4)}
-        self.name = get_file_lst(lang, 1, 'data_name', False)
+        self.name = GAME_STRINGS.get_all_strings()
         self.resize(window)
         self.values_surface = [None, 0]
         self.chrono_value(chronometer)
@@ -1254,7 +1250,7 @@ class Data(HoldQueue):
 
     def change_text_language(self, lang):
         """change la langue du texte selon `lang` une chaîne de caractère."""
-        self.name = get_file_lst(lang, 1, 'data_name', False)
+        self.name = GAME_STRINGS.get_all_strings()
         self.font_resize()
 
     def font_resize(self):
@@ -1270,7 +1266,7 @@ class Data(HoldQueue):
         # redéfinition de l'attribut font selon les résultats obtenus
         self.font = pygame.font.Font("others/Anton-Regular.ttf", font_size)
         name_surface = []
-        for i in range(5):
+        for i in DATA_STRINGS:
             name_surface.append(self.font.render(self.name[i], 1, COLOR['WHITE']))
         space_between_string = (font_place[1] - 7 * font_height) // 6
 

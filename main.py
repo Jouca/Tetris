@@ -7,7 +7,7 @@ import pygame
 import pygame.freetype
 from modules.bastien import main_menu
 
-# pylint: disable=E1101
+         # pylint: disable=E1101
 # (no-member) erreur apparaissant pour les constantes de pygame référant aux
 # touches de clavier et boutons de fenêtre, ...
 
@@ -31,8 +31,6 @@ window_data = {'size' : WINDOW_SIZE,
                'width': WINDOW_WIDTH,
                'height': WINDOW_HEIGHT,
                'margin': round(0.05 * WINDOW_HEIGHT)}
-
-lang = 'EN'
 
 # importation d'images
 icon = pygame.image.load("./image/window_logo.png").convert_alpha()

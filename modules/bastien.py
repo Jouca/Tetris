@@ -4,15 +4,18 @@ les menus du jeu Tetris. Repassage du code par Solène, (@periergeia)."""
 
 import pygame
 try:
-    from constant import COLOR
-    from diego import Button
+    from constant import COLOR, LANG
+    from diego import Button, GameStrings
     from solene import gameplay
     from useful import get_font_size, loop_starter_pack
 except ModuleNotFoundError:
-    from modules.constant import COLOR
-    from modules.diego import Button
+    from modules.constant import COLOR, LANG
+    from modules.diego import Button, GameStrings
     from modules.solene import gameplay
     from modules.useful import get_font_size, loop_starter_pack
+
+
+game_strings = GameStrings(LANG)
 
 
 def create_main_menu(window):
@@ -25,19 +28,19 @@ def create_main_menu(window):
     window_w = window.get_width()
     
     play_button = Button(window, (logo_pos[0] / window_w,
-                         0.45, logo_size[0] / window_w, 0.15), "JOUER")
+                         0.45, logo_size[0] / window_w, 0.15), game_strings.get_string("play"))
     ranking_button = Button(window,
                             (logo_pos[0] / window_w,
                              0.65,
                              (logo_size[0] / window_w) * 0.65,
                              0.15),
-                            "CLASSEMENT")
+                            game_strings.get_string("leaderboard"))
     help_button = Button(window,
                          (logo_pos[0] / window_w + (logo_size[0] / window_w) * 0.65,
                           0.65,
                           (logo_size[0] / window_w) * 0.35,
                           0.15),
-                         "AIDE")
+                         game_strings.get_string("help"))
     
     frame = pygame.Surface(window.get_size())
     frame.blit(logo_to_display, (logo_pos))
@@ -77,20 +80,20 @@ def create_game_choice_menu(window):
     font_height = round(0.15 * window.get_height())
     font_size = get_font_size(font_height)
     font = pygame.font.SysFont("./others/Anton-Regular.ttf", font_size)
-    statement = font.render('SELECTIONNEZ  UN  MODE', 1 , COLOR['WHITE'])
+    statement = font.render(game_strings.get_string("select_mode"), 1 , COLOR['WHITE'])
     background = pygame.transform.scale(menu_background, window.get_size())
     mode_a_button = Button(window,
                             (0.175,
                              0.4,
                              0.3,
                              0.4),
-                            "MODE  A", font_size)
+                            game_strings.get_string("mode_a"), font_size)
     mode_b_button = Button(window,
                          (0.525,
                           0.4,
                           0.3,
                           0.4),
-                         "MODE  B", font_size)
+                         game_strings.get_string("mode_b"), font_size)
 
     frame = pygame.Surface(window.get_size())
     frame.blit(background, (0, 0))
