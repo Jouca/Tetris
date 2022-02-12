@@ -3,7 +3,6 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 
 
 # importation de librairies python utiles
-# ##import sys
 import random
 import colorsys
 import time
@@ -13,14 +12,15 @@ import pygame.freetype
 
 try:
     from collect_file_s_text import get_file_lst
-    from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT, DATA_KEYS
+    from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
+    from constant import PHASIS_NAME, ROTATION_POINT, DATA_KEYS
     from diego import clear_lines
     from paul import border_dict
     from useful import get_font_size, loop_starter_pack
 except ModuleNotFoundError:
-    # ##sys.path.append("..")
     from modules.collect_file_s_text import get_file_lst
-    from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME, ROTATION_POINT, DATA_KEYS
+    from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
+    from modules.constant import PHASIS_NAME, ROTATION_POINT, DATA_KEYS
     from modules.diego import clear_lines
     from modules.paul import border_dict
     from modules.useful import get_font_size, loop_starter_pack
@@ -183,6 +183,7 @@ def gameplay(window, game_type, lang):
                         if temp:
                             tetrimino.set_type(temp)
                             tetrimino.set_y(0)
+                            tetrimino.find_lower_pos(matrix)  # ## déplacer dans fonction
                         # si vide
                         else:
                             # création d'un nouveau tetrimino
@@ -843,7 +844,7 @@ class Tetrimino(Bag, Matrix):
             phase = (phase + 1) % 2
         return first, phase
 
-    def find_lower_pos(self, matrix):
+    '''def find_lower_pos(self, matrix):
         """renvoie la position la plus basse pouvant être atteinte par
         l'instance afin de déterminer la position des ordonnées de la ghost
         piece dans `matrix`. La méthode prend en paramètre `matrix` une
@@ -877,7 +878,33 @@ class Tetrimino(Bag, Matrix):
         # on rétablit la valeur initiale de la coordonnée y du tetrimino
         self.y_coordinate = y_coordinate
         # on renvoie la valeur d'ordonnée trouvée
-        self.lower_pos = y_value_attempt + i - 2
+        self.lower_pos = y_value_attempt + i - 2'''
+    
+    def find_lower_pos(self, matrix):
+        """renvoie la position la plus basse pouvant être atteinte par
+        l'instance afin de déterminer la position des ordonnées de la ghost
+        piece dans `matrix`. La méthode prend en paramètre `matrix` une
+        instance de la classe Matrix."""
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        # variable utile pour la méthode test_around de l'objet `tetrimino`
+        # afin d'éviter de calculer la longueur à chaque tour de boucle
+        nb_column = len(tetrimino_shape)
+        # stockage de la valeur de l'attribut y_coordinate de `tetrimino`
+        y_coordinate = self.y_coordinate
+        proceed = True
+        # du moment que le tetrimino peut être placé sans accroc
+        while proceed:
+            if self.test_around(matrix, tetrimino_shape, nb_column):
+            # on incrémente pour faire descendre le tetrimino d'une ligne
+                self.y_coordinate += 1
+                if self.y_coordinate > 20:
+                    proceed = False
+            else:
+                proceed = False
+        # on renvoie la valeur d'ordonnée trouvée
+        self.lower_pos = self.y_coordinate - 1
+        # on rétablit la valeur initiale de la coordonnée y du tetrimino
+        self.y_coordinate = y_coordinate
 
     '''def find_lower_pos(self, matrix):
         """renvoie la position la plus basse pouvant être atteinte par
