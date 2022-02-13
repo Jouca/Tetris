@@ -2,12 +2,14 @@
     "play": "PLAY",
     "leaderboard": "LEADERBOARD",
     "help": "HELP",
-    "select_mode": "SELECT MODE",
+    "select_mode": "SELECT A GAME MODE",
     "mode_a": "MODE A",
     "mode_b": "MODE B",
     "score": "SCORE",
     "time": "TIME",
     "lines": "LINES",
     "level": "LEVEL",
-    "goal": "GOAL"
+    "goal": "GOAL",
+    "gameover": "GAME OVER",
+    "yourscore": "Your score :  {} pts"
 }
