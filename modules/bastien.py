@@ -4,15 +4,18 @@ les menus du jeu Tetris. Repassage du code par Solène, (@periergeia)."""
 
 import pygame
 try:
-    from constant import COLOR
-    from diego import Button
+    from constant import LANG
+    from diego import GameStrings
     from solene import gameplay
-    from useful import get_font_size, loop_starter_pack
+    from useful import get_font_size, loop_starter_pack, Button, Text
 except ModuleNotFoundError:
-    from modules.constant import COLOR
-    from modules.diego import Button
+    from modules.constant import LANG
+    from modules.diego import GameStrings
     from modules.solene import gameplay
-    from modules.useful import get_font_size, loop_starter_pack
+    from modules.useful import get_font_size, loop_starter_pack, Button, Text
+
+
+game_strings = GameStrings(LANG)
 
 
 def create_main_menu(window):
@@ -25,19 +28,19 @@ def create_main_menu(window):
     window_w = window.get_width()
     
     play_button = Button(window, (logo_pos[0] / window_w,
-                         0.45, logo_size[0] / window_w, 0.15), "JOUER")
+                         0.45, logo_size[0] / window_w, 0.15), game_strings.get_string("play"))
     ranking_button = Button(window,
                             (logo_pos[0] / window_w,
                              0.65,
                              (logo_size[0] / window_w) * 0.65,
                              0.15),
-                            "CLASSEMENT")
+                            game_strings.get_string("leaderboard"))
     help_button = Button(window,
                          (logo_pos[0] / window_w + (logo_size[0] / window_w) * 0.65,
                           0.65,
                           (logo_size[0] / window_w) * 0.35,
                           0.15),
-                         "AIDE")
+                         game_strings.get_string("help"))
     
     frame = pygame.Surface(window.get_size())
     frame.blit(logo_to_display, (logo_pos))
@@ -52,7 +55,6 @@ def create_main_menu(window):
 def main_menu(window):
     play_button, ranking_button, help_button = create_main_menu(window)
     # évènements pygame
-    
     proceed = True
     while proceed:
         for event in pygame.event.get():
@@ -72,76 +74,34 @@ def main_menu(window):
                 proceed = False
                 return
 
-def create_game_over_menu(window):
-    font_height = round(0.15 * window.get_height())
-    font_size = get_font_size(font_height)
-    font = pygame.font.SysFont("./others/Anton-Regular.ttf", font_size)
-    end = font.render('GAME OVER !', 1 , COLOR['WHITE'])
-    score = "123456"
-    score = font.render(f'Votre score : {score}', 1 , COLOR['WHITE'])
-    rejouer_button = Button(window,
-                            (0.3,
-                             0.5,
-                             0.4,
-                             0.18),
-                            "REJOUER", font_size)
-    quitter_button = Button(window,
-                            (0.3,
-                             0.7,
-                             0.4,
-                             0.18),
-                            "QUITTER", font_size)
-
-
-    frame = pygame.Surface(window.get_size())
-    frame.blit(end, ((window.get_width() - end.get_width()) // 2, round(0.175 * window.get_height())))
-    frame.blit(score, ((window.get_width() - score.get_width()) // 2, round(0.3 * window.get_height())))
-    quitter_button.draw(frame)
-    rejouer_button.draw(frame)
-    window.blit(frame, (0, 0))
-    pygame.display.flip()
-    return rejouer_button, quitter_button
-    
-def game_over_menu(window):
-    rejouer_button, quitter_button = create_game_over_menu(window)
-    proceed = True
-    while proceed:
-        for event in pygame.event.get():
-            loop_starter_pack(window, event)
-            if event.type == pygame.VIDEORESIZE:
-                rejouer_button = create_game_over_menu(window)
-            if rejouer_button.is_pressed(event):
-                game_choice_menu(window)
-                proceed = False
-                return
-            if quitter_button.is_pressed(event):
-                proceed = False
-                pygame.quit()
-
 
 def create_game_choice_menu(window):
     menu_background = pygame.image.load('./image/menu_background2.png').convert_alpha()
     font_height = round(0.15 * window.get_height())
     font_size = get_font_size(font_height)
-    font = pygame.font.SysFont("./others/Anton-Regular.ttf", font_size)
-    statement = font.render('SELECTIONNEZ  UN  MODE', 1 , COLOR['WHITE'])
     background = pygame.transform.scale(menu_background, window.get_size())
+    statement = Text(window,
+                     (0.175,
+                      0.175,
+                      0.65,
+                      0.15),
+                     game_strings.get_string("select_mode"))
     mode_a_button = Button(window,
                             (0.175,
                              0.4,
                              0.3,
                              0.4),
-                            "MODE  A", font_size)
+                            game_strings.get_string("mode_a"), font_size)
     mode_b_button = Button(window,
-                         (0.525,
-                          0.4,
-                          0.3,
-                          0.4),
-                         "MODE  B", font_size)
+                           (0.525,
+                            0.4,
+                            0.3,
+                            0.4),
+                           game_strings.get_string("mode_b"), font_size)
 
     frame = pygame.Surface(window.get_size())
     frame.blit(background, (0, 0))
-    frame.blit(statement, ((window.get_width() - statement.get_width()) // 2, round(0.175 * window.get_height())))
+    statement.draw(frame)
     mode_a_button.draw(frame)
     mode_b_button.draw(frame)
     window.blit(frame, (0, 0))
@@ -171,6 +131,62 @@ def game_choice_menu(window):
                 return'''
 
 
+def create_game_over_menu(window):
+    font_height = round(0.15 * window.get_height())
+    font_size = get_font_size(font_height)
+    end = Text(window,
+               (0,
+                0.075,
+                1,
+                0.3),
+               game_strings.get_string("gameover"))
+    score = "123456"
+    score = Text(window,
+                 (0,
+                  0.3,
+                  1,
+                  0.15),
+                 game_strings.get_string("yourscore").format(score))
+    rejouer_button = Button(window,
+                            (0.3,
+                             0.5,
+                             0.4,
+                             0.18),
+                            "REJOUER", font_size)
+    quitter_button = Button(window,
+                            (0.3,
+                             0.7,
+                             0.4,
+                             0.18),
+                            "QUITTER", font_size)
+
+    frame = pygame.Surface(window.get_size())
+    end.draw(frame)
+    score.draw(frame)
+    quitter_button.draw(frame)
+    rejouer_button.draw(frame)
+    window.blit(frame, (0, 0))
+    pygame.display.flip()
+    return rejouer_button, quitter_button
+
+
+def game_over_menu(window):
+    rejouer_button, quitter_button = create_game_over_menu(window)
+    proceed = True
+    while proceed:
+        for event in pygame.event.get():
+            loop_starter_pack(window, event)
+            if event.type == pygame.VIDEORESIZE:
+                rejouer_button, quitter_button = create_game_over_menu(window)
+            if rejouer_button.is_pressed(event):
+                game_choice_menu(window)
+                proceed = False
+                return
+            if quitter_button.is_pressed(event):
+                proceed = False
+                pygame.quit()
+
+
 def menuhelp():
     pygame.draw.rect(screen, (50, 50, 50), pygame.Rect(150, 50, 700, 400))
     retour = Button((255, 300, 500, 100), "RETOUR MENU", 50, (250, 250, 250))
@@ -186,6 +202,7 @@ def menuhelp():
     classement.draw(screen)"""
     pygame.display.flip()
 
+
 def menuderoulant():
     pygame.draw.rect(screen, (50, 50, 50), pygame.Rect(150, 50, 700, 400))
 
@@ -198,9 +215,6 @@ def menuderoulant():
     help.draw(screen)
     options.draw(screen)
     pygame.display.flip()
-
-
-
 
 
 lang = 'EN'
