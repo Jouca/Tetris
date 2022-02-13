@@ -2,12 +2,14 @@
     "play": "JOUER",
     "leaderboard": "CLASSEMENT",
     "help": "AIDE",
-    "select_mode": "SÉLECTIONNER LE MODE",
+    "select_mode": "SELECTIONNEZ UN MODE",
     "mode_a": "MODE A",
     "mode_b": "MODE B",
     "score": "SCORE",
     "time": "TEMPS",
     "lines": "LIGNES",
     "level": "NIVEAU",
-    "goal": "OBJECTIF"
+    "goal": "OBJECTIF",
+    "gameover": "PERDU",
+    "yourscore": "Votre score :  {} pts"
 }
