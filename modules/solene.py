@@ -11,23 +11,21 @@ import pygame
 import pygame.freetype
 
 try:
-    from collect_file_s_text import get_file_lst
     from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME
-    from constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG
+    from constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from diego import clear_lines, GameStrings
     from paul import border_dict
-    from useful import get_font_size, loop_starter_pack
+    from useful import get_font_size, loop_starter_pack, Button
 except ModuleNotFoundError:
-    from modules.collect_file_s_text import get_file_lst
     from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
-    from modules.constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG
+    from modules.constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from modules.constant import PHASIS_NAME
     from modules.diego import clear_lines, GameStrings
     from modules.paul import border_dict
-    from modules.useful import get_font_size, loop_starter_pack
+    from modules.useful import get_font_size, loop_starter_pack, Button
 
 
-GAME_STRINGS = GameStrings(LANG)
+game_strings = GameStrings(LANG)
 
 
 # pylint: disable=E1101
@@ -92,9 +90,50 @@ def display_game_data(window, data, chronometer):
     pygame.display.flip()
 
 
-def game_pause():
+def create_game_pause(window):
     """crée un visuel permettant au joueur de comprendre que le
     jeu est mis en pause."""
+    resume_button = Button(window,
+                           (0.15,
+                            0.2,
+                            0.5, 0.15), game_strings.get_string("resume"))
+    option_button = Button(window,
+                         (0.15,
+                          0.45,
+                          0.5,
+                          0.15),
+                         game_strings.get_string("options"))
+    
+    frame = pygame.Surface((window.get_width() * 0.8, window.get_height() * 0.8))
+    frame.fill((100, 100, 100))
+    resume_button.draw(frame)
+    option_button.draw(frame)
+    window.blit(frame, (window.get_width() * 0.1, window.get_height() * 0.1))
+    pygame.display.flip()
+    return resume_button, option_button
+
+
+def game_pause(window, game_type, lang):
+    resume_button, option_button = create_game_pause(window)
+    # évènements pygame
+    proceed = True
+    while proceed:
+        for event in pygame.event.get():
+            loop_starter_pack(window, event)
+            if event.type == pygame.VIDEORESIZE:
+                resume_button, option_button = create_game_pause(window)
+            if resume_button.is_pressed(event):
+                gameplay(window, game_type, lang)
+                proceed = False
+                return
+            '''if ranking_button.is_pressed(event):
+                game_over_menu(window)
+                proceed = False
+                return
+            if help_button.is_pressed(event):
+                menuplay()
+                proceed = False
+                return'''
 
 
 def gameplay(window, game_type, lang):
@@ -158,7 +197,7 @@ def gameplay(window, game_type, lang):
                 key = pygame.key.get_pressed()
 
                 if key[pygame.K_F1] or key[pygame.K_ESCAPE]:
-                    game_pause()
+                    game_pause(window, game_type, lang)
 
                 elif key[pygame.K_SPACE]:
                     tetrimino.hard_drop(data)
@@ -1230,7 +1269,7 @@ class Data(HoldQueue):
         goal = 25 if hight else level * 5
         first_values = [0, 0, level, goal]
         self.values = {DATA_KEYS[i]: first_values[i] for i in range(4)}
-        self.name = GAME_STRINGS.get_all_strings()
+        self.name = game_strings.get_all_strings()
         self.resize(window)
         self.values_surface = [None, 0]
         self.chrono_value(chronometer)
@@ -1239,7 +1278,7 @@ class Data(HoldQueue):
 
     def change_text_language(self, lang):
         """change la langue du texte selon `lang` une chaîne de caractère."""
-        self.name = GAME_STRINGS.get_all_strings()
+        self.name = game_strings.get_all_strings()
         self.font_resize()
 
     def font_resize(self):
@@ -1251,9 +1290,8 @@ class Data(HoldQueue):
         font_place = (w_value - local_margin, h_value - 2 * local_margin)
         # taille que devrait avoir la hauteur du texte
         font_height = round((0.86 * font_place[1]) / 7)
-        font_size = get_font_size(font_height)
         # redéfinition de l'attribut font selon les résultats obtenus
-        self.font = pygame.font.Font("others/Anton-Regular.ttf", font_size)
+        self.font = pygame.font.Font("others/Anton-Regular.ttf", get_font_size(font_height))
         name_surface = []
         for i in DATA_STRINGS:
             name_surface.append(self.font.render(self.name[i], 1, COLOR['WHITE']))
@@ -1261,12 +1299,11 @@ class Data(HoldQueue):
 
         # création d'un objet surface servant de calque afin d'optimiser le jeu
         surface = pygame.Surface((w_value - 2 * self.width, h_value - 2 * self.width))
-        temp = [1, None, 0, 1, None, 0, 0, 0, 1, 0, 1, 0, 1]
         y_value = local_margin
         self.position = []
         font_h = name_surface[0].get_size()
         i = 0
-        for element in temp:
+        for element in VISUAL_STRUCTURE:
             if element == 1:
                 surface.blit(name_surface[i], (local_margin // 2, y_value))
                 if i > 1:
