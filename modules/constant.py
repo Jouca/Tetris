@@ -1,6 +1,6 @@
 """module contenant les constantes utiles au jeu Tetris."""
 
-LANG = "EN"
+LANG = "FR"
 
 COLOR = {'RED': (237, 41, 57),
          'ORANGE': (255, 121, 0),
@@ -111,6 +111,9 @@ FONT_HEIGHT = [19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37,
                262, 264, 265, 267, 268, 270, 271, 273, 274, 276, 277,
                279, 280, 282, 284, 285, 287, 288, 290, 291, 293, 294,
                296, 297, 299, 300]
+
+
+VISUAL_STRUCTURE = [1, None, 0, 1, None, 0, 0, 0, 1, 0, 1, 0, 1]
 
 
 DATA_KEYS = ['score', 'lines', 'level', 'goal']
