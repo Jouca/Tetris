@@ -9,27 +9,25 @@ import time
 import termcolor  # ##à enlever, utile pour test avec print
 import pygame
 import pygame.freetype
-
 try:
     from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME
     from constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from diego import clear_lines, GameStrings
     from paul import border_dict
-    from useful import get_font_size, loop_starter_pack, Button
+    from useful import get_font_size, loop_starter_pack, Button2, Button 
 except ModuleNotFoundError:
     from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
     from modules.constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from modules.constant import PHASIS_NAME
     from modules.diego import clear_lines, GameStrings
     from modules.paul import border_dict
-    from modules.useful import get_font_size, loop_starter_pack, Button
+    from modules.useful import get_font_size, loop_starter_pack, Button2, Button
 
 
 game_strings = GameStrings(LANG)
 
 
 # pylint: disable=E1101
-# pylint: disable=W0231
 # (super-init-not-called), il m'est inutile de faire appel à la méthode
 # constructeur des classes parent vu que leur méthode constructeur font appel
 # à une méthode présente dans la même classe nommée "resize". C'est dans la
@@ -44,10 +42,15 @@ game_strings = GameStrings(LANG)
 def resize_all(window_data, obj):
     """"redimensionne toutes les choses nécéssitant d'être
     redimensionnées."""
+    obj[1].resize(window_data)
+    matrix_data = {'rect': obj[1].rect,
+                   'cell_size': obj[1].cell_size}
     # redimensionne chaque objet avec leur méthode resize
-    for element in obj[1:]:
-        element.resize(window_data)
-    obj[-1].values_relative_position()
+    for element in obj[2:5]:
+        element.resize(window_data, matrix_data)
+    '''for element in obj[5:]:
+        element.resize(window_data)'''
+    obj[4].values_relative_position()
 
 
 def display_all(window, chronometer, obj):
@@ -59,10 +62,11 @@ def display_all(window, chronometer, obj):
     # création d'une surface
     frame = pygame.Surface(window.get_size())
     # affichage de l'image pour le boutton des menus, ## voir arrangement ?
-    menu_image = pygame.transform.scale(menubutton,
+    menu_button = Button2(window, (0.9, 0.05, 0.05), menubutton)
+    '''menu_image = pygame.transform.scale(menubutton,
                                         (obj[4].rect.w,
-                                        obj[4].rect.h))
-    frame.blit(menu_image, (obj[4].rect.x, obj[4].rect.y))
+                                         obj[4].rect.h))
+    frame.blit(menu_image, (obj[4].rect.x, obj[4].rect.y))'''
     # affiche chaque objet avec leur méthode display
     for element in obj:
         element.display(frame)
@@ -71,12 +75,14 @@ def display_all(window, chronometer, obj):
         # ## test à enlever si pas de soucis
         if obj[1].draw_ghost_piece(frame, obj[0]) == "ERROR snif :')":
             pygame.image.save(window, "screenshot.jpeg")
+    menu_button.draw(frame)
     # frame sur la fenêtre
     window.blit(frame, (0, 0))
     # ## voir à supprimer ?
-    display_game_data(window, obj[5], chronometer)
+    display_game_data(window, obj[4], chronometer)
     # rafraichissement de la fenêtre pygame
     pygame.display.flip()
+    return menu_button
 
 
 def display_game_data(window, data, chronometer):
@@ -94,46 +100,30 @@ def create_game_pause(window):
     """crée un visuel permettant au joueur de comprendre que le
     jeu est mis en pause."""
     resume_button = Button(window,
-                           (0.15,
-                            0.2,
-                            0.5, 0.15), game_strings.get_string("resume"))
+                           (0.25,
+                            0.3,
+                            0.5,
+                            0.15),
+                           game_strings.get_string("resume"))
     option_button = Button(window,
-                         (0.15,
-                          0.45,
+                         (0.25,
+                          0.55,
                           0.5,
                           0.15),
                          game_strings.get_string("options"))
     
-    frame = pygame.Surface((window.get_width() * 0.8, window.get_height() * 0.8))
-    frame.fill((100, 100, 100))
+    frame = pygame.Surface(window.get_size())
+    frame.set_colorkey((0, 0, 0))
+    pygame.draw.rect(frame, (100, 100, 100),
+                     pygame.Rect(window.get_width() * 0.1,
+                                 window.get_height() * 0.1,
+                                 window.get_width() * 0.8,
+                                 window.get_height() * 0.8))
     resume_button.draw(frame)
     option_button.draw(frame)
-    window.blit(frame, (window.get_width() * 0.1, window.get_height() * 0.1))
+    window.blit(frame, (0, 0))
     pygame.display.flip()
     return resume_button, option_button
-
-
-def game_pause(window, game_type, lang):
-    resume_button, option_button = create_game_pause(window)
-    # évènements pygame
-    proceed = True
-    while proceed:
-        for event in pygame.event.get():
-            loop_starter_pack(window, event)
-            if event.type == pygame.VIDEORESIZE:
-                resume_button, option_button = create_game_pause(window)
-            if resume_button.is_pressed(event):
-                gameplay(window, game_type, lang)
-                proceed = False
-                return
-            '''if ranking_button.is_pressed(event):
-                game_over_menu(window)
-                proceed = False
-                return
-            if help_button.is_pressed(event):
-                menuplay()
-                proceed = False
-                return'''
 
 
 def gameplay(window, game_type, lang):
@@ -146,16 +136,17 @@ def gameplay(window, game_type, lang):
     bag = Bag()
     game_chrono = Chronometer()
     matrix = Matrix(window_data, game_type)
-    next_queue = NextQueue(window_data)
-    hold_queue = HoldQueue(window_data)
-    menu_button = MenuButton(window_data)
-    data = Data(window_data, lang, game_chrono, game_type)
+    matrix_data = {'rect': matrix.rect,
+                   'cell_size': matrix.cell_size}
+    next_queue = NextQueue(window_data, matrix_data)
+    hold_queue = HoldQueue(window_data, matrix_data)
+    data = Data(window_data, matrix_data, game_chrono, game_type)
 
     tetrimino = Tetrimino(matrix)
 
-    game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
+    game_object = (tetrimino, matrix, next_queue, hold_queue, data)
 
-    display_all(window, game_chrono, game_object)
+    menu_button = display_all(window, game_chrono, game_object)
 
 
     time_before_refresh = Chronometer()
@@ -163,10 +154,11 @@ def gameplay(window, game_type, lang):
     SHADE_PHASE = 1
     LOCK_PHASE_FIRST = 1
     softdrop = False
+    game_paused = False
 
     while True:
 
-        game_object = (tetrimino, matrix, next_queue, hold_queue, menu_button, data)
+        game_object = (tetrimino, matrix, next_queue, hold_queue, data)
 
         # évènements pygame
         for event in pygame.event.get():
@@ -180,7 +172,9 @@ def gameplay(window, game_type, lang):
                 print(f'current window size :   {window_data}')
                 # reaffichage avec changement des tailles et emplacement des objets
                 resize_all(window_data, game_object)
-                display_all(window, game_chrono, game_object)
+                menu_button = display_all(window, game_chrono, game_object)
+                if game_paused:
+                    resume_button, option_button = create_game_pause(window)
 
             # ## à enlever en fin
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -193,26 +187,27 @@ def gameplay(window, game_type, lang):
 
             if event.type == pygame.KEYDOWN:
 
-                key_mod = pygame.key.get_mods()
                 key = pygame.key.get_pressed()
 
                 if key[pygame.K_F1] or key[pygame.K_ESCAPE]:
-                    game_pause(window, game_type, lang)
-
+                    game_paused = not game_paused
+                    if game_paused:
+                        print(game_chrono.get_chrono_value())
+                        game_chrono.freeze()
+                        resume_button, option_button = create_game_pause(window)
+                    
                 elif key[pygame.K_SPACE]:
                     tetrimino.hard_drop(data)
 
                 elif key[pygame.K_DOWN]:
                     softdrop = True
-                    data.fall_speed /= 20  # ## pas bon
+                    data.fall_speed /= 20
 
                 elif key[pygame.K_RIGHT]:
                     tetrimino.move_right(matrix)
 
                 elif key[pygame.K_LEFT]:
                     tetrimino.move_left(matrix)
-
-
 
                 elif key[pygame.K_UP] or key[pygame.K_x]:
                     tetrimino.turn_right(matrix)
@@ -230,48 +225,50 @@ def gameplay(window, game_type, lang):
                         else:
                             # création d'un nouveau tetrimino
                             tetrimino = Tetrimino(matrix)
+            if game_paused:
+                if resume_button.is_pressed(event):
+                    game_chrono.unfreeze()
+                    print(game_chrono.get_chrono_value())
+                    game_paused = False
+        
+        if not game_paused:
+            # phase précédant le lock down
+            if tetrimino.state == 1:
+                # permet de jouer sur la couleur du tetrimino
+                values = tetrimino.lock_phase(matrix, lock_down_chrono,
+                                              LOCK_PHASE_FIRST, SHADE_PHASE)
+                LOCK_PHASE_FIRST, SHADE_PHASE = values
+                menu_button = display_all(window, game_chrono, game_object)
+                time.sleep(0.015)
 
-                display_all(window, game_chrono, game_object)
-
-        # phase précédant le lock down
-        if tetrimino.state == 1:
-            # permet de jouer sur la couleur du tetrimino
-            values = tetrimino.lock_phase(matrix, lock_down_chrono,
-                                        LOCK_PHASE_FIRST, SHADE_PHASE)
-            LOCK_PHASE_FIRST, SHADE_PHASE = values
-            display_all(window, game_chrono, game_object)
-            time.sleep(0.015)
-
-        # phase lock down
-        elif tetrimino.state == 2:
-            # le tetrimino est lock dans matrix
-            tetrimino.lock_on_matrix(matrix)
-            # le tetrimino suivant est créé
-            tetrimino = Tetrimino(matrix)
-            hold_queue.allow_hold()
-            display_all(window, game_chrono, game_object)
-            # clear les lines s'il y a
-            matrix.clear_lines(data)
-            display_all(window, game_chrono, game_object)
-            # le chronomètre est raffraîchi
-            time_before_refresh.reset()
-
-        # dans le cas où le tetrimino est en falling phase
-        else:
-            # dans le cas où le joueur souhaite faire un softdrop
-            # spécifié par le fait que la touche flèche bas est
-            # maintenue pressée
-            if time_before_refresh == data.fall_speed:
-                # score incrémenté de 1 lorsque le tetrimino peut tomber
-                if tetrimino.fall(matrix) and softdrop:
-                    data.score_increase(1)
-                # on reinitialise le chrono
+            # phase lock down
+            elif tetrimino.state == 2:
+                # le tetrimino est lock dans matrix
+                tetrimino.lock_on_matrix(matrix)
+                # le tetrimino suivant est créé
+                tetrimino = Tetrimino(matrix)
+                hold_queue.allow_hold()
+                menu_button = display_all(window, game_chrono, game_object)
+                # clear les lines s'il y a
+                matrix.clear_lines(data)
+                menu_button = display_all(window, game_chrono, game_object)
+                # le chronomètre est raffraîchi
                 time_before_refresh.reset()
-            # reaffichage de l'écran
-            display_all(window, game_chrono, game_object)
-        # ##pour tester au besoin
-        # display_all(window_data, game_object)
-        display_game_data(window, data, game_chrono)
+
+            # dans le cas où le tetrimino est en falling phase
+            else:
+                # dans le cas où le joueur souhaite faire un softdrop
+                # spécifié par le fait que la touche flèche bas est
+                # maintenue pressée
+                if time_before_refresh == data.fall_speed:
+                    # score incrémenté de 1 lorsque le tetrimino peut tomber
+                    if tetrimino.fall(matrix) and softdrop:
+                        data.score_increase(1)
+                    # on reinitialise le chrono
+                    time_before_refresh.reset()
+                # reaffichage de l'écran
+                menu_button = display_all(window, game_chrono, game_object)
+            display_game_data(window, data, game_chrono)
 
 
 def display_visual_tetrimino(surface, place_properties, y_axis, t_type):
@@ -372,11 +369,20 @@ class Chronometer:
         """initialisation d'un chronomètre."""
         self.reset()
 
-    # ##enlever ?
     def time_elapsed(self):
         """renvoie le temps passé depuis l'initialisation
         du chronomètre"""
         return time.time_ns() - self.time
+    
+    def freeze(self):
+        """défini l'attribut duration pour sauvegarder la valeur du
+        chronomètre au moment de l'appel à la méthode freeze."""
+        self.duration = self.time_elapsed()
+
+    def unfreeze(self):
+        """redéfinit l'attribut time afin que le chronomètre puisse
+        afficher une valeur cohérente par rapport aux actions."""
+        self.time = time.time_ns() - self.duration
 
     def get_chrono_value(self):
         """renvoie les valeurs en durée du nombre d'heures,
@@ -885,33 +891,6 @@ class Tetrimino(Bag, Matrix):
             # on change de phase
             phase = (phase + 1) % 2
         return first, phase
-
-    '''def find_lower_pos(self, matrix):
-        """renvoie la position la plus basse pouvant être atteinte par
-        l'instance afin de déterminer la position des ordonnées de la ghost
-        piece dans `matrix`. La méthode prend en paramètre `matrix` une
-        instance de la classe Matrix."""
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
-        # variable utile pour la méthode test_around de l'objet `tetrimino`
-        # afin d'éviter de calculer la longueur à chaque tour de boucle
-        nb_column = len(tetrimino_shape)
-        # stockage de la valeur de l'attribut y_coordinate de `tetrimino`
-        y_coordinate = self.y_coordinate
-        proceed = True
-        # du moment que le tetrimino peut être placé sans accroc
-        while proceed:
-            if self.test_around(matrix, tetrimino_shape, nb_column):
-            # on incrémente pour faire descendre le tetrimino d'une ligne
-                self.y_coordinate += 1
-                if self.y_coordinate > 20:
-                    proceed = False
-            else:
-                proceed = False
-        # on renvoie la valeur d'ordonnée trouvée
-        self.lower_pos = self.y_coordinate - 1
-        # on rétablit la valeur initiale de la coordonnée y du tetrimino
-        self.y_coordinate = y_coordinate'''
-    
     
     def find_lower_pos(self, matrix):
         """renvoie la position la plus basse pouvant être atteinte par
@@ -1077,16 +1056,16 @@ class Tetrimino(Bag, Matrix):
         return self.y_coordinate
 
 
-class HoldQueue(Matrix):
+class HoldQueue:
     """modélise la hold queue, là où les tetrimino sont mis sur le côté et
     pouvant être rappelé dans le jeu à tout moment à raison d'une fois par
     tetrimino."""
 
-    def __init__(self, window):
+    def __init__(self, window, matrix):
         """initialisation de l'instance par l'attribution de ses valeurs
         pratique à sa représentation. L'attribut t_type est à 0 : il n'y a
         pas de tetrimino hold."""
-        self.resize(window)
+        self.resize(window, matrix)
         self.t_type = 0
         self.can_hold = True
 
@@ -1096,23 +1075,39 @@ class HoldQueue(Matrix):
         self.t_type = tetrimino.type
         self.can_hold = False
 
-    def resize(self, window):
+    def resize(self, window, matrix):
         """redimensionne selon les valeurs de `Window` une instance de la
         classe Window."""
         # informations générales de l'emplacement de la hold queue
-        super().resize(window)
-        remaining_space = window['width'] - (self.rect.x + self.rect.w) - window['margin']
-        w_value = self.rect.h = round(self.cell_size * 3.7)
-        x_axis = (remaining_space - w_value) * 0.7 + window['margin']
-        self.width = self.rect.h // 39 + 1
-        self.rect = pygame.Rect(x_axis, self.rect.y, w_value, self.rect.h)
+        remaining_space = matrix['rect'].x - window['margin']
+        w_value = round(matrix['cell_size'] * 3.7)
+        x_axis = (remaining_space - w_value) * 0.8
+        self.width = w_value // 39 + 1
+        self.rect = pygame.Rect(x_axis, matrix['rect'].y, w_value, w_value)
         # informations de l'emplacement tetrimino
         # ## tester utilité des variables
-        t_w = self.cell_size * 3
-        t_h = self.cell_size * 2
+        t_w = matrix['cell_size'] * 3
+        t_h = matrix['cell_size'] * 2
         t_x = self.rect.x + (self.rect.w - t_w) // 2
         t_y = self.rect.y + (self.rect.w - t_h) // 2
         self.t_rect = pygame.Rect(t_x, t_y, t_w, t_h)
+    
+    '''def resize(self, window, matrix):
+        """redimensionne selon les valeurs de `Window` une instance de la
+        classe Window."""
+        # informations générales de l'emplacement de la hold queue
+        remaining_space = window['width'] - (matrix['rect'].x + matrix['rect'].w) - window['margin']
+        w_value = round(matrix['cell_size'] * 3.7)
+        x_axis = (remaining_space - w_value) * 0.7 + window['margin']
+        self.width = w_value // 39 + 1
+        self.rect = pygame.Rect(x_axis, matrix['rect'].y, w_value, w_value)
+        # informations de l'emplacement tetrimino
+        # ## tester utilité des variables
+        t_w = matrix['cell_size'] * 3
+        t_h = matrix['cell_size'] * 2
+        t_x = self.rect.x + (self.rect.w - t_w) // 2
+        t_y = self.rect.y + (self.rect.w - t_h) // 2
+        self.t_rect = pygame.Rect(t_x, t_y, t_w, t_h)'''
 
     def display(self, surface):
         """affichage de l'encadré associé à la hold queue, avec si y a le
@@ -1122,14 +1117,9 @@ class HoldQueue(Matrix):
                          self.rect,
                          self.width)
         # dans le cas où il y a un tetrimino mis de côté, l'afficher
-        try:
-            if self.t_type:
-                display_visual_tetrimino(surface, self, self.t_rect.y,
-                                         self.t_type)
-        # afin de ne pas définir un attribut t_type à des instances de
-        # MenuButton et Data
-        except AttributeError:
-            pass
+        if self.t_type:
+            display_visual_tetrimino(surface, self, self.t_rect.y,
+                                     self.t_type)
 
     def get_t_type(self):
         """renvoie le type du tetrimino dans la hold_queue, un int compris
@@ -1142,34 +1132,33 @@ class HoldQueue(Matrix):
         self.can_hold = True
 
 
-class NextQueue(Bag, Matrix):
+class NextQueue(Bag):
     """modélisation de la next queue dans laquelle sont représentés les six
     prochaines pièces de la partie en cours."""
 
-    def __init__(self, window):
+    def __init__(self, window, matrix):
         """méthode constructeur de la classe."""
-        self.resize(window)
+        self.resize(window, matrix)
 
-    def resize(self, window):
+    def resize(self, window, matrix):
         """permet d'après les données de `Window` de redimensionner l'encadré
         grâce à la mise à jour des attributs de l'instance concernant cela."""
-        super().resize(window)
-        matrix_place = self.rect.x + self.rect.w
+        matrix_place = matrix['rect'].x + matrix['rect'].w
         remaining_space = window['width'] - matrix_place - window['margin']
         # évaluation des paramètres utiles pour définir les encadrés
-        w_value = round(self.cell_size * 3.7)
-        h_value = (w_value, round(self.rect.h*0.9) - w_value)
+        w_value = round(matrix['cell_size'] * 3.7)
+        h_value = (w_value, round(matrix['rect'].h * 0.9) - w_value)
         x_axis = (round((remaining_space - w_value) * 0.3)) + matrix_place
-        y_axis_1 = self.rect.y
-        y_axis_2 = round(y_axis_1 + w_value + (self.rect.h / 10))
+        y_axis_1 = matrix['rect'].y
+        y_axis_2 = round(y_axis_1 + w_value + (matrix['rect'].h / 10))
         self.width = h_value[0] // 39 + 1
         # ## trouver moyen de supprimer self.rect des attributs
         self.rect_1 = pygame.Rect(x_axis, y_axis_1, w_value, h_value[0])
         self.rect_2 = pygame.Rect(x_axis, y_axis_2, w_value, h_value[1])
         # liste des positions 'y' des différents emplacement des tetriminos
         # ## optimiser avec changement de la fonction display_visual_tetrimino
-        t_w = self.cell_size * 3
-        t_h = self.cell_size * 2
+        t_w = matrix['cell_size'] * 3
+        t_h = matrix['cell_size'] * 2
         t_x = x_axis + (w_value - t_w) // 2
         self.next_y = [y_axis_1 + (w_value - t_h) // 2]
         space = (h_value[1] - 5 * t_h) // 6
@@ -1202,7 +1191,7 @@ class NextQueue(Bag, Matrix):
                                      self.next_y[i - 1], self.content[-i])
 
 
-# ## à changer, utiliser classe Button retravaillé par Bastien
+# ## à changer, utiliser classe Button retravaillée par Bastien
 class MenuButton(HoldQueue, NextQueue):
     """crée le boutton de jeu."""
 
@@ -1235,16 +1224,7 @@ def find_align_center_x(lenght, remaining_place):
     return (remaining_place - lenght) // 2
 
 
-# ## garder ?
-'''def find_align_right_x(lenght, remaining_place):
-    """permet de trouver la position x tel que l'objet que l'on cherche
-    à aligner soit à droite. Prend en paramètre la taille de la largeur
-    de l'objet (`lenght`) et la largeur de l'objet sur lequel on cherche à
-    centrer (`remaining_place`)."""
-    return remaining_place - lenght'''
-
-
-class Data(HoldQueue):
+class Data:
     """regroupe les données relatifs aux informations du jeu, ainsi que les
     attributs permettant de tracer l'encadré d'affichage du score, niveau,
     nombre de line clear, ...
@@ -1262,7 +1242,7 @@ class Data(HoldQueue):
     cell_size
     """
 
-    def __init__(self, window, lang, chronometer, game_type):
+    def __init__(self, window, matrix, chronometer, game_type):
         """méthode constructeur de la classe. Initialise le score
         et les données d'une parties."""
         level, hight = game_type
@@ -1270,7 +1250,7 @@ class Data(HoldQueue):
         first_values = [0, 0, level, goal]
         self.values = {DATA_KEYS[i]: first_values[i] for i in range(4)}
         self.name = game_strings.get_all_strings()
-        self.resize(window)
+        self.resize(window, matrix)
         self.values_surface = [None, 0]
         self.chrono_value(chronometer)
         self.values_relative_position()  # ##
@@ -1372,22 +1352,23 @@ class Data(HoldQueue):
                                             T-Spin Line Clears performed consecutively in a B2B
                                             sequence."""
 
-    def resize(self, window):
+    def resize(self, window, matrix):
         """change les attributs relatifs aux dimensions de l'encadré."""
         # informations générales de l'emplacement de l'encadré
-        super().resize(window)
-        x_axis = self.rect.x - self.rect.w
-        # dans le cas où la marge n'est pas respectée
-        if x_axis < window['margin']:
-            x_axis = window['margin']
-            w_value = self.rect.w + self.rect.x - x_axis
-        else:
-            w_value = self.rect.w * 2
-        y_axis = self.rect.y + self.rect.h * 2
-        h_value = self.cell_size * 21 - y_axis + window['margin']
+        remaining_space = matrix['rect'].x - window['margin']  # ##laisser ?
+        w_value = round(matrix['cell_size'] * 7.4)  # ##soucis
+        x_axis = (remaining_space - w_value) * 0.72
+        y_axis = matrix['rect'].y + w_value
+        h_value = matrix['cell_size'] * 21 - y_axis + window['margin']
+        self.width = round(matrix['cell_size'] * 3.7) // 39 + 1  # ##changer ?
         self.rect = pygame.Rect(x_axis, y_axis, w_value, h_value)
         # redimensionnement des textes et repositionnement
         self.font_resize()
+    
+    def display(self, surface):  # ##changer
+        pygame.draw.rect(surface, (150, 150, 150),
+                         self.rect,
+                         self.width)
 
     def chrono_value(self, chronometer):
         """la valeur du chronomètre est donnée selon celle de `chronometer`
