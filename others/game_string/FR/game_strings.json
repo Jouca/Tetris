@@ -11,5 +11,7 @@
     "level": "NIVEAU",
     "goal": "OBJECTIF",
     "gameover": "PERDU",
-    "yourscore": "Votre score :  {} pts"
+    "yourscore": "Votre score :  {} pts",
+    "resume": "RESUME",
+    "options": "OPTIONS"
 }
