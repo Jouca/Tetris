@@ -6,12 +6,12 @@ import pygame
 try:
     from constant import LANG
     from diego import GameStrings
-    from solene import gameplay
+    from gameplay import gameplay
     from useful import get_font_size, loop_starter_pack, Button, Text
 except ModuleNotFoundError:
     from modules.constant import LANG
     from modules.diego import GameStrings
-    from modules.solene import gameplay
+    from modules.gameplay import gameplay
     from modules.useful import get_font_size, loop_starter_pack, Button, Text
 
 
@@ -120,11 +120,13 @@ def game_choice_menu(window):
             if mode_a_button.is_pressed(event):
                 window.fill(0x000000)
                 gameplay(window, (1, 0))
+                game_over_menu(window)
                 proceed = False
                 return
             elif mode_b_button.is_pressed(event):
                 window.fill(0x000000)
                 gameplay(window, (4, 4)) # ## level 4 hight 4
+                game_over_menu(window)
                 proceed = False
                 return
             '''elif back_button.is_pressed(event):
