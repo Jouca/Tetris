@@ -118,11 +118,13 @@ def game_choice_menu(window):
             if event.type == pygame.VIDEORESIZE:
                 mode_a_button, mode_b_button = create_game_choice_menu(window)
             if mode_a_button.is_pressed(event):
-                gameplay(window, (1, 0), lang)
+                window.fill(0x000000)
+                gameplay(window, (1, 0))
                 proceed = False
                 return
             elif mode_b_button.is_pressed(event):
-                gameplay(window, (4, 4), lang) # ## level 4 hight 4
+                window.fill(0x000000)
+                gameplay(window, (4, 4)) # ## level 4 hight 4
                 proceed = False
                 return
             '''elif back_button.is_pressed(event):
@@ -215,10 +217,3 @@ def menuderoulant():
     help.draw(screen)
     options.draw(screen)
     pygame.display.flip()
-
-
-lang = 'EN'
-
-# provisoire, sans les menus
-level = 1
-mode_B = False
