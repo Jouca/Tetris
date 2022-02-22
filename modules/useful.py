@@ -34,7 +34,7 @@ def loop_starter_pack(tetris_window, event):
         width, height = event.size
         if width < 545:
             width = 545
-        if width / height < 1.1:
+        if width / height < 1.3:
             width = round(1.8 * height)
         if height < 303:
             height = 303
@@ -78,7 +78,7 @@ class Button2:
         window_w, window_h = window.get_size()
         x_value = round(relative_position[0] * window_w)
         y_value = round(relative_position[1] * window_h)
-        w_value = h_value = round(relative_position[2] * window_w)
+        w_value = h_value = round(relative_position[2] * window_h)
         self.rect = pygame.Rect(x_value, y_value, w_value, h_value)
 
     def draw(self, surface):
