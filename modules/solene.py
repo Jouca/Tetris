@@ -6,7 +6,6 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 import random
 import colorsys
 import time
-import termcolor  # ##à enlever, utile pour test avec print
 import pygame
 import pygame.freetype
 try:
@@ -14,7 +13,7 @@ try:
     from constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from diego import clear_lines, GameStrings
     from paul import border_dict
-    from useful import get_font_size, loop_starter_pack, Button2, Button 
+    from useful import get_font_size, loop_starter_pack, Button2, Button
 except ModuleNotFoundError:
     from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
     from modules.constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
@@ -28,13 +27,6 @@ game_strings = GameStrings(LANG)
 
 
 # pylint: disable=E1101
-# (super-init-not-called), il m'est inutile de faire appel à la méthode
-# constructeur des classes parent vu que leur méthode constructeur font appel
-# à une méthode présente dans la même classe nommée "resize". C'est dans la
-# méthode du même nom ("resize") que je fais appel à la classe parent.
-# Comprenez que j'évite d'attribuer des attributs inutiles à une classe et que
-# les classes parents sont avant tout pratique pour les positions relatives
-# des différents objets entre eux.
 
 # supprimer des attributs avec delattr(self, 'field_to_delete') super().__init__(*args, **kwargs)
 
@@ -53,46 +45,49 @@ def resize_all(window_data, obj):
     obj[4].values_relative_position()
 
 
-def display_all(window, chronometer, obj):
+def display_all(window, obj):
     """raffraîchit le jeu en faisant afficher une frame,
     contenant les objets dont les caractéristiques ont été
     mis à jour."""
-    #  ###############provisoire
-    menubutton = pygame.image.load("./image/menubutton.png").convert_alpha()
     # création d'une surface
     frame = pygame.Surface(window.get_size())
-    # affichage de l'image pour le boutton des menus, ## voir arrangement ?
-    menu_button = Button2(window, (0.9, 0.05, 0.05), menubutton)
-    '''menu_image = pygame.transform.scale(menubutton,
-                                        (obj[4].rect.w,
-                                         obj[4].rect.h))
-    frame.blit(menu_image, (obj[4].rect.x, obj[4].rect.y))'''
+    # rect transparent sur l'emplacement de Data
+    transparent_rect = pygame.Surface((obj[-1].rect.w, obj[-1].rect.h))
+    transparent_rect.fill((45, 0, 0))
+    # rect transparent pour le bouton des menus
+    transparent_rect_2 = pygame.Surface((round(window.get_width() * 0.1), window.get_height()))
+    transparent_rect_2.fill((45, 0, 0))
+    frame.blit(transparent_rect, (obj[-1].rect.x, obj[-1].rect.y))
+    frame.blit(transparent_rect_2, (round(window.get_width() * 0.89), 0))
+    frame.set_colorkey((45, 0, 0))
     # affiche chaque objet avec leur méthode display
-    for element in obj:
+    for element in obj[:-1]:
         element.display(frame)
     # dessin de la ghost piece
-    if obj[0].state != 2:
-        # ## test à enlever si pas de soucis
-        if obj[1].draw_ghost_piece(frame, obj[0]) == "ERROR snif :')":
-            pygame.image.save(window, "screenshot.jpeg")
-    menu_button.draw(frame)
+    obj[1].draw_ghost_piece(frame, obj[0])
     # frame sur la fenêtre
     window.blit(frame, (0, 0))
-    # ## voir à supprimer ?
-    display_game_data(window, obj[4], chronometer)
     # rafraichissement de la fenêtre pygame
     pygame.display.flip()
-    return menu_button
+
+
+def display_button(window):
+    #  ###############provisoire
+    menubutton = pygame.image.load("./image/menubutton.png").convert_alpha()
+    # affichage de l'image pour le boutton des menus, ## voir arrangement ?
+    menu_button = Button2(window, (0.9, 0.05, 0.08), menubutton)
+    menu_button.draw(window)
+    pygame.display.flip()
 
 
 def display_game_data(window, data, chronometer):
     """affiche les données de jeu dans l'encadré de Data."""
-    frame_size = (data.rect.w - 2 * data.width, data.rect.h - 2 * data.width)
     # création d'un objet pygame.Surface de la taille de l'encadré data
-    frame = pygame.Surface(frame_size)
+    frame = pygame.Surface((data.rect.w, data.rect.h))
+    frame.fill(0x009900)
     frame.blit(data.surface, (0, 0))
     data.update(chronometer, frame)
-    window.blit(frame, (data.rect.x + data.width, data.rect.y + data.width))
+    window.blit(frame, (data.rect.x, data.rect.y))
     pygame.display.flip()
 
 
@@ -106,18 +101,18 @@ def create_game_pause(window):
                             0.15),
                            game_strings.get_string("resume"))
     option_button = Button(window,
-                         (0.25,
-                          0.55,
-                          0.5,
-                          0.15),
-                         game_strings.get_string("options"))
-    
+                           (0.25,
+                            0.55,
+                            0.5,
+                            0.15),
+                           game_strings.get_string("options"))
+
     frame = pygame.Surface(window.get_size())
     frame.set_colorkey((0, 0, 0))
     pygame.draw.rect(frame, (100, 100, 100),
                      pygame.Rect(window.get_width() * 0.1,
                                  window.get_height() * 0.1,
-                                 window.get_width() * 0.8,
+                                 window.get_width() * 0.78,
                                  window.get_height() * 0.8))
     resume_button.draw(frame)
     option_button.draw(frame)
@@ -126,35 +121,105 @@ def create_game_pause(window):
     return resume_button, option_button
 
 
-def gameplay(window, game_type, lang):
+def tetrimino_control(event, tetrimino, data, matrix, softdrop):
+    # ## à enlever en fin
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        print(pygame.mouse.get_pos())
+
+    if event.type == pygame.KEYUP:
+        if event.key == pygame.K_DOWN:
+            softdrop = False
+            data.set_fall_speed()
+
+    if event.type == pygame.KEYDOWN:
+
+        key = pygame.key.get_pressed()
+
+        if key[pygame.K_SPACE]:
+            tetrimino.hard_drop(data)
+
+        elif key[pygame.K_DOWN]:
+            softdrop = True
+            data.fall_speed /= 20
+
+        elif key[pygame.K_RIGHT]:
+            tetrimino.move_right(matrix)
+
+        elif key[pygame.K_LEFT]:
+            tetrimino.move_left(matrix)
+
+        elif key[pygame.K_UP] or key[pygame.K_x]:
+            tetrimino.turn_right(matrix)
+
+    return softdrop
+
+
+def game_pause(game_chrono, window, game_paused, resume_button, option_button):
+    key = pygame.key.get_pressed()
+    if key[pygame.K_F1] or key[pygame.K_ESCAPE]:
+        game_paused = not game_paused
+        if game_paused:
+            game_chrono.freeze()
+            resume_button, option_button = create_game_pause(window)
+        else:
+            game_chrono.unfreeze()
+    return game_paused, resume_button, option_button
+
+
+def tetrimino_falling(time_before_refresh, data, softdrop, matrix, tetrimino):
+    # dans le cas où le joueur souhaite faire un softdrop
+    # spécifié par le fait que la touche flèche bas est
+    # maintenue pressée
+    if time_before_refresh == data.fall_speed:
+        # score incrémenté de 1 lorsque le tetrimino peut tomber
+        if tetrimino.fall(matrix) and softdrop:
+            data.score_increase(1)
+        # on reinitialise le chrono
+        time_before_refresh.reset()
+
+
+def hold_tetrimino(temp, matrix, bag, next_queue, tetrimino):
+    if temp:
+        tetrimino.set_type(temp)
+        tetrimino.set_y(0)
+        tetrimino.find_lower_pos(matrix)
+    # si vide
+    else:
+        # création d'un nouveau tetrimino
+        tetrimino = Tetrimino(bag, matrix)
+        next_queue.update(bag)
+    return tetrimino
+
+
+def gameplay(window, game_type):
     """gameplay du jeu tetris."""
-    w_width, w_height = window.get_size()
-    window_data = {'size': (w_width, w_height),
-                   'width': w_width,
-                   'height': w_height,
-                   'margin': round(0.05 * w_height)}
+    window_data = {'size': window.get_size(),
+                   'width': window.get_width(),
+                   'height': window.get_height(),
+                   'margin': round(0.05 * window.get_height())}
     bag = Bag()
     game_chrono = Chronometer()
     matrix = Matrix(window_data, game_type)
     matrix_data = {'rect': matrix.rect,
                    'cell_size': matrix.cell_size}
-    next_queue = NextQueue(window_data, matrix_data)
+
+    tetrimino = Tetrimino(bag, matrix)
+
+    next_queue = NextQueue(window_data, matrix_data, bag)
     hold_queue = HoldQueue(window_data, matrix_data)
     data = Data(window_data, matrix_data, game_chrono, game_type)
 
-    tetrimino = Tetrimino(matrix)
 
     game_object = (tetrimino, matrix, next_queue, hold_queue, data)
 
-    menu_button = display_all(window, game_chrono, game_object)
+    resume_button, option_button = create_game_pause(window)
+    display_all(window, game_object)
+    display_button(window)
 
+    time_before_refresh = lock_down_chrono = Chronometer()
 
-    time_before_refresh = Chronometer()
-    lock_down_chrono = Chronometer()
-    SHADE_PHASE = 1
-    LOCK_PHASE_FIRST = 1
-    softdrop = False
-    game_paused = False
+    shade_phase = lock_phase_first = 1
+    softdrop = game_paused = False
 
     while True:
 
@@ -164,110 +229,67 @@ def gameplay(window, game_type, lang):
         for event in pygame.event.get():
             window = loop_starter_pack(window, event)
             if event.type == pygame.VIDEORESIZE:
-                window_w, window_h = window.get_size()
-                window_data = {'size': (window_w, window_h),
-                               'width': window_w,
-                               'height': window_h,
-                               'margin': round(0.05 * window_h)}
+                window_data = {'size': window.get_size(),
+                               'width': window.get_width(),
+                               'height': window.get_height(),
+                               'margin': round(0.05 * window.get_height())}
                 print(f'current window size :   {window_data}')
                 # reaffichage avec changement des tailles et emplacement des objets
                 resize_all(window_data, game_object)
-                menu_button = display_all(window, game_chrono, game_object)
+                display_all(window, game_object)
+                display_button(window)
                 if game_paused:
+                    display_game_data(window, data, game_chrono)
                     resume_button, option_button = create_game_pause(window)
 
-            # ## à enlever en fin
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                print(pygame.mouse.get_pos())
-
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_DOWN:
-                    softdrop = False
-                    data.set_fall_speed()
+            softdrop = tetrimino_control(event, tetrimino, data, matrix, softdrop)
 
             if event.type == pygame.KEYDOWN:
 
-                key = pygame.key.get_pressed()
+                game_paused, resume_button, option_button = game_pause(game_chrono, window,
+                                                                       game_paused, resume_button,
+                                                                       option_button)
 
-                if key[pygame.K_F1] or key[pygame.K_ESCAPE]:
-                    game_paused = not game_paused
-                    if game_paused:
-                        print(game_chrono.get_chrono_value())
-                        game_chrono.freeze()
-                        resume_button, option_button = create_game_pause(window)
-                    
-                elif key[pygame.K_SPACE]:
-                    tetrimino.hard_drop(data)
-
-                elif key[pygame.K_DOWN]:
-                    softdrop = True
-                    data.fall_speed /= 20
-
-                elif key[pygame.K_RIGHT]:
-                    tetrimino.move_right(matrix)
-
-                elif key[pygame.K_LEFT]:
-                    tetrimino.move_left(matrix)
-
-                elif key[pygame.K_UP] or key[pygame.K_x]:
-                    tetrimino.turn_right(matrix)
-
-                elif event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
+                if event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
                     if hold_queue.can_hold:
                         temp = hold_queue.get_t_type()
                         hold_queue.hold(tetrimino)
                         # dans le cas où la hold queue n'est pas vide
-                        if temp:
-                            tetrimino.set_type(temp)
-                            tetrimino.set_y(0)
-                            tetrimino.find_lower_pos(matrix)
-                        # si vide
-                        else:
-                            # création d'un nouveau tetrimino
-                            tetrimino = Tetrimino(matrix)
-            if game_paused:
-                if resume_button.is_pressed(event):
-                    game_chrono.unfreeze()
-                    print(game_chrono.get_chrono_value())
-                    game_paused = False
-        
-        if not game_paused:
+                        tetrimino = hold_tetrimino(temp, matrix, bag, next_queue, tetrimino)
+        if game_paused:
+            if resume_button.is_pressed(event):
+                game_chrono.unfreeze()
+                game_paused = False
+        else:
             # phase précédant le lock down
             if tetrimino.state == 1:
                 # permet de jouer sur la couleur du tetrimino
                 values = tetrimino.lock_phase(matrix, lock_down_chrono,
-                                              LOCK_PHASE_FIRST, SHADE_PHASE)
-                LOCK_PHASE_FIRST, SHADE_PHASE = values
-                menu_button = display_all(window, game_chrono, game_object)
+                                              lock_phase_first, shade_phase)
+                lock_phase_first, shade_phase = values
+                display_all(window, game_object)
                 time.sleep(0.015)
 
             # phase lock down
             elif tetrimino.state == 2:
                 # le tetrimino est lock dans matrix
-                tetrimino.lock_on_matrix(matrix)
-                # le tetrimino suivant est créé
-                tetrimino = Tetrimino(matrix)
-                hold_queue.allow_hold()
-                menu_button = display_all(window, game_chrono, game_object)
+                tetrimino.__lock_on_matrix__(matrix)
                 # clear les lines s'il y a
                 matrix.clear_lines(data)
-                menu_button = display_all(window, game_chrono, game_object)
+                # le tetrimino suivant est créé
+                tetrimino = Tetrimino(bag, matrix)
+                next_queue.update(bag)
+                hold_queue.allow_hold()
+                display_all(window, game_object)
                 # le chronomètre est raffraîchi
                 time_before_refresh.reset()
 
             # dans le cas où le tetrimino est en falling phase
             else:
-                # dans le cas où le joueur souhaite faire un softdrop
-                # spécifié par le fait que la touche flèche bas est
-                # maintenue pressée
-                if time_before_refresh == data.fall_speed:
-                    # score incrémenté de 1 lorsque le tetrimino peut tomber
-                    if tetrimino.fall(matrix) and softdrop:
-                        data.score_increase(1)
-                    # on reinitialise le chrono
-                    time_before_refresh.reset()
+                tetrimino_falling(time_before_refresh, data,
+                                  softdrop, matrix, tetrimino)
                 # reaffichage de l'écran
-                menu_button = display_all(window, game_chrono, game_object)
+                display_all(window, game_object)
             display_game_data(window, data, game_chrono)
 
 
@@ -326,26 +348,26 @@ def display_visual_tetrimino(surface, place_properties, y_axis, t_type):
                                  width)
 
 
-def turn_right(tetrimino, phasis):
+def turn_right(tetrimino, facing):
     """fait tourner une pièce tetrimino avec une rotation
     vers la droite. Utilise la récursivité.
     - tetrimino : modélisé par une matrice ;
-    - phasis : un entier compris entre 0 et 3.
+    - facing : un entier compris entre 0 et 3.
     Renvoie une matrice correspondant à la phase indiquée.
     >>> turn_right([[0, 0, 1], [1, 1, 1], [0, 0, 0]], 2)
     [[0, 0, 0], [1, 1, 1], [1, 0, 0]]
     >>> turn_right([[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], 3)
     [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0]]"""
-    if phasis == 0:
+    if facing == 0:
         return tetrimino
-    phasis -= 1
+    facing -= 1
     rotated_tetrimino = []
     for i in range(len(tetrimino)):
         tetrimino_line = []
         for j in range(len(tetrimino)-1, -1, -1):
             tetrimino_line.append(tetrimino[j][i])
         rotated_tetrimino.append(tetrimino_line)
-    return turn_right(rotated_tetrimino, phasis)
+    return turn_right(rotated_tetrimino, facing)
 
 
 def change_color_luminosity(color, rate_of_change):
@@ -367,13 +389,15 @@ class Chronometer:
 
     def __init__(self):
         """initialisation d'un chronomètre."""
+        self.time = None
+        self.duration = None
         self.reset()
 
     def time_elapsed(self):
         """renvoie le temps passé depuis l'initialisation
         du chronomètre"""
         return time.time_ns() - self.time
-    
+
     def freeze(self):
         """défini l'attribut duration pour sauvegarder la valeur du
         chronomètre au moment de l'appel à la méthode freeze."""
@@ -418,20 +442,21 @@ class Bag:
     """modélise un sac contenant l'ordre des tetrimino suivant
     représentés par un numéro correspondant à leur type."""
 
-    content = list(range(1, 8))
-    random.shuffle(content)
+    def __init__(self):
+        self.content = list(range(1, 8))
+        random.shuffle(self.content)
 
     def __len__(self):
         """renvoie le nombre de tetrimino en attente."""
-        return len(Bag.content)
+        return len(self.content)
 
     def next_tetrimino(self):
         """renvoie le prochain tetrimino et fait en sorte qu'il
         y ait toujours au moins 5 tetrimino en attente."""
-        if len(self) < 6:
+        if len(self) < 7:
             next_generation = list(range(1, 8))
             random.shuffle(next_generation)
-            Bag.content = next_generation + Bag.content
+            self.content = next_generation + self.content
         return self.content.pop()
 
 
@@ -439,10 +464,10 @@ class Matrix:
     """modélisation de matrix dans laquelle tombent les tetrimino."""
 
     def __init__(self, window, game_type):
-        """initialisation des différents attribut de la classe Matrix."""
+        """initialisation des différents attributs de la classe Matrix."""
+        self.grid_surface = None
         self.resize(window)
         self.content = [[0 for j in range(10)] for i in range(22)]
-        self.modelisation = [22 for i in range(10)]
         # création d'une matrice vide avec deux lignes pour la skyline
         self.higher_row = 22
         for i in range(game_type[1] * 2):
@@ -450,6 +475,7 @@ class Matrix:
             for j in range(10):
                 line[j] = 0 if line[j] > 7 else line[j]
             self.content[21-i] = line
+
     # ##temporaire
     def __str__(self):
         stock = ''
@@ -471,10 +497,8 @@ class Matrix:
             multiply_by = {1: 100, 2: 300, 3: 500, 4: 800}
             level = data.values['lines']
             data.score_increase(level * multiply_by[nb_line_cleared])
-            for i in range(10):
-                if self.modelisation[i] != 22:
-                    self.modelisation[i] += 1
-            self.higher_row -= 1
+            self.higher_row += nb_line_cleared
+
 
     def resize(self, window):
         """redimmensionne les valeurs utile à la représentation
@@ -578,62 +602,66 @@ class Matrix:
         pygame.draw.rect(surface, (0, 250, 0), self.cell[9][21])'''
         surface.blit(self.grid_surface, (0, 0))
 
-    # ## optimiser
+
     def draw_ghost_piece(self, surface, tetrimino):
         """dessin de la ghost piece."""
         color = Tetrimino.COLOR_SHADE[tetrimino.type][tetrimino.shade]
-        line_to_draw = Tetrimino.BORDER[tetrimino.type][tetrimino.phasis]
+        line_to_draw = Tetrimino.BORDER[tetrimino.type][tetrimino.facing]
         pos_y = tetrimino.lower_pos
         # dessin des lignes en haut
         for element in line_to_draw[0]:
             coordinates = element[0]
             line_lenght = element[1] * self.cell_size
+            cell_pos_x = tetrimino.x_coordinate + coordinates[1]
+            cell_pos_y = coordinates[0] + pos_y
             try:
-                x = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].x
-                y = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].y
+                x_value = self.cell[cell_pos_x][cell_pos_y].x
+                y_value = self.cell[cell_pos_x][cell_pos_y].y
                 pygame.draw.line(surface, color,
-                             (x, y),
-                             (x + line_lenght, y), 3)
-            # pour le moment
+                             (x_value, y_value),
+                             (x_value + line_lenght, y_value), 3)
             except KeyError:
                 pass
         # dessin des lignes à droite
         for element in line_to_draw[1]:
             coordinates = element[0]
             line_lenght = element[1] * self.cell_size
+            cell_pos_x = tetrimino.x_coordinate + coordinates[1]
+            cell_pos_y = coordinates[0] + pos_y
             try:
-                x = self.cell_size + self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].x
-                y = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].y
+                x_value = self.cell_size + self.cell[cell_pos_x][cell_pos_y].x
+                y_value = self.cell[cell_pos_x][cell_pos_y].y
                 pygame.draw.line(surface, color,
-                             (x, y),
-                             (x, y + line_lenght), 3)
-            # pour le moment
+                             (x_value, y_value),
+                             (x_value, y_value + line_lenght), 3)
             except KeyError:
                 pass
         # dessin des lignes en dessous
         for element in line_to_draw[2]:
             coordinates = element[0]
             line_lenght = element[1] * self.cell_size
+            cell_pos_x = tetrimino.x_coordinate + coordinates[1]
+            cell_pos_y = coordinates[0] + pos_y
             try:
-                x = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].x
-                y = self.cell_size + self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].y
+                x_value = self.cell[cell_pos_x][cell_pos_y].x
+                y_value = self.cell_size + self.cell[cell_pos_x][cell_pos_y].y
                 pygame.draw.line(surface, color,
-                             (x, y),
-                             (x + line_lenght, y), 3)
-            # pour le moment
+                                 (x_value, y_value),
+                                 (x_value + line_lenght, y_value), 3)
             except KeyError:
                 pass
         # dessin des lignes à gauche
         for element in line_to_draw[3]:
             coordinates = element[0]
             line_lenght = element[1] * self.cell_size
+            cell_pos_x = tetrimino.x_coordinate + coordinates[1]
+            cell_pos_y = coordinates[0] + pos_y
             try:
-                x = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].x
-                y = self.cell[tetrimino.x_coordinate + coordinates[1]][coordinates[0] + pos_y].y
+                x_value = self.cell[cell_pos_x][cell_pos_y].x
+                y_value = self.cell[cell_pos_x][cell_pos_y].y
                 pygame.draw.line(surface, color,
-                                 (x, y),
-                                 (x, y + line_lenght), 3)
-            # pour le moment
+                                 (x_value, y_value),
+                                 (x_value, y_value + line_lenght), 3)
             except KeyError:
                 pass
 
@@ -645,8 +673,29 @@ def start_center(tetrimino_type):
     return (10 - len(TETRIMINO_SHAPE[tetrimino_type])) // 2
 
 
-class Tetrimino(Bag, Matrix):
-    """modélise un tetrimino."""
+class Tetrimino(Matrix):
+    """modélise un tetrimino.
+
+    ATTRIBUTS:
+    - `facing` (int) compris entre 0 et 3 inclus, il s'agit de l'orientation
+    du tetrimino :
+        - 0: nord ;
+        - 1: est ;
+        - 2: sud ;
+        - 3: ouest ;
+    - `shade` (int) compris entre 0 et 9 inclus, représente la nuance de
+    couleur prise par le tetrimino plus le nombre est grand plus le tetrimino
+    est sombre ;
+    - `state` (int) compris entre 0 et 2 inclus :
+        - 0 si le tetrimino est en 'falling phase', c'est-à-dire que le
+        tetrimino continue à tomber ;
+        - 1 si le tetrimino est en 'lock phase', phase où le tetrimino
+        s'apprête à se figer dans la matrice ;
+        - 2 lorsque le tetrimino est en 'completion phase' ;
+    - `type`
+    - x_coordinate
+    - y_coordinate
+    """
 
     # compteur intéressant pour les informations en fin de partie
     count = 0
@@ -655,16 +704,16 @@ class Tetrimino(Bag, Matrix):
     ROTATION_PHASIS = {}
     for i in range(1, 8):
         ROTATION_PHASIS[i] = {}
-        for phasis in range(4):
-            ROTATION_PHASIS[i][phasis] = turn_right(TETRIMINO_SHAPE[i],
-                                                    phasis)
+        for facing in range(4):
+            ROTATION_PHASIS[i][facing] = turn_right(TETRIMINO_SHAPE[i],
+                                                    facing)
 
     # création du dictionnaire utile aux ghost pieces et aux test alentours
     BORDER = {}
     for i in range(1, 8):
         BORDER[i] = {}
-        for phasis in range(4):
-            BORDER[i][phasis] = border_dict(ROTATION_PHASIS[i][phasis])
+        for facing in range(4):
+            BORDER[i][facing] = border_dict(ROTATION_PHASIS[i][facing])
 
     # création d'un dictionnaire des teintes pour le lock phase
     COLOR_SHADE = {}
@@ -677,15 +726,15 @@ class Tetrimino(Bag, Matrix):
             changed_color = change_color_luminosity(previous_color, 14)
             COLOR_SHADE[tetrimino_type][shade] = changed_color
 
-    def __init__(self, matrix):
+    def __init__(self, bag, matrix):
         """initialise une instance avec l'attribution de la phase à 0 ("Nord"),
         l'état à : 0 ("falling phase"), le type dépendant de la pièce en
         attente de l'instance de Bag et les attributs `x` et `y` tels qu'ils
         indique leur position en fonction d'une instance Matrix de sorte que
         l'instance créée soit centré dans la skyline."""
-        self.phasis = 0
+        self.facing = 0
         self.state = 0
-        self.type = self.next_tetrimino()
+        self.type = bag.next_tetrimino()
         # définit la nuance de couleur du tetrimino
         self.shade = 0
         # position centrée horizontalement
@@ -703,29 +752,18 @@ class Tetrimino(Bag, Matrix):
     def __str__(self):
         """ceci est une docstring pylint :)"""
         stock = ''
-        for element in Tetrimino.ROTATION_PHASIS[self.type][self.phasis]:
+        for element in Tetrimino.ROTATION_PHASIS[self.type][self.facing]:
             stock += ' '.join(str(element))
             stock += '\n'
         stock += f'\n type du tetrimino : {TETRIMINO_SHAPE[self.type]}'
         return stock
 
-    # ## si 2 --> test pour voir si line clear ou autre, puis passage au
-    # tetrimino suivant version non finie, il reste à déterminer les cas
-    # où le tetrimino sort de la matrice !
-    def __current_state__(self):
-        """renvoie:
-        - 0 si le tetrimino est en 'falling phase', c'est-à-dire que le
-        tetrimino continue à tomber
-        - 1 si le tetrimino est en 'lock phase', phase où le tetrimino
-        s'apprête à se figer dans la matrice avec un temps escompté
-        - 2 lorsque le tetrimino est en 'completion phase'"""
-
-    def lock_on_matrix(self, matrix):
+    def __lock_on_matrix__(self, matrix):
         """Méthode permettant de lock un tetrimino (celui de l'instance),
         dans sur la matrix de jeu. `matrix` est une instance de la classe
         Matrix."""
         t_type = self.type
-        t_phasis = self.phasis
+        t_phasis = self.facing
         tetrimino_shape = self.ROTATION_PHASIS[t_type][t_phasis]
         tetrimino_lenght = len(tetrimino_shape)
         for i in range(tetrimino_lenght):
@@ -734,19 +772,17 @@ class Tetrimino(Bag, Matrix):
                     pos_y = self.y_coordinate + j
                     pos_x = self.x_coordinate + i
                     matrix.content[pos_y][pos_x] = self.type
-                    # ajoute à modelisation au besoin afin de créer
-                    # un sorte de cartographie des plus haut à chaque fois
-                    if pos_y < matrix.modelisation[pos_x]:
-                        matrix.modelisation[pos_x] = pos_y
-                        if matrix.modelisation[pos_x] < matrix.higher_row:
-                            matrix.higher_row = matrix.modelisation[pos_x]
+                    if matrix.higher_row < 1:
+                        print('game_over')
+                    if pos_y < matrix.higher_row:
+                        matrix.higher_row = pos_y
 
-    def can_fall(self, matrix):
+    def __can_fall__(self, matrix):
         """test afin de vérifier si un tetrimino peut tomber.
         Il prend en paramètre `matrix` une instance de la classe Matrix,
         et renvoie un booléen correspondant à l'issue du test (succès ou
         échec)."""
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.facing]
         nb_column = len(tetrimino_shape)
         self.y_coordinate += 1
         if self.test_around(matrix, tetrimino_shape, nb_column):
@@ -785,7 +821,7 @@ class Tetrimino(Bag, Matrix):
             return False
         return False
 
-    def super_rotation_system(self, matrix, phasis):
+    def super_rotation_system(self, matrix, facing):
         """super rotation système décrit par la guideline de Tetris,
         permet de faire tourner un tetrimino bien que la situation
         ne soit pas confortable à la manoeuvre en temps habituel (contre
@@ -794,7 +830,7 @@ class Tetrimino(Bag, Matrix):
         d'un tetrimino via des translations et non de rotation avec un
         point de rotation comme le suggère la guideline.
         `matrix` est un objet de la classe Matrix.
-        `phasis` est la phase vers laquelle le tetrimino doit tourner.
+        `facing` est la phase vers laquelle le tetrimino doit tourner.
         La fonction renvoie un booléen selon si la pièce peut tourner ou non,
         elle change les attributs x et y de l'instance avant d'effectuer les
         test, si tous échouent, les valeurs initiales de ces deux attributs
@@ -811,8 +847,8 @@ class Tetrimino(Bag, Matrix):
             t_type = 'I'
             nb_column = 4
         # ## test pour les situation de rotation à enlever en fin
-        print(f'{PHASIS_NAME[self.phasis]}  -->  {PHASIS_NAME[phasis]}')
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][phasis]
+        print(f'{PHASIS_NAME[self.facing]}  -->  {PHASIS_NAME[facing]}')
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][facing]
         # optimisable, mais comme cela on a une économie en calcul
         # je privilégie la performance :) (et puis, pas besoin de mettre
         # (0, 0) dans le dictionnaire des test à chaque fois x))
@@ -820,8 +856,8 @@ class Tetrimino(Bag, Matrix):
             return True
         # dans le cas où la rotation au point de rotation naturel échoue
         # on fait appel à d'autres test existants
-        current_phasis = PHASIS_NAME[self.phasis]
-        next_phasis = PHASIS_NAME[phasis]
+        current_phasis = PHASIS_NAME[self.facing]
+        next_phasis = PHASIS_NAME[facing]
         coordinates = (self.x_coordinate, self.y_coordinate)
         try:
             test_list = ROTATION_POINT[t_type][current_phasis][next_phasis]
@@ -831,7 +867,7 @@ class Tetrimino(Bag, Matrix):
                 self.y_coordinate = coordinates[1] + rotation_test[1]
                 if self.test_around(matrix, tetrimino_shape, nb_column):
                     return True
-        # s'opère lorsque phasis vaut SOUTH pour un tetrimino 3x2
+        # s'opère lorsque facing vaut SOUTH pour un tetrimino 3x2
         # il n'y a pas de test supplémentaire donc ne peut pas tourner
         except KeyError:
             print('turn point : FAIL')
@@ -872,7 +908,7 @@ class Tetrimino(Bag, Matrix):
             first = 1
             return first, 1
         # dans le cas où le tetrimino peut tomber
-        if self.can_fall(matrix):
+        if self.__can_fall__(matrix):
             # permet de sortir de la lock phase
             self.state = 0
             self.shade = 0
@@ -891,13 +927,13 @@ class Tetrimino(Bag, Matrix):
             # on change de phase
             phase = (phase + 1) % 2
         return first, phase
-    
+
     def find_lower_pos(self, matrix):
         """renvoie la position la plus basse pouvant être atteinte par
         l'instance afin de déterminer la position des ordonnées de la ghost
         piece dans `matrix`. La méthode prend en paramètre `matrix` une
         instance de la classe Matrix."""
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.facing]
         # variable utile pour la méthode test_around de l'objet `tetrimino`
         # afin d'éviter de calculer la longueur à chaque tour de boucle
         nb_column = len(tetrimino_shape)
@@ -920,7 +956,7 @@ class Tetrimino(Bag, Matrix):
 
     def display(self, surface):
         """affiche l'instance de tetrimino en fonction de ses spécificités."""
-        tetrimino_shape = self.ROTATION_PHASIS[self.type][self.phasis]
+        tetrimino_shape = self.ROTATION_PHASIS[self.type][self.facing]
         color = Tetrimino.COLOR_SHADE[self.type][self.shade]
         for i, row in enumerate(tetrimino_shape):
             for j in range(len(tetrimino_shape)):
@@ -940,7 +976,7 @@ class Tetrimino(Bag, Matrix):
     def leftmost(self):
         """renvoie le plus petit coordonnée x possédé par un mino."""
         # on selectionne les bords gauche du tetrimino
-        left = Tetrimino.BORDER[self.type][self.phasis][3]
+        left = Tetrimino.BORDER[self.type][self.facing][3]
         left_most = 4
         for shift in left:
             if shift[0][1] < left_most:
@@ -951,7 +987,7 @@ class Tetrimino(Bag, Matrix):
     def rightmost(self):
         """renvoie la plus grande valeur x d'un mino."""
         # on selectionne les bords droit du tetrimino
-        right = Tetrimino.BORDER[self.type][self.phasis][1]
+        right = Tetrimino.BORDER[self.type][self.facing][1]
         right_most = 0
         for shift in right:
             if shift[0][1] + shift[1] > right_most:
@@ -961,9 +997,9 @@ class Tetrimino(Bag, Matrix):
     def fall(self, matrix):
         """permet de faire tomber le tetrimino, s'il ne peut pas,
         le tetrimino passe en lock phase. A pour paramètre une instance de
-        la classe Matrix."""
+        la classe Matrix `matrix`."""
         # teste si le tetrimino est apte à tomber
-        if self.can_fall(matrix):
+        if self.__can_fall__(matrix):
             return True
         # le test a échoué, le tetrimino ne peut pas tomber,
         # on passe en lock phase
@@ -972,7 +1008,7 @@ class Tetrimino(Bag, Matrix):
 
     def move_left(self, matrix):
         """déplace d'une case vers la gauche le tetrimino."""
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.facing]
         nb_column = len(tetrimino_shape)
         # dans le cas où le mino le plus à gauche n'est pas adjacent au mur
         if self.leftmost() > 0:
@@ -986,7 +1022,7 @@ class Tetrimino(Bag, Matrix):
 
     def move_right(self, matrix):
         """déplace d'une case vers la droite le tetrimino."""
-        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.phasis]
+        tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][self.facing]
         nb_column = len(tetrimino_shape)
         self.x_coordinate += 1
         if self.test_around(matrix, tetrimino_shape, nb_column):
@@ -1000,18 +1036,18 @@ class Tetrimino(Bag, Matrix):
     def turn_left(self, matrix):
         """permet de tourner le tetrimino de 90° dans le sens
         horaire."""
-        phasis = (self.phasis - 1) % 4
-        if self.super_rotation_system(matrix, phasis):
-            self.phasis = phasis
+        facing = (self.facing - 1) % 4
+        if self.super_rotation_system(matrix, facing):
+            self.facing = facing
             # redéfini emplacement de la ghost piece
             self.find_lower_pos(matrix)
 
     def turn_right(self, matrix):
         """permet de tourner le tetrimino de 90° dans le sens
         anti-horaire."""
-        phasis = (self.phasis + 1) % 4
-        if self.super_rotation_system(matrix, phasis):
-            self.phasis = phasis
+        facing = (self.facing + 1) % 4
+        if self.super_rotation_system(matrix, facing):
+            self.facing = facing
             # redéfini emplacement de la ghost piece
             self.find_lower_pos(matrix)
 
@@ -1091,7 +1127,7 @@ class HoldQueue:
         t_x = self.rect.x + (self.rect.w - t_w) // 2
         t_y = self.rect.y + (self.rect.w - t_h) // 2
         self.t_rect = pygame.Rect(t_x, t_y, t_w, t_h)
-    
+
     '''def resize(self, window, matrix):
         """redimensionne selon les valeurs de `Window` une instance de la
         classe Window."""
@@ -1132,12 +1168,13 @@ class HoldQueue:
         self.can_hold = True
 
 
-class NextQueue(Bag):
+class NextQueue:
     """modélisation de la next queue dans laquelle sont représentés les six
     prochaines pièces de la partie en cours."""
 
-    def __init__(self, window, matrix):
+    def __init__(self, window, matrix, bag):
         """méthode constructeur de la classe."""
+        self.bag_content = bag.content[-6:]
         self.resize(window, matrix)
 
     def resize(self, window, matrix):
@@ -1166,10 +1203,13 @@ class NextQueue(Bag):
         # pour les différents tetrimino visuel
         y_axis_2 += space
         for _ in range(5):
-            t_place = y_axis_2
+            self.next_y.append(y_axis_2)
             y_axis_2 += t_h + space
-            self.next_y.append(t_place)
         self.t_rect = pygame.Rect(t_x, 0, t_w, t_h)
+
+    def update(self, bag):
+        """met à jour l'attribut bag_content."""
+        self.bag_content = bag.content[-6:]
 
     def display(self, surface):
         """affiche des encadrés correspondant à la next queue dans lesquelles
@@ -1188,31 +1228,7 @@ class NextQueue(Bag):
         # affichage des tetrimino suivant contenu dans bag
         for i in range(6):
             display_visual_tetrimino(surface, self,
-                                     self.next_y[i - 1], self.content[-i])
-
-
-# ## à changer, utiliser classe Button retravaillée par Bastien
-class MenuButton(HoldQueue, NextQueue):
-    """crée le boutton de jeu."""
-
-    def __init__(self, window):
-        """initialisation de l'instance."""
-        self.resize(window)
-
-    def resize(self, window):
-        """redimensionne selon les valeurs de `Window` une instance de la
-        classe Window."""
-        # informations générales de l'emplacement de la hold queue
-        super().resize(window)
-        w_value = self.rect_1.h = self.rect_1.w // 2
-        remaining_space = window['width'] - self.rect_1.x - self.rect_1.w - w_value
-        x_axis = self.rect_1.x + self.rect.w + (remaining_space // 2)
-        self.width = self.rect_1.h // 39 + 1
-        self.rect = pygame.Rect(x_axis, self.rect_1.y, w_value, self.rect_1.h)
-
-    # ###
-    def bind(self):
-        """affichage dans le cas où le boutton est appuyé."""
+                                     self.next_y[i - 1], self.bag_content[-i])
 
 
 # fonctions plus pour la lisibilité du code
@@ -1229,73 +1245,107 @@ class Data:
     attributs permettant de tracer l'encadré d'affichage du score, niveau,
     nombre de line clear, ...
 
-    attributs des instances:
-    - font
-    - margin
-    - name
-    - rect
-    - values
-    - values_surface
-    - width
-
-    à supprimer :
-    cell_size
-    """
+    ATTRIBUTS:
+    - `fall_speed` (float) vitesse de raffraîchissement en ce qui concerne
+    le jeu, il s'agit du temps entre deux positions d'un tetrimino en jeu lors
+    du falling_phase, ainsi fall_speed détermine la vitesse de la chute du
+    tetrimino, variant selon le niveau ;
+    - `font` (pygame.Font) font utilisé pour l'affichage ;
+    - `rect` (pygame.Rect) rectangle pygame pour dessiner l'encadré de
+    l'instance ;
+    - `surface` (pygame.Surface) surface sur laquelle se trouve les noms
+    des données ('score', 'temps', ...) à leur emplacement ;
+    - `values` (dict) stocke les valeurs des données de jeu ;
+    - `values_surface` (dict) contient les objets pygame.surface et les
+    positions de ces surfaces exprimé en tuple (position x, position y) par
+    rapport à l'encadré de data ;
+    - `width` (int) largeur du trait devant devant délimiter l'encadré"""
 
     def __init__(self, window, matrix, chronometer, game_type):
         """méthode constructeur de la classe. Initialise le score
-        et les données d'une parties."""
+        et les données d'une parties. `window`, `matrix` et `chronometer` sont
+        des instances de classes du même nom, `game_type` est un 2-uplet
+        contenant dans l'ordre, le niveau et la difficulté imposée au mode B.
+        le niveau peut-être compris entre 0 et 10 inclus. La difficulté quant à
+        elle est comprise entre 0 et 6 inclus, 6 signifiant qu'il s'agit du mode
+        A (le mode B permettant de choisir pour niveau max 5)."""
         level, hight = game_type
-        goal = 25 if hight else level * 5
+        # goal correspond à l'objectif à atteindre avant le passage au niveau
+        # suivant. 25 dans le cas du mode B, autrement 5 fois le niveau choisi
+        hight -= 1
+        goal = 25 if hight - 1 > 0 else level * 5
         first_values = [0, 0, level, goal]
         self.values = {DATA_KEYS[i]: first_values[i] for i in range(4)}
-        self.name = game_strings.get_all_strings()
+        self.values_surface = {DATA_STRINGS[i]:
+                               {'surface': None,
+                                'position': None} for i in range(5)}
+        self.font = None
+        self.surface = None
         self.resize(window, matrix)
-        self.values_surface = [None, 0]
         self.chrono_value(chronometer)
-        self.values_relative_position()  # ##
+        self.values_relative_position()
         self.set_fall_speed()
 
-    def change_text_language(self, lang):
-        """change la langue du texte selon `lang` une chaîne de caractère."""
-        self.name = game_strings.get_all_strings()
-        self.font_resize()
-
     def font_resize(self):
-        """redimenssione les polices."""
+        """redimenssione les polices de caractères."""
         w_value, h_value = self.rect.w, self.rect.h
         # attribution d'une marge locale
         local_margin = h_value // 11
-        # ## font place en tant que variable plutôt qu'attribut ?
+        # dimensions que peut occuper le texte prenant en compte une marge
         font_place = (w_value - local_margin, h_value - 2 * local_margin)
         # taille que devrait avoir la hauteur du texte
         font_height = round((0.86 * font_place[1]) / 7)
         # redéfinition de l'attribut font selon les résultats obtenus
-        self.font = pygame.font.Font("others/Anton-Regular.ttf", get_font_size(font_height))
+        self.font = pygame.font.Font("others/Anton-Regular.ttf",
+                                     get_font_size(font_height))
+        # liste qui stockera les textes avec les intitulés des données
         name_surface = []
+        # constitution de cette liste
         for i in DATA_STRINGS:
-            name_surface.append(self.font.render(self.name[i], 1, COLOR['WHITE']))
+            value = game_strings.get_all_strings()[i]
+            name_surface.append(self.font.render(value, 1, COLOR['WHITE']))
+        # calcul espace nécéssaire entre deux surface contenant du texte
         space_between_string = (font_place[1] - 7 * font_height) // 6
-
         # création d'un objet surface servant de calque afin d'optimiser le jeu
-        surface = pygame.Surface((w_value - 2 * self.width, h_value - 2 * self.width))
+        surface = pygame.Surface((w_value, h_value))
+        # dessin de l'encadré
+        pygame.draw.rect(surface, (150, 150, 150),
+                         pygame.Rect(self.width,
+                                     self.width,
+                                     self.rect.w - 2 * self.width,
+                                     self.rect.h - 2 * self.width),
+                         self.width)
+        # position selon axe y par rapport à l'encadré à stocker dans attribut
+        # values_surface
         y_value = local_margin
-        self.position = []
+        # correspond à la hauteur occupé par une surface texte
         font_h = name_surface[0].get_size()
-        i = 0
-        for element in VISUAL_STRUCTURE:
-            if element == 1:
-                surface.blit(name_surface[i], (local_margin // 2, y_value))
-                if i > 1:
-                    self.position.append(y_value)
-                i += 1
+        index = 0
+        # parcours de VISUAL_STRUCTURE indiquant la présentation de la chose
+        for i, element in enumerate(VISUAL_STRUCTURE):
+            # dans le cas où `element` vaut None
+            if element is None:
+                # récupération de la clef, valeur contenu l'indice d'avant
+                element = VISUAL_STRUCTURE[i-1]  # ## key = TvT
+                # ajout de la valeur de y_value dans le dictionnaire
+                self.values_surface[element]['position'] = y_value
                 y_value += font_h[1]
-            elif element is None:
-                self.position.append(y_value)
-                y_value += font_h[1]
-            else:
+            # dans le cas où `element` vaut 0
+            elif not element:
+                # incrémentation de y_value
                 y_value += space_between_string
-
+            # autrement (quand il s'agit d'un string)
+            else:
+                # ajout du texte sur surface
+                surface.blit(name_surface[index], (local_margin // 2, y_value))
+                # dans le cas où `index` est supérieur à 1
+                if index > 1:
+                    # ajout de la valeur de y_value dans le dictionnaire
+                    self.values_surface[element]['position'] = y_value
+                # incrémentations
+                index += 1
+                y_value += font_h[1]
+        # attribution de surface à l'instance
         self.surface = surface
 
     def values_relative_position(self):
@@ -1305,52 +1355,30 @@ class Data:
         local_margin = h_value // 11
 
         nb_zero_to_fill = [10, 3, 2, 3]
-        chrono_save = self.values_surface[1]
-        self.values_surface = [self.font.render(str(self.values[DATA_KEYS[i]]).zfill(nb_zero_to_fill[i]), 1, COLOR['WHITE']) for i in range(4)]
-        self.values_surface.insert(1, chrono_save)
-        # ## recours boucle pour ne pas dépasser limite de 79 caractères
-        '''for i in range(4):
-            # ##besoin d'un nom à un caractère TvT
-            j = str(self.values[DATA_KEYS[i]]).zfill(nb_zero_to_fill[i])
-            self.values_surface.append(self.font.render(j, 1, COLOR['WHITE']))
-        self.values_surface.insert(1, chrono_save)'''
+        for i, element in enumerate(DATA_KEYS):
+            value = str(self.values[element]).zfill(nb_zero_to_fill[i])
+            value_rendered = self.font.render(value, 1, COLOR['WHITE'])
+            self.values_surface[element]['surface'] = value_rendered
 
         pos_x = []
-        termcolor.cprint(self.position, 'red')
         temp_chrono = Chronometer()  # ##
         self.chrono_value(temp_chrono)  # ##
-        print(self.values_surface)
-        for i in range(2):
-            obj_w_value = self.values_surface[i].get_size()[0]
+        for element in DATA_STRINGS[:2]:
+            obj_w_value = self.values_surface[element]['surface'].get_size()[0]
             pos_x.append(find_align_center_x(obj_w_value, w_value))
-        for i in range(2, 5):
-            obj_w_value = self.values_surface[i].get_size()[0]
+        for element in DATA_STRINGS[2:]:
+            obj_w_value = self.values_surface[element]['surface'].get_size()[0]
             pos_x.append(w_value - local_margin - obj_w_value)
-
-        for i in range(5):
-            self.position[i] = ((pos_x[i], self.position[i]))
+        print(pos_x)
+        for i, element in enumerate(DATA_STRINGS):
+            position = (pos_x[i], self.values_surface[element]['position'])
+            self.values_surface[element]['position'] = position
 
     def set_fall_speed(self):
         """met à jour la valeur du temps entre chaque frame du jeu en accord
         avec la guideline officiel du jeu."""
         level = self.values['level']
         self.fall_speed = (0.8 - (level - 1) * 0.007) ** (level - 1)
-
-    """SCORING (aide-mémoire) :
-    There is a special bonus for Back-to-Backs, which is when two actions such as a Tetris and
-    T-Spin Double (see complete list below) take place without a Single, Double, or Triple Line
-    Clear occurring between them.
-
-    Action              Action Total        Description
-    Mini T-Spin         100 x Level         An easier T-Spin with no Line Clear.
-    Mini T-Spin Single  200 x Level         An easier T-Spin clearing 1 line of Blocks.
-    T-Spin              400 x Level         T-Tetrimino is spun into a T-Slot with no Line Clear.
-    T-Spin Single       800 x Level         T-Spin clearing 1 line of Blocks.
-    T-Spin Double       1200 x Level        T-Spin simultaneously clearing 2 lines of 10 Blocks.
-    T-Spin Triple       1600 x Level        T-Spin simultaneously clearing 3 lines of 10 Blocks.
-    Back-to-Back Bonus  0.5 x Action        Total Bonus for Tetrises, T-Spin Line Clears, and Mini
-                                            T-Spin Line Clears performed consecutively in a B2B
-                                            sequence."""
 
     def resize(self, window, matrix):
         """change les attributs relatifs aux dimensions de l'encadré."""
@@ -1364,31 +1392,27 @@ class Data:
         self.rect = pygame.Rect(x_axis, y_axis, w_value, h_value)
         # redimensionnement des textes et repositionnement
         self.font_resize()
-    
-    def display(self, surface):  # ##changer
-        pygame.draw.rect(surface, (150, 150, 150),
-                         self.rect,
-                         self.width)
 
     def chrono_value(self, chronometer):
         """la valeur du chronomètre est donnée selon celle de `chronometer`
         une instance de la classe Chronometer."""
         chrono_value = chronometer.get_chrono_value()
-        self.values_surface[1] = self.font.render(chrono_value, 1,
-                                                  COLOR['WHITE'])
+        chrono_surface = self.font.render(chrono_value, 1, COLOR['WHITE'])
+        self.values_surface['time']['surface'] = chrono_surface
 
     def update(self, chronometer, surface):
         """met à jour les attributs de l'instance."""
         self.chrono_value(chronometer)
-        for i in range(5):
-            surface.blit(self.values_surface[i], self.position[i])
+        for element in DATA_STRINGS:
+            surface.blit(self.values_surface[element]['surface'],
+                         self.values_surface[element]['position'])
 
     def add_to_line_clear(self, value_to_add):
         """ajoute `value_to_add` au nombre de line_clear."""
         self.values['lines'] += value_to_add
         lines = self.font.render(str(self.values['lines']).zfill(3), 1,
                                  COLOR['WHITE'])
-        self.values_surface[2] = lines
+        self.values_surface['lines']['surface'] = lines
         self.values['goal'] -= value_to_add
         if self.values['goal'] < 1:
             self.values['level'] += 1
@@ -1396,10 +1420,10 @@ class Data:
             self.values['goal'] = self.values['level'] * 5
             level = self.font.render(str(self.values['level']).zfill(2), 1,
                                      COLOR['WHITE'])
-            self.values_surface[3] = level
-        chrono = self.font.render(str(self.values['goal']).zfill(3), 1,
-                                  COLOR['WHITE'])
-        self.values_surface[4] = chrono
+            self.values_surface['level']['surface'] = level
+        goal = self.font.render(str(self.values['goal']).zfill(3), 1,
+                                COLOR['WHITE'])
+        self.values_surface['goal']['surface'] = goal
 
     def score_increase(self, value_to_add):
         """augmente l'attribut score de `value_to_add` devant
@@ -1407,4 +1431,4 @@ class Data:
         self.values['score'] += value_to_add
         score = self.font.render(str(self.values['score']).zfill(10), 1,
                                  COLOR['WHITE'])
-        self.values_surface[0] = score
+        self.values_surface['score']['surface'] = score
