@@ -7,18 +7,18 @@ import pygame
 import pygame.freetype
 from modules.bastien import main_menu
 
-         # pylint: disable=E1101
+# pylint: disable=E1101
 # (no-member) erreur apparaissant pour les constantes de pygame référant aux
 # touches de clavier et boutons de fenêtre, ...
 
 # initialisation de pygame
 pygame.init()
-
+ 
 '''# préréglage du module mixer
 pygame.mixer.pre_init(44100, -16, 2, 1024)
 pygame.mixer.music.set_volume(0.4)'''
 
-
+# définition de variables de fenêtre
 FULLSCREEN_WIDTH = pygame.display.get_desktop_sizes()[0][1]
 WINDOW_HEIGHT = round(FULLSCREEN_WIDTH * 2/3)
 WINDOW_WIDTH = round(WINDOW_HEIGHT * 1.8)
@@ -34,7 +34,6 @@ window_data = {'size' : WINDOW_SIZE,
 
 # importation d'images
 icon = pygame.image.load("./image/window_logo.png").convert_alpha()
-# prop = pygame.image.load("prop2.png").convert_alpha()
 menubutton = pygame.image.load("./image/menubutton.png").convert_alpha()
 
 
@@ -44,5 +43,4 @@ pygame.display.set_icon(icon)
 
 
 if __name__ == "__main__":
-    # gameplay(tetris_window)
     main_menu(tetris_window)
