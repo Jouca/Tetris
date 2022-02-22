@@ -5,6 +5,12 @@ try:
 except ModuleNotFoundError:
     from modules.constant import COLOR, FONT_HEIGHT
 
+pygame.init()
+ 
+# préréglage du module mixer
+pygame.mixer.pre_init(44100, -16, 2, 1024)
+pygame.mixer.music.set_volume(0.4)
+
 
 def get_font_size(font_height):
     """récupère une valeur de taille de police selon `font_height` un entier
@@ -43,68 +49,11 @@ def loop_starter_pack(tetris_window, event):
     return tetris_window
 
 
-class Button2:
-    """crée un bouton visuel formaté avec le style général du jeu."""
-
-    def __init__(self, window, relative_position, image):
-        """méthode constructeur de la classe :
-        - `window` est la fenêtre sur laquelle est créé le bouton ;
-        - `relative_position` correspond à un 4-uple (`x`, `y`, `w`, `h`)
-        indiquant la position et les dimensions relatives selon les dimensions
-        de la fenêtre, toutes les valeurs doivent être comprises entre 0 et 1
-        exclus afin que le bouton soit visible, dans l'ordre :
-            - position relative `x`, positionnement x par rapport à la largeur
-            de la fenêtre (sur bord gauche lorsque `x` vaut 0, droit lorsque
-            `x` vaut 1 (sort du cadre)) ;
-            - position relative `y`, positionnement y par rapport à la longueur
-            de la fenêtre (sur le bord haut lorsque `y` vaut 0, sur le bord bas
-            lorsque `y` vaut 1 auquel cas ne sera pas visible puisque le bouton
-            sortira du cadre de la fenêtre)) ;
-            - valeur `w`, représente la largeur du bouton selon la largeur de
-            la fenêtre (pour `w` égal à 0, le bouton est inexistant ce qui
-            n'est pas très intéressant, lorsque `w` vaut 1, le bouton possède
-            une largeur égale à celle de la fenêtre) ;
-            - valeur `h`, représente la longueur du bouton selon la longueur
-            de la fenêtre (pour `h` égal à 0, le bouton est inexistant ce qui
-            n'est pas très intéressant, lorsque `w` vaut 1, le bouton possède
-            une longueur égale à celle de la fenêtre)
-        - `text` est le texte associé au bouton, doit être une chaîne de
-        caractères ;
-        - font_size, un entier spécifiant la taille de la police pour le texte
-        à afficher sur le bouton visuel, dans le cas où elle n'est pas
-        indiqué, la taille dépendra de la hauteur du bouton.
-        >>> button = Button((0, 0, 1, 1), "Hello world !", 50)"""
-        self.image = image
-        window_w, window_h = window.get_size()
-        x_value = round(relative_position[0] * window_w)
-        y_value = round(relative_position[1] * window_h)
-        w_value = h_value = round(relative_position[2] * window_h)
-        self.rect = pygame.Rect(x_value, y_value, w_value, h_value)
-
-    def draw(self, surface):
-        """permet de dessiner le bouton sur une surface `surface` devant
-        être un objet pygame.Surface"""
-        # ##voir pour transparence
-        button_surface = pygame.Surface((self.rect.w, self.rect.h))
-        image = pygame.transform.scale(self.image,
-                                       (self.rect.w, self.rect.h))
-        button_surface.blit(image, (0, 0))
-        surface.blit(button_surface, (self.rect.x, self.rect.y))
-        pygame.draw.rect(surface, (150, 150, 150), self.rect, 3)
-
-    def is_pressed(self, event):
-        """permet de détecter si le joueur a fait un clic gauche
-        sur le bouton. Renvoie un booléen, True si le bouton est cliqué,
-        False sinon."""
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                if self.rect.collidepoint(event.pos):
-                    return True
-        return False
-
-
 class Button:
-    """crée un bouton visuel formaté avec le style général du jeu."""
+    """crée un bouton visuel formaté avec le style général du jeu.
+    Bouton ayant la spécificité d'être de forme carré et d'avoir une image."""
+
+    button_click = pygame.mixer.Sound('sound/button_click.wav')
 
     def __init__(self, window, relative_position, text, font_size=0):
         """méthode constructeur de la classe :
@@ -130,10 +79,11 @@ class Button:
             une longueur égale à celle de la fenêtre)
         - `text` est le texte associé au bouton, doit être une chaîne de
         caractères ;
-        - font_size, un entier spécifiant la taille de la police pour le texte
+        - `font_size`, un entier spécifiant la taille de la police pour le texte
         à afficher sur le bouton visuel, dans le cas où elle n'est pas
         indiqué, la taille dépendra de la hauteur du bouton.
-        >>> button = Button((0, 0, 1, 1), "Hello world !", 50)"""
+        >>> window = pygame.display.set_mode((800, 500))
+        >>> button = Button(window, (0, 0, 1, 1), "Hello world !", 50)"""
         self.text = text
         window_w, window_h = window.get_size()
         x_value = round(relative_position[0] * window_w)
@@ -157,6 +107,59 @@ class Button:
         pygame.draw.rect(surface, (150, 150, 150), self.rect, 4)
         center_pos = self.text_image.get_rect(center=self.rect.center)
         surface.blit(self.text_image, center_pos)
+
+    def is_pressed(self, event):
+        """permet de détecter si le joueur a fait un clic gauche
+        sur le bouton. Renvoie un booléen, True si le bouton est cliqué,
+        False sinon."""
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                if self.rect.collidepoint(event.pos):
+                    pygame.mixer.Sound.play(Button.button_click)
+                    return True            
+        return False
+
+
+class Button2:
+    """crée un bouton visuel formaté avec le style général du jeu."""
+
+    def __init__(self, window, relative_position, image):
+        """méthode constructeur de la classe :
+        - `window` est la fenêtre sur laquelle est créé le bouton ;
+        - `relative_position` correspond à un 4-uple (`x`, `y`, `w`)
+        indiquant la position et les dimensions relatives selon les dimensions
+        de la fenêtre, toutes les valeurs doivent être comprises entre 0 et 1
+        exclus afin que le bouton soit visible, dans l'ordre :
+            - position relative `x`, positionnement x par rapport à la largeur
+            de la fenêtre (sur bord gauche lorsque `x` vaut 0, droit lorsque
+            `x` vaut 1 (sort du cadre)) ;
+            - position relative `y`, positionnement y par rapport à la longueur
+            de la fenêtre (sur le bord haut lorsque `y` vaut 0, sur le bord bas
+            lorsque `y` vaut 1 auquel cas ne sera pas visible puisque le bouton
+            sortira du cadre de la fenêtre)) ;
+            - valeur `w`, représente la longueur du côté du bouton selon la
+            hauteur de la fenêtre (pour `w` égal à 0, le bouton est inexistant
+            ce qui n'est pas très intéressant, lorsque `w` vaut 1, le bouton est
+            un carré de côté égal à la hauteur de la fenêtre) ;
+        - `image` est l'image associé au bouton, il doit s'agir d'un # ##
+        """
+        self.image = image
+        window_w, window_h = window.get_size()
+        x_value = round(relative_position[0] * window_w)
+        y_value = round(relative_position[1] * window_h)
+        w_value = h_value = round(relative_position[2] * window_h)
+        self.rect = pygame.Rect(x_value, y_value, w_value, h_value)
+
+    def draw(self, surface):
+        """permet de dessiner le bouton sur une surface `surface` devant
+        être un objet pygame.Surface"""
+        # ##voir pour transparence
+        button_surface = pygame.Surface((self.rect.w, self.rect.h))
+        image = pygame.transform.scale(self.image,
+                                       (self.rect.w, self.rect.h))
+        button_surface.blit(image, (0, 0))
+        surface.blit(button_surface, (self.rect.x, self.rect.y))
+        pygame.draw.rect(surface, (150, 150, 150), self.rect, 3)
 
     def is_pressed(self, event):
         """permet de détecter si le joueur a fait un clic gauche
