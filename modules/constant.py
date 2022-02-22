@@ -113,8 +113,19 @@ FONT_HEIGHT = [19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37,
                296, 297, 299, 300]
 
 
-VISUAL_STRUCTURE = [1, None, 0, 1, None, 0, 0, 0, 1, 0, 1, 0, 1]
-
+VISUAL_STRUCTURE = ['score',
+                    None,
+                    0,
+                    'time',
+                    None,
+                    0,
+                    0,
+                    0,
+                    'lines',
+                    0,
+                    'level',
+                    0,
+                    'goal']
 
 DATA_KEYS = ['score', 'lines', 'level', 'goal']
 DATA_STRINGS = ['score', 'time', 'lines', 'level', 'goal']
