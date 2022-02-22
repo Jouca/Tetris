@@ -121,82 +121,13 @@ def create_game_pause(window):
     return resume_button, option_button
 
 
-def tetrimino_control(event, tetrimino, data, matrix, softdrop):
-    # ## à enlever en fin
-    if event.type == pygame.MOUSEBUTTONDOWN:
-        print(pygame.mouse.get_pos())
-
-    if event.type == pygame.KEYUP:
-        if event.key == pygame.K_DOWN:
-            softdrop = False
-            data.set_fall_speed()
-
-    if event.type == pygame.KEYDOWN:
-
-        key = pygame.key.get_pressed()
-
-        if key[pygame.K_SPACE]:
-            tetrimino.hard_drop(data)
-
-        elif key[pygame.K_DOWN]:
-            softdrop = True
-            data.fall_speed /= 20
-
-        elif key[pygame.K_RIGHT]:
-            tetrimino.move_right(matrix)
-
-        elif key[pygame.K_LEFT]:
-            tetrimino.move_left(matrix)
-
-        elif key[pygame.K_UP] or key[pygame.K_x]:
-            tetrimino.turn_right(matrix)
-
-    return softdrop
-
-
-def game_pause(game_chrono, window, game_paused, resume_button, option_button):
-    key = pygame.key.get_pressed()
-    if key[pygame.K_F1] or key[pygame.K_ESCAPE]:
-        game_paused = not game_paused
-        if game_paused:
-            game_chrono.freeze()
-            resume_button, option_button = create_game_pause(window)
-        else:
-            game_chrono.unfreeze()
-    return game_paused, resume_button, option_button
-
-
-def tetrimino_falling(time_before_refresh, data, softdrop, matrix, tetrimino):
-    # dans le cas où le joueur souhaite faire un softdrop
-    # spécifié par le fait que la touche flèche bas est
-    # maintenue pressée
-    if time_before_refresh == data.fall_speed:
-        # score incrémenté de 1 lorsque le tetrimino peut tomber
-        if tetrimino.fall(matrix) and softdrop:
-            data.score_increase(1)
-        # on reinitialise le chrono
-        time_before_refresh.reset()
-
-
-def hold_tetrimino(temp, matrix, bag, next_queue, tetrimino):
-    if temp:
-        tetrimino.set_type(temp)
-        tetrimino.set_y(0)
-        tetrimino.find_lower_pos(matrix)
-    # si vide
-    else:
-        # création d'un nouveau tetrimino
-        tetrimino = Tetrimino(bag, matrix)
-        next_queue.update(bag)
-    return tetrimino
-
-
 def gameplay(window, game_type):
     """gameplay du jeu tetris."""
-    window_data = {'size': window.get_size(),
-                   'width': window.get_width(),
-                   'height': window.get_height(),
-                   'margin': round(0.05 * window.get_height())}
+    w_width, w_height = window.get_size()
+    window_data = {'size': (w_width, w_height),
+                   'width': w_width,
+                   'height': w_height,
+                   'margin': round(0.05 * w_height)}
     bag = Bag()
     game_chrono = Chronometer()
     matrix = Matrix(window_data, game_type)
@@ -212,14 +143,16 @@ def gameplay(window, game_type):
 
     game_object = (tetrimino, matrix, next_queue, hold_queue, data)
 
-    resume_button, option_button = create_game_pause(window)
     display_all(window, game_object)
     display_button(window)
 
-    time_before_refresh = lock_down_chrono = Chronometer()
+    time_before_refresh = Chronometer()
+    lock_down_chrono = Chronometer()
 
-    shade_phase = lock_phase_first = 1
-    softdrop = game_paused = False
+    shade_phase = 1
+    lock_phase_first = 1
+    softdrop = False
+    game_paused = False
 
     while True:
 
@@ -229,37 +162,75 @@ def gameplay(window, game_type):
         for event in pygame.event.get():
             window = loop_starter_pack(window, event)
             if event.type == pygame.VIDEORESIZE:
-                window_data = {'size': window.get_size(),
-                               'width': window.get_width(),
-                               'height': window.get_height(),
-                               'margin': round(0.05 * window.get_height())}
+                window_w, window_h = window.get_size()
+                window_data = {'size': (window_w, window_h),
+                               'width': window_w,
+                               'height': window_h,
+                               'margin': round(0.05 * window_h)}
                 print(f'current window size :   {window_data}')
                 # reaffichage avec changement des tailles et emplacement des objets
                 resize_all(window_data, game_object)
                 display_all(window, game_object)
                 display_button(window)
                 if game_paused:
-                    display_game_data(window, data, game_chrono)
                     resume_button, option_button = create_game_pause(window)
 
-            softdrop = tetrimino_control(event, tetrimino, data, matrix, softdrop)
+            # ## à enlever en fin
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                print(pygame.mouse.get_pos())
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN:
+                    softdrop = False
+                    data.set_fall_speed()
 
             if event.type == pygame.KEYDOWN:
 
-                game_paused, resume_button, option_button = game_pause(game_chrono, window,
-                                                                       game_paused, resume_button,
-                                                                       option_button)
+                key = pygame.key.get_pressed()
 
-                if event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
+                if key[pygame.K_F1] or key[pygame.K_ESCAPE]:
+                    game_paused = not game_paused
+                    if game_paused:
+                        game_chrono.freeze()
+                        resume_button, option_button = create_game_pause(window)
+                    else:
+                        game_chrono.unfreeze()
+
+                elif key[pygame.K_SPACE]:
+                    tetrimino.hard_drop(data)
+
+                elif key[pygame.K_DOWN]:
+                    softdrop = True
+                    data.fall_speed /= 20
+
+                elif key[pygame.K_RIGHT]:
+                    tetrimino.move_right(matrix)
+
+                elif key[pygame.K_LEFT]:
+                    tetrimino.move_left(matrix)
+
+                elif key[pygame.K_UP] or key[pygame.K_x]:
+                    tetrimino.turn_right(matrix)
+
+                elif event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
                     if hold_queue.can_hold:
                         temp = hold_queue.get_t_type()
                         hold_queue.hold(tetrimino)
                         # dans le cas où la hold queue n'est pas vide
-                        tetrimino = hold_tetrimino(temp, matrix, bag, next_queue, tetrimino)
+                        if temp:
+                            tetrimino.set_type(temp)
+                            tetrimino.set_y(0)
+                            tetrimino.find_lower_pos(matrix)
+                        # si vide
+                        else:
+                            # création d'un nouveau tetrimino
+                            tetrimino = Tetrimino(bag, matrix)
+                            next_queue.update(bag)
         if game_paused:
             if resume_button.is_pressed(event):
                 game_chrono.unfreeze()
                 game_paused = False
+
         else:
             # phase précédant le lock down
             if tetrimino.state == 1:
@@ -286,8 +257,15 @@ def gameplay(window, game_type):
 
             # dans le cas où le tetrimino est en falling phase
             else:
-                tetrimino_falling(time_before_refresh, data,
-                                  softdrop, matrix, tetrimino)
+                # dans le cas où le joueur souhaite faire un softdrop
+                # spécifié par le fait que la touche flèche bas est
+                # maintenue pressée
+                if time_before_refresh == data.fall_speed:
+                    # score incrémenté de 1 lorsque le tetrimino peut tomber
+                    if tetrimino.fall(matrix) and softdrop:
+                        data.score_increase(1)
+                    # on reinitialise le chrono
+                    time_before_refresh.reset()
                 # reaffichage de l'écran
                 display_all(window, game_object)
             display_game_data(window, data, game_chrono)
@@ -1369,7 +1347,6 @@ class Data:
         for element in DATA_STRINGS[2:]:
             obj_w_value = self.values_surface[element]['surface'].get_size()[0]
             pos_x.append(w_value - local_margin - obj_w_value)
-        print(pos_x)
         for i, element in enumerate(DATA_STRINGS):
             position = (pos_x[i], self.values_surface[element]['position'])
             self.values_surface[element]['position'] = position
@@ -1422,7 +1399,7 @@ class Data:
                                      COLOR['WHITE'])
             self.values_surface['level']['surface'] = level
         goal = self.font.render(str(self.values['goal']).zfill(3), 1,
-                                COLOR['WHITE'])
+                                  COLOR['WHITE'])
         self.values_surface['goal']['surface'] = goal
 
     def score_increase(self, value_to_add):
