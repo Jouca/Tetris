@@ -4,6 +4,11 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 
 import json
 import pygame
+import requests
+try:
+    from constant import LANG
+except ModuleNotFoundError:
+    from modules.constant import LANG
 
 
 class GameStrings:
@@ -16,6 +21,9 @@ class GameStrings:
 
     def get_all_strings(self):
         return self.data
+
+
+game_strings = GameStrings(LANG)
 
 
 class Spritesheet:
@@ -89,3 +97,15 @@ def clear_lines(content):
             copy_content.insert(0, [0] * len(content[0]))
             nb_line_clear += 1
     return copy_content, nb_line_clear
+
+
+def post_request(url, data=None, headers=None):
+    """
+    Permet d'envoyer une requête POST à l'url `url` avec les données
+    `data`.
+    """
+    try:
+        response = requests.post(url, data=data, headers=headers, timeout=10)
+        return response.text, response.status_code
+    except requests.exceptions.ConnectionError as e:
+        return game_strings.get_string("error"), 0

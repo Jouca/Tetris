@@ -12,6 +12,8 @@
     "goal": "GOAL",
     "gameover": "GAME OVER",
     "yourscore": "Your score :  {} pts",
-    "resume": "REPRENDRE",
-    "options": "OPTIONS"
+    "resume": "RESUME",
+    "retour": "BACK",
+    "options": "OPTIONS",
+    "error": "An error occured."
 }
