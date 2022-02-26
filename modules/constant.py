@@ -1,5 +1,6 @@
 """module contenant les constantes utiles au jeu Tetris."""
 
+
 LANG = "FR"
 
 COLOR = {'RED': (237, 41, 57),
@@ -9,7 +10,8 @@ COLOR = {'RED': (237, 41, 57),
          'CYAN': (0, 159, 218),
          'BLUE': (0, 101, 189),
          'PURPLE': (149, 45, 152),
-         'WHITE': (255, 255, 255)}
+         'WHITE': (255, 255, 255),
+         'BLACK': (0, 0, 0)}
 
 
 TETRIMINO_DATA = {1: {'name': 'O',
