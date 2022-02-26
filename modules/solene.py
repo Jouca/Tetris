@@ -2,7 +2,7 @@
 fonctions utiles au bon fonctionnement du jeu Tetris."""
 
 
-# importation de librairies python utiles
+# importation de librairies python
 import random
 import colorsys
 import time
@@ -13,14 +13,14 @@ try:
     from constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from diego import clear_lines, GameStrings
     from paul import border_dict
-    from useful import get_font_size, loop_starter_pack, Button2, Button
+    from useful import get_font_size, Button
 except ModuleNotFoundError:
     from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
     from modules.constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from modules.constant import PHASIS_NAME
     from modules.diego import clear_lines, GameStrings
     from modules.paul import border_dict
-    from modules.useful import get_font_size, loop_starter_pack, Button2, Button
+    from modules.useful import get_font_size, Button
 
 
 game_strings = GameStrings(LANG)
@@ -31,52 +31,44 @@ game_strings = GameStrings(LANG)
 # supprimer des attributs avec delattr(self, 'field_to_delete') super().__init__(*args, **kwargs)
 
 
-def resize_all(window_data, obj):
-    """"redimensionne toutes les choses nécéssitant d'être
-    redimensionnées."""
-    obj[1].resize(window_data)
-    matrix_data = {'rect': obj[1].rect,
-                   'cell_size': obj[1].cell_size}
+def resize_all(window_data, game_objet):
+    """"redimensionne tous les objets de contenu dans `game_objet`
+    nécéssitant d'être redimensionné."""
+    # redimesion de matrix
+    game_objet[1].resize(window_data)
+    # récupération des valeurs de matrix
+    matrix_data = {'rect': game_objet[1].rect,
+                   'cell_size': game_objet[1].cell_size}
     # redimensionne chaque objet avec leur méthode resize
-    for element in obj[2:5]:
+    for element in game_objet[2:5]:
         element.resize(window_data, matrix_data)
-    '''for element in obj[5:]:
-        element.resize(window_data)'''
-    obj[4].values_relative_position()
+    game_objet[4].values_relative_position()  # ## déplacement ?
+    game_objet[5].resize(window_data)
 
 
-def display_all(window, obj):
+def display_all(window, game_objet):
     """raffraîchit le jeu en faisant afficher une frame,
-    contenant les objets dont les caractéristiques ont été
+    contenant les objets de `game_objet` dont les caractéristiques ont été
     mis à jour."""
     # création d'une surface
     frame = pygame.Surface(window.get_size())
-    # rect transparent sur l'emplacement de Data
-    transparent_rect = pygame.Surface((obj[-1].rect.w, obj[-1].rect.h))
+    # rect pour l'emplacement de Data
+    transparent_rect = pygame.Surface((game_objet[4].rect.w,
+                                       game_objet[4].rect.h))
     transparent_rect.fill((45, 0, 0))
-    # rect transparent pour le bouton des menus
-    transparent_rect_2 = pygame.Surface((round(window.get_width() * 0.1), window.get_height()))
-    transparent_rect_2.fill((45, 0, 0))
-    frame.blit(transparent_rect, (obj[-1].rect.x, obj[-1].rect.y))
-    frame.blit(transparent_rect_2, (round(window.get_width() * 0.89), 0))
+    # ajout sur la frame
+    frame.blit(transparent_rect, (game_objet[4].rect.x, game_objet[4].rect.y))
+    # réglage de la transparence de ces deux derniers rect
     frame.set_colorkey((45, 0, 0))
     # affiche chaque objet avec leur méthode display
-    for element in obj[:-1]:
+    for element in game_objet[:-2]:
         element.display(frame)
+    game_objet[5].draw(frame)
     # dessin de la ghost piece
-    obj[1].draw_ghost_piece(frame, obj[0])
+    game_objet[1].draw_ghost_piece(frame, game_objet[0])
     # frame sur la fenêtre
     window.blit(frame, (0, 0))
     # rafraichissement de la fenêtre pygame
-    pygame.display.flip()
-
-
-def display_button(window):
-    #  ###############provisoire
-    menubutton = pygame.image.load("./image/menubutton.png").convert_alpha()
-    # affichage de l'image pour le boutton des menus, ## voir arrangement ?
-    menu_button = Button2(window, (0.9, 0.05, 0.08), menubutton)
-    menu_button.draw(window)
     pygame.display.flip()
 
 
@@ -99,21 +91,25 @@ def create_game_pause(window):
                             0.3,
                             0.5,
                             0.15),
-                           game_strings.get_string("resume"))
+                           game_strings.get_string("resume"),
+                           (75, 75, 75))
     option_button = Button(window,
                            (0.25,
                             0.55,
                             0.5,
                             0.15),
-                           game_strings.get_string("options"))
-
+                           game_strings.get_string("options"),
+                           (75, 75, 75))
     frame = pygame.Surface(window.get_size())
     frame.set_colorkey((0, 0, 0))
-    pygame.draw.rect(frame, (100, 100, 100),
-                     pygame.Rect(window.get_width() * 0.1,
-                                 window.get_height() * 0.1,
-                                 window.get_width() * 0.78,
-                                 window.get_height() * 0.8))
+    background = Button(window,
+                           (0.1,
+                            0.1,
+                            0.78,
+                            0.8),
+                           '',
+                           (100, 100, 100))
+    background.draw(frame)
     resume_button.draw(frame)
     option_button.draw(frame)
     window.blit(frame, (0, 0))
@@ -121,8 +117,8 @@ def create_game_pause(window):
     return resume_button, option_button
 
 
-def get_game_picture():
-    pass
+def get_game_picture():  # ##
+    """fait une sauvegarde du jeu sous la forme d'un pygame.Surface."""
 
 
 def display_visual_tetrimino(surface, place_properties, y_axis, t_type):
@@ -205,7 +201,9 @@ def turn_right(tetrimino, facing):
 def change_color_luminosity(color, rate_of_change):
     """change la luminosité de la couleur, renvoie un tuple rgb de la couleur
     assombrie selon `rate_of_change`, un entier. `couleur` doit être un tuple
-    représentant les valeurs rgb (chaque entier est compris entre 0 et 255)."""
+    représentant les valeurs rgb (chaque entier est compris entre 0 et 255).
+    Renvoie une couleur éclaircie à la condition que `rate_of_change` soit
+    négatif."""
     red, green, blue = color
     hue, saturation, lightness = colorsys.rgb_to_hsv(red, green, blue)
     lightness = lightness - rate_of_change
@@ -214,6 +212,66 @@ def change_color_luminosity(color, rate_of_change):
     for i, primary in enumerate(temp_color):
         final_color[i] = round(primary)
     return tuple(final_color)
+
+
+class RadioButton:
+    """classe permettant de selectionner un bouton parmi plusieurs.
+    Donner une priorité selon des évenements pygame."""
+
+    select_sound = pygame.mixer.Sound('sound/select.wav')
+
+    def __init__(self, list_of_button):
+        """méthode constructeur de la classe."""
+        self.nb_button = len(list_of_button)
+        self.priority = list_of_button[0]
+        self.button_list = list_of_button
+        self.attribute = {list_of_button[i]: i for i in range(self.nb_button)}
+        priority_color = self.priority.get_color()
+        darker_color = change_color_luminosity(self.priority.get_color(), 40)
+        self.color = {'priority': priority_color, 'non-priority': darker_color}
+        for element in list_of_button[1:]:
+            element.change_color(darker_color)
+
+    def get_value(self):
+        """renvoie la valeur du bouton prioritaire."""
+        return self.attribute[self.priority]
+
+    def change_visibility(self, last_priority, current_priority):
+        """change la visibilité d'un bouton en influant sur la couleur de fond
+        du bouton. `last_priority` est rendu plus sombre tandis que
+        `current_priority` est éclairci."""
+        last_priority.change_color(self.color['non-priority'])
+        current_priority.change_color(self.color['priority'])
+
+    def radio_change(self, event):
+        """Un booléen est renvoyé, True dans le cas où la souris a été déplacé
+        sur un autre bouton, lequel est alors mis en avant. Autrement la
+        méthode renvoie False."""
+        if event.type == pygame.MOUSEMOTION:
+            for i in range(self.nb_button):
+                if self.button_list[i].mouse_on(event):
+                    button = self.button_list[i]
+                    if button != self.priority:
+                        pygame.mixer.Sound.play(RadioButton.select_sound)
+                        self.change_visibility(self.priority, button)
+                        self.priority = button
+                        return True
+        return False
+
+    def click_change(self, event):
+        """détecte si un clic a été effectué sur l'un des boutons. Si oui,
+        la méthode renvoie True, dans le cas contraire, elle renvoie False."""
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                for i in range(self.nb_button):
+                    if self.button_list[i].mouse_on(event):
+                        button = self.button_list[i]
+                        if button != self.priority:
+                            pygame.mixer.Sound.play(RadioButton.select_sound)
+                            self.change_visibility(self.priority, button)
+                            self.priority = button
+                            return True
+        return False
 
 
 class Chronometer:
@@ -961,23 +1019,6 @@ class HoldQueue:
         t_y = self.rect.y + (self.rect.w - t_h) // 2
         self.t_rect = pygame.Rect(t_x, t_y, t_w, t_h)
 
-    '''def resize(self, window, matrix):
-        """redimensionne selon les valeurs de `Window` une instance de la
-        classe Window."""
-        # informations générales de l'emplacement de la hold queue
-        remaining_space = window['width'] - (matrix['rect'].x + matrix['rect'].w) - window['margin']
-        w_value = round(matrix['cell_size'] * 3.7)
-        x_axis = (remaining_space - w_value) * 0.7 + window['margin']
-        self.width = w_value // 39 + 1
-        self.rect = pygame.Rect(x_axis, matrix['rect'].y, w_value, w_value)
-        # informations de l'emplacement tetrimino
-        # ## tester utilité des variables
-        t_w = matrix['cell_size'] * 3
-        t_h = matrix['cell_size'] * 2
-        t_x = self.rect.x + (self.rect.w - t_w) // 2
-        t_y = self.rect.y + (self.rect.w - t_h) // 2
-        self.t_rect = pygame.Rect(t_x, t_y, t_w, t_h)'''
-
     def display(self, surface):
         """affichage de l'encadré associé à la hold queue, avec si y a le
         type du tetrimino hold."""
@@ -1022,7 +1063,6 @@ class NextQueue:
         y_axis_1 = matrix['rect'].y
         y_axis_2 = round(y_axis_1 + w_value + (matrix['rect'].h / 10))
         self.width = h_value[0] // 39 + 1
-        # ## trouver moyen de supprimer self.rect des attributs
         self.rect_1 = pygame.Rect(x_axis, y_axis_1, w_value, h_value[0])
         self.rect_2 = pygame.Rect(x_axis, y_axis_2, w_value, h_value[1])
         # liste des positions 'y' des différents emplacement des tetriminos
@@ -1215,12 +1255,12 @@ class Data:
     def resize(self, window, matrix):
         """change les attributs relatifs aux dimensions de l'encadré."""
         # informations générales de l'emplacement de l'encadré
-        remaining_space = matrix['rect'].x - window['margin']  # ##laisser ?
-        w_value = round(matrix['cell_size'] * 7.4)  # ##soucis
+        remaining_space = matrix['rect'].x - window['margin']
+        w_value = round(matrix['cell_size'] * 7.4)
         x_axis = (remaining_space - w_value) * 0.72
         y_axis = matrix['rect'].y + w_value
         h_value = matrix['cell_size'] * 21 - y_axis + window['margin']
-        self.width = round(matrix['cell_size'] * 3.7) // 39 + 1  # ##changer ?
+        self.width = round(matrix['cell_size'] * 3.7) // 39 + 1
         self.rect = pygame.Rect(x_axis, y_axis, w_value, h_value)
         # redimensionnement des textes et repositionnement
         self.font_resize()
