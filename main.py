@@ -14,9 +14,14 @@ from modules.bastien import main_menu
 # initialisation de pygame
 pygame.init()
  
-'''# préréglage du module mixer
+# préréglage du module mixer
 pygame.mixer.pre_init(44100, -16, 2, 1024)
-pygame.mixer.music.set_volume(0.4)'''
+pygame.mixer.music.set_volume(0.4)
+
+# charge la musique
+pygame.mixer.music.load("./sound/korobeiniki.ogg")
+# la joue indéfiniment
+pygame.mixer.music.play(-1)
 
 # définition de variables de fenêtre
 FULLSCREEN_WIDTH = pygame.display.get_desktop_sizes()[0][1]
@@ -33,8 +38,7 @@ window_data = {'size' : WINDOW_SIZE,
                'margin': round(0.05 * WINDOW_HEIGHT)}
 
 # importation d'images
-icon = pygame.image.load("./image/window_logo.png").convert_alpha()
-menubutton = pygame.image.load("./image/menubutton.png").convert_alpha()
+icon = pygame.image.load("./image/logo.ico").convert_alpha()
 
 
 # personnalisation de la fenêtre
