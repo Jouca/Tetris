@@ -12,6 +12,8 @@
     "goal": "OBJECTIF",
     "gameover": "PERDU",
     "yourscore": "Votre score :  {} pts",
-    "resume": "RESUME",
-    "options": "OPTIONS"
+    "resume": "REPRENDRE",
+    "retour": "RETOUR",
+    "options": "OPTIONS",
+    "error": "Une erreur est survenue."
 }

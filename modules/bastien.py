@@ -3,15 +3,16 @@ les menus du jeu Tetris. Repassage du code par Solène, (@periergeia)."""
 
 
 import pygame
+from zmq import PROTOCOL_ERROR_ZMTP_MALFORMED_COMMAND_MESSAGE
 try:
-    from constant import LANG
-    from diego import GameStrings
-    from solene import gameplay
+    from constant import LANG, COLOR
+    from diego import GameStrings, post_request
+    from gameplay import gameplay
     from useful import get_font_size, loop_starter_pack, Button, Text
 except ModuleNotFoundError:
-    from modules.constant import LANG
-    from modules.diego import GameStrings
-    from modules.solene import gameplay
+    from modules.constant import LANG, COLOR
+    from modules.diego import GameStrings, post_request
+    from modules.gameplay import gameplay
     from modules.useful import get_font_size, loop_starter_pack, Button, Text
 
 
@@ -66,7 +67,7 @@ def main_menu(window):
                 proceed = False
                 return
             if ranking_button.is_pressed(event):
-                game_over_menu(window)
+                leaderboard_menu(window, 1)
                 proceed = False
                 return
             if help_button.is_pressed(event):
@@ -118,11 +119,15 @@ def game_choice_menu(window):
             if event.type == pygame.VIDEORESIZE:
                 mode_a_button, mode_b_button = create_game_choice_menu(window)
             if mode_a_button.is_pressed(event):
-                gameplay(window, (1, 0), lang)
+                window.fill(0x000000)
+                gameplay(window, (1, 0))
+                game_over_menu(window)
                 proceed = False
                 return
             elif mode_b_button.is_pressed(event):
-                gameplay(window, (4, 4), lang) # ## level 4 hight 4
+                window.fill(0x000000)
+                gameplay(window, (4, 4)) # ## level 4 hight 4
+                game_over_menu(window)
                 proceed = False
                 return
             '''elif back_button.is_pressed(event):
@@ -187,6 +192,158 @@ def game_over_menu(window):
                 pygame.quit()
 
 
+def create_leaderboard_menu(window):
+    font_height = round(0.15 * window.get_height())
+    font_size = get_font_size(font_height)
+    retour_button = Button(window,
+                            (0.01,
+                             0.01,
+                             0.2,
+                             0.1),
+                            game_strings.get_string("retour"),
+                            font_size
+    )
+
+    frame = pygame.Surface(window.get_size())
+    retour_button.draw(frame)
+    window.blit(frame, (0, 0))
+    window_w, window_h = window.get_size()
+    x_value = round(0.15 * window_w)
+    y_value = round(0.15 * window_h)
+    w_value = round(0.7 * window_w)
+    h_value = round(0.7 * window_h)
+    rect_rectangle = pygame.Rect(x_value, y_value, w_value, h_value)
+    pygame.draw.rect(
+        window,
+        (255, 255, 255),
+        rect_rectangle,
+        5
+    )
+    pygame.display.flip()
+    return retour_button
+
+
+def create_leaderboard_table(window, leaderboard, page):
+    window_w, window_h = window.get_size()
+    x_value = round(0.15 * window_w)+5
+    y_value = round(0.15 * window_h)+5
+    w_value = round(0.7 * window_w)-10
+    h_value = round(0.15 * window_h)-5
+    leaderboard = leaderboard.split(":")
+    pages = (len(leaderboard) // 5) + 1
+    for values in leaderboard[(page-1)*5:(page-1)*5+5]:
+        try:
+            values = values.split("#")
+            rank = values[0]
+            username = values[1]
+            score = values[2]
+        except IndexError:
+            continue
+        rect_rectangle = pygame.Rect(x_value, y_value, w_value, h_value)
+        pygame.draw.rect(
+            window,
+            (150, 150, 150),
+            rect_rectangle,
+            5
+        )
+        rank_surface = pygame.Surface((w_value/3, h_value-10))
+        username_surface = pygame.Surface((w_value/3, h_value-10))
+        score_surface = pygame.Surface(((w_value/3)-10, h_value-10))
+        if rank == "1":
+            rank_surface.fill((245, 189, 2))
+        elif rank == "2":
+            rank_surface.fill((187, 194, 204))
+        elif rank == "3":
+            rank_surface.fill((205, 127, 50))
+        pygame.draw.rect(rank_surface, (255, 255, 255), (0, 0, w_value/3, h_value-10), 2)
+        pygame.draw.rect(username_surface, (255, 255, 255), (0, 0, w_value/3, h_value-10), 2)
+        pygame.draw.rect(score_surface, (255, 255, 255), (0, 0, (w_value/3)-10, h_value-10), 2)
+        font = pygame.font.SysFont("./others/Anton-Regular.ttf", round(0.07 * window_h))
+        rank_text = font.render(rank, True, COLOR["WHITE"])
+        username_text = font.render(username, True, COLOR["WHITE"])
+        score_text = font.render(score, True, COLOR["WHITE"])
+        rank_rect = rank_text.get_rect(center=((w_value/3)/2, (h_value-10)/2))
+        username_rect = username_text.get_rect(center=((w_value/3)/2, (h_value-10)/2))
+        score_rect = score_text.get_rect(center=((w_value/3)/2, (h_value-10)/2))
+        rank_surface.blit(rank_text, rank_rect)
+        username_surface.blit(username_text, username_rect)
+        score_surface.blit(score_text, score_rect)
+        window.blit(rank_surface, (x_value+5, y_value+5))
+        window.blit(username_surface, (x_value+5+w_value/3, y_value+5))
+        window.blit(score_surface, (x_value+5+2*w_value/3, y_value+5))
+        y_value += 98
+    page_right = Button(window,
+                            (0.88,
+                            0.45,
+                            0.1,
+                            0.15),
+                            "->",
+                            get_font_size(round(0.3 * window_h))
+    )
+    page_left = Button(window,
+                            (0.02,
+                            0.45,
+                            0.1,
+                            0.15),
+                            "<-",
+                            get_font_size(round(0.3 * window_h))
+    )
+    if page < pages:
+        page_right.draw(window)
+    if page > 1:
+        page_left.draw(window)
+    pygame.display.flip()
+    return page_right, page_left, pages
+
+
+def create_error_table(window, error):
+    window_w, window_h = window.get_size()
+    x_value = round(0.15 * window_w)+5
+    y_value = round(0.15 * window_h)+5
+    w_value = round(0.7 * window_w)-10
+    h_value = round(0.15 * window_h)-5
+    rect_rectangle = pygame.Rect(x_value, y_value, w_value, h_value)
+    pygame.draw.rect(
+        window,
+        (150, 150, 150),
+        rect_rectangle,
+        5
+    )
+    font = pygame.font.SysFont("./others/Anton-Regular.ttf", round(0.07 * window_h))
+    error_text = font.render(error, True, COLOR["WHITE"])
+    error_rect = error_text.get_rect(center=((w_value)/2, (h_value-10)/2))
+    error_surface = pygame.Surface((w_value-10, h_value-10))
+    error_surface.fill((255, 0, 0))
+    error_surface.blit(error_text, error_rect)
+    window.blit(error_surface, (x_value+5, y_value+5))
+    pygame.display.flip()
+
+
+def leaderboard_menu(window, page):
+    retour_button = create_leaderboard_menu(window)
+    proceed = True
+    response, status_code = post_request("http://tetrisnsi.tk/leaderboard")
+    while proceed:
+        for event in pygame.event.get():
+            loop_starter_pack(window, event)
+            if status_code == 200:
+                page_right, page_left, limit = create_leaderboard_table(window, response, page)
+                if page_right.is_pressed(event) and page < limit:
+                    proceed = False
+                    leaderboard_menu(window, page+1)
+                if page_left.is_pressed(event) and page > 1:
+                    proceed = False
+                    leaderboard_menu(window, page-1)
+            else:
+                create_error_table(window, game_strings.get_string("error"))
+            if event.type == pygame.VIDEORESIZE:
+                retour_button = create_leaderboard_menu(window)
+            if retour_button.is_pressed(event):
+                main_menu(window)
+                proceed = False
+                return
+
+
 def menuhelp():
     pygame.draw.rect(screen, (50, 50, 50), pygame.Rect(150, 50, 700, 400))
     retour = Button((255, 300, 500, 100), "RETOUR MENU", 50, (250, 250, 250))
@@ -215,10 +372,3 @@ def menuderoulant():
     help.draw(screen)
     options.draw(screen)
     pygame.display.flip()
-
-
-lang = 'EN'
-
-# provisoire, sans les menus
-level = 1
-mode_B = False
