@@ -4,14 +4,14 @@ les menus du jeu Tetris. Repassage du code par Solène, (@periergeia)."""
 
 import pygame
 try:
-    from constant import LANG
-    from diego import GameStrings
+    from constant import LANG, COLOR
+    from diego import GameStrings, post_request
     from gameplay import gameplay
     from solene import RadioButton
     from useful import get_font_size, loop_starter_pack, Button, Button2, Text
 except ModuleNotFoundError:
-    from modules.constant import LANG
-    from modules.diego import GameStrings
+    from modules.constant import LANG, COLOR
+    from modules.diego import GameStrings, post_request
     from modules.gameplay import gameplay
     from modules.solene import RadioButton
     from modules.useful import get_font_size, loop_starter_pack, Button, Button2, Text
@@ -68,7 +68,7 @@ def main_menu(window):
                 proceed = False
                 return
             if ranking_button.is_pressed(event):
-                game_over_menu(window)
+                leaderboard_menu(window, 1)
                 proceed = False
                 return
             if help_button.is_pressed(event):
@@ -156,13 +156,13 @@ def create_surface(window, mode):
                       0.85,
                       1,
                       0.1),
-                     '- - - PRESSEZ ENTRÉE POUR COMMENCER - - -')
+                     game_strings.get_string("enter_game"))
     statement_a = Text(mode.button_list[0],
                      (0,
                       0.3,
                       1,
                       0.15),
-                     'Commencer au niveau')
+                     game_strings.get_string("a_mode_statement"))
     mode_a_text = Text(mode.button_list[0],
                      (0,
                       0.08,
@@ -187,7 +187,7 @@ def create_surface(window, mode):
                       0.6,
                       1,
                       0.1),
-                     'DIFFICULTÉ',
+                     game_strings.get_string("difficulty"),
                      True)
     previous_menu_button = Button2(window, (0.9, 0.05, 0.04), 'back')
     statement_1.draw(surface)
@@ -285,6 +285,126 @@ def game_choice_menu(window):
                 return
 
 
+def create_leaderboard_menu(window):
+    previous_menu_button = Button2(window, (0.9, 0.05, 0.04), 'back')
+    frame = pygame.Surface(window.get_size())
+    previous_menu_button.draw(frame)
+    window.blit(frame, (0, 0))
+    statement = Button(window,
+                         (0.15,
+                          0.15,
+                          0.7,
+                          0.7),
+                         '')
+    statement.draw(window)
+    pygame.display.flip()
+    return previous_menu_button
+
+
+def create_leaderboard_table(window, leaderboard, page):
+    window_w, window_h = window.get_size()
+    x_value = round(0.15 * window_w)+5
+    y_value = round(0.15 * window_h)+5
+    w_value = round(0.7 * window_w)-10
+    h_value = round(0.15 * window_h)-5
+    leaderboard = leaderboard.split(":")
+    pages = (len(leaderboard) // 5) + 1
+    for values in leaderboard[(page-1)*5:(page-1)*5+5]:
+        try:
+            values = values.split("#")
+            rank = values[0]
+            username = values[1]
+            score = values[2]
+        except IndexError:
+            continue
+        rect_rectangle = pygame.Rect(x_value, y_value, w_value, h_value)
+        pygame.draw.rect(
+            window,
+            (150, 150, 150),
+            rect_rectangle,
+            5
+        )
+        rank_surface = pygame.Surface((w_value/3, h_value-10))
+        username_surface = pygame.Surface((w_value/3, h_value-10))
+        score_surface = pygame.Surface(((w_value/3)-10, h_value-10))
+        if rank == "1":
+            rank_surface.fill(COLOR['GOLD'])
+        elif rank == "2":
+            rank_surface.fill(COLOR['SILVER'])
+        elif rank == "3":
+            rank_surface.fill(COLOR['BRONZE'])
+        pygame.draw.rect(rank_surface, (255, 255, 255), (0, 0, w_value/3, h_value-10), 2)
+        pygame.draw.rect(username_surface, (255, 255, 255), (0, 0, w_value/3, h_value-10), 2)
+        pygame.draw.rect(score_surface, (255, 255, 255), (0, 0, (w_value/3)-10, h_value-10), 2)
+        font = pygame.font.SysFont("./others/Anton-Regular.ttf", round(0.07 * window_h))
+        rank_text = font.render(rank, True, COLOR["WHITE"])
+        username_text = font.render(username, True, COLOR["WHITE"])
+        score_text = font.render(score, True, COLOR["WHITE"])
+        rank_rect = rank_text.get_rect(center=((w_value/3)/2, (h_value-10)/2))
+        username_rect = username_text.get_rect(center=((w_value/3)/2, (h_value-10)/2))
+        score_rect = score_text.get_rect(center=((w_value/3)/2, (h_value-10)/2))
+        rank_surface.blit(rank_text, rank_rect)
+        username_surface.blit(username_text, username_rect)
+        score_surface.blit(score_text, score_rect)
+        window.blit(rank_surface, (x_value+5, y_value+5))
+        window.blit(username_surface, (x_value+5+w_value/3, y_value+5))
+        window.blit(score_surface, (x_value+5+2*w_value/3, y_value+5))
+        y_value += h_value
+    page_right = Button2(window,
+                            (0.88,
+                            0.45,
+                            0.05),
+                            'right_arrow')
+    page_left = Button2(window,
+                            (0.02,
+                            0.45,
+                            0.05),
+                            'left_arrow')
+    if page < pages:
+        page_right.draw(window)
+    if page > 1:
+        page_left.draw(window)
+    pygame.display.flip()
+    return page_right, page_left, pages
+
+
+def create_error_table(window, error):
+    message = Button(window,
+                         (0.15,
+                          0.425,
+                          0.7,
+                          0.15),
+                         error,
+                         COLOR['RED'])
+    message.draw(window)
+    pygame.display.flip()
+
+
+def leaderboard_menu(window, page):
+    previous_menu_button = create_leaderboard_menu(window)
+    proceed = True
+    response, status_code = post_request("http://tetrisnsi.tk/leaderboard")
+    while proceed:
+        for event in pygame.event.get():
+            loop_starter_pack(window, event)
+            if status_code == 200:
+                page_right, page_left, limit = create_leaderboard_table(window, response, page)
+                if page_right.is_pressed(event) and page < limit:
+                    proceed = False
+                    leaderboard_menu(window, page+1)
+                if page_left.is_pressed(event) and page > 1:
+                    proceed = False
+                    leaderboard_menu(window, page-1)
+            else:
+                create_error_table(window, game_strings.get_string("error"))
+            if event.type == pygame.VIDEORESIZE:
+                previous_menu_button = create_leaderboard_menu(window)
+            if previous_menu_button.is_pressed(event):
+                main_menu(window)
+                proceed = False
+                return
+
+
 def create_game_over_menu(window):
     font_height = round(0.15 * window.get_height())
     font_size = get_font_size(font_height)
@@ -306,13 +426,15 @@ def create_game_over_menu(window):
                              0.5,
                              0.4,
                              0.18),
-                            "REJOUER", font_size)
+                            game_strings.get_string("replay"),
+                            font_size)
     quitter_button = Button(window,
                             (0.3,
                              0.7,
                              0.4,
                              0.18),
-                            "QUITTER", font_size)
+                            game_strings.get_string("quit"),
+                            font_size)
 
     frame = pygame.Surface(window.get_size())
     end.draw(frame)
