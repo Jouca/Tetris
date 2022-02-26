@@ -1,18 +1,22 @@
+"""fichier contenant la fonction de la gameplay codé par Solène (@periergeia) TG8."""
+
+
 # importation de librairies python utiles
 import time
 import pygame
 try:
     from solene import Chronometer, Bag, Matrix, Tetrimino
     from solene import HoldQueue, NextQueue, Data
-    from solene import resize_all, display_all, display_button
+    from solene import resize_all, display_all
     from solene import display_game_data, create_game_pause, get_game_picture
-    from useful import loop_starter_pack
+    from useful import loop_starter_pack, Button2
 except ModuleNotFoundError:
     from modules.solene import Chronometer, Bag, Matrix, Tetrimino
     from modules.solene import HoldQueue, NextQueue, Data
-    from modules.solene import resize_all, display_all, display_button
+    from modules.solene import resize_all, display_all
     from modules.solene import display_game_data, create_game_pause, get_game_picture
-    from modules.useful import loop_starter_pack
+    from modules.useful import loop_starter_pack, Button2
+
 
 def gameplay(window, game_type):
     """gameplay du jeu tetris."""
@@ -33,11 +37,11 @@ def gameplay(window, game_type):
     hold_queue = HoldQueue(window_data, matrix_data)
     data = Data(window_data, matrix_data, game_chrono, game_type)
 
+    menu_button = Button2(window, (0.9, 0.05, 0.04), 'option')
 
-    game_object = (tetrimino, matrix, next_queue, hold_queue, data)
+    game_object = (tetrimino, matrix, next_queue, hold_queue, data, menu_button)
 
     display_all(window, game_object)
-    display_button(window)
 
     time_before_refresh = Chronometer()
     lock_down_chrono = Chronometer()
@@ -51,7 +55,7 @@ def gameplay(window, game_type):
 
     while not game_over:
 
-        game_object = (tetrimino, matrix, next_queue, hold_queue, data)
+        game_object = (tetrimino, matrix, next_queue, hold_queue, data, menu_button)
 
         # évènements pygame
         for event in pygame.event.get():
@@ -66,13 +70,15 @@ def gameplay(window, game_type):
                 # reaffichage avec changement des tailles et emplacement des objets
                 resize_all(window_data, game_object)
                 display_all(window, game_object)
-                display_button(window)
                 if game_paused:
+                    display_game_data(window, data, game_chrono)
                     resume_button, option_button = create_game_pause(window)
 
-            # ## à enlever en fin
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                print(pygame.mouse.get_pos())
+            if menu_button.is_pressed(event):
+                game_paused = not game_paused
+                if game_paused:
+                    game_chrono.freeze()
+                    resume_button, option_button = create_game_pause(window)
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_DOWN:
