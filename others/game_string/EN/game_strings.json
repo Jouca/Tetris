@@ -15,5 +15,10 @@
     "resume": "RESUME",
     "retour": "BACK",
     "options": "OPTIONS",
-    "error": "An error occured."
+    "error": "An error occured.",
+    "replay": "REPLAY",
+    "quit": "QUIT",
+    "a_mode_statement": "Start at level",
+    "difficulty": "DIFFICULTY",
+    "enter_game": "- - - PRESS ENTRY TO START THE GAME - - -"
 }
