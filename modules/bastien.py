@@ -306,7 +306,7 @@ def create_leaderboard_table(window, leaderboard, page):
     x_value = round(0.15 * window_w)+5
     y_value = round(0.15 * window_h)+5
     w_value = round(0.7 * window_w)-10
-    h_value = round(0.15 * window_h)-5
+    h_value = round(0.145 * window_h)-5
     leaderboard = leaderboard.split(":")
     pages = (len(leaderboard) // 5) + 1
     for values in leaderboard[(page-1)*5:(page-1)*5+5]:
