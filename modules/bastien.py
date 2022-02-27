@@ -9,6 +9,7 @@ try:
     from paul import main_rule
     from gameplay import gameplay
     from solene import RadioButton
+    from paul import main_rule
     from useful import get_font_size, loop_starter_pack, Button, Button2, Text
 except ModuleNotFoundError:
     from modules.constant import LANG, COLOR
@@ -16,6 +17,7 @@ except ModuleNotFoundError:
     from modules.paul import main_rule
     from modules.gameplay import gameplay
     from modules.solene import RadioButton
+    from modules.paul import main_rule
     from modules.useful import get_font_size, loop_starter_pack, Button, Button2, Text
 
 
