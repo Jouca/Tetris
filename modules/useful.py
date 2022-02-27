@@ -211,7 +211,7 @@ class Button2(Button1):
     def __init__(self, window, relative_position, image_name):
         """méthode constructeur de la classe :
         - `window` est la fenêtre sur laquelle est créé le bouton ;
-        - `relative_position` correspond à un 4-uple (`x`, `y`, `w`)
+        - `relative_position` correspond à un 3-uple (`x`, `y`, `w`)
         indiquant la position et les dimensions relatives selon les dimensions
         de la fenêtre, toutes les valeurs doivent être comprises entre 0 et 1
         exclus afin que le bouton soit visible, dans l'ordre :

@@ -22,6 +22,7 @@
     "quit": "QUITTER",
     "a_mode_statement": "Commencer au niveau",
     "difficulty": "DIFFICULTÉ",
+    "save_success": "Capture d'écran enregistré avec succès.",
     "enter_game": "- - - PRESSEZ ENTRÉE POUR COMMENCER - - -",
     "regle_ligne1": "- - - Règle du jeu - - -",
     "regle_ligne2": "Le but du jeu est d'empiler les blocs qui tombent au fur",

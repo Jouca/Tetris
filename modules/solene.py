@@ -120,10 +120,11 @@ def create_game_pause(window):
 def get_game_picture(window):  # ##
     """fait une sauvegarde du jeu sous la forme d'un pygame.Surface."""
     screenshot = window.subsurface(window.get_rect())
+    normal_screenshot = screenshot.copy()
     screen_window = pygame.Surface(screenshot.get_size())
     screenshot.set_alpha(60)
     screen_window.blit(screenshot, (0, 0))
-    return screen_window
+    return screen_window, normal_screenshot
 
 
 def display_visual_tetrimino(surface, place_properties, y_axis, t_type):

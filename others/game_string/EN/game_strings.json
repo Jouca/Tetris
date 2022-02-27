@@ -23,6 +23,7 @@
     "a_mode_statement": "Start at level",
     "difficulty": "DIFFICULTY",
     "enter_game": "- - - PRESS ENTRY TO START THE GAME - - -",
+    "save_success": "Screenshot saved successfully.",
     "regle_ligne1": "- - - Rule of the game - - -",
     "regle_ligne2": "The object of the game is to stack the falling blocks as",
     "regle_ligne3": "and to measure and to have the highest score.",

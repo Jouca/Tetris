@@ -274,14 +274,14 @@ def game_choice_menu(window):
                     if mode.get_value() == 0:
                         window.fill(0x000000)
                         level = a_mode[0]
-                        data, game_screen = gameplay(window, (level, 0))
-                        game_over_menu(window, data.get_score(), data.get_time(), data.get_lines_count(), game_screen)
+                        data, game_screen, screenshot = gameplay(window, (level, 0))
+                        game_over_menu(window, data.get_score(), data.get_time(), data.get_lines_count(), game_screen, screenshot)
                         proceed = False
                     else:
                         window.fill(0x000000)
                         level, hight = b_mode_option
-                        data, game_screen = gameplay(window, (level.get_value(), hight.get_value()))
-                        game_over_menu(window, data.get_score(), data.get_time(), data.get_lines_count(), game_screen)
+                        data, game_screen, screenshot = gameplay(window, (level.get_value(), hight.get_value()))
+                        game_over_menu(window, data.get_score(), data.get_time(), data.get_lines_count(), game_screen, screenshot)
                         proceed = False
             
             if previous_menu_button.is_pressed(event):
@@ -410,9 +410,7 @@ def leaderboard_menu(window, page):
                 return
 
 
-def create_game_over_menu(window, score, time_value, lines_count, game_screen):
-    font_height = round(0.15 * window.get_height())
-    font_size = get_font_size(font_height)
+def create_game_over_menu(window, score, time_value, lines_count, game_screen, enregistrer_texte):
     window_w, window_h = window.get_size()
     frame = pygame.Surface((round(0.5 * window_w), round(0.7 * window_h)))
     pygame.draw.rect(frame, (150, 150, 150), (0, 0, round(0.5 * window_w), round(0.7 * window_h)), 5)
@@ -444,42 +442,40 @@ def create_game_over_menu(window, score, time_value, lines_count, game_screen):
                   0.1),
                  game_strings.get_string("lines_count").format(lines_count))
     lines.draw(frame)
-    rejouer_button = Button(window,
-                            (0.3,
-                             0.5,
-                             0.4,
-                             0.18),
-                            game_strings.get_string("replay"),
-                            font_size)
-    quitter_button = Button(window,
-                            (0.3,
-                             0.7,
-                             0.4,
-                             0.18),
-                            game_strings.get_string("quit"),
-                            font_size)
+    rejouer_button = Button2(window, (0.37, 0.64, 0.05), 'retry')
+    quitter_button = Button2(window, (0.3, 0.64, 0.05), 'back')
+    enregistrer_button = Button2(window, (0.44, 0.64, 0.05), 'save')
+    score_upload_button = Button2(window, (0.3, 0.75, 0.05), 'upload')
+    local_score_surface = pygame.Surface((round(0.18 * window_w), round(0.44 * window_h)))
+    pygame.draw.rect(local_score_surface, (150, 150, 150), (0, 0, round(0.18 * window_w), round(0.44 * window_h)), 5)
+    frame.blit(local_score_surface, (round(0.3 * window_w), round(0.23 * window_h)))
     window.blit(game_screen, (0, 0))
     window.blit(frame, (round(0.26 * window_w), round(0.16 * window_h)))
-    """
-    frame = pygame.Surface(window.get_size())
-    end.draw(frame)
-    score.draw(frame)
-    quitter_button.draw(frame)
-    rejouer_button.draw(frame)
-    window.blit(frame, (0, 0))
-    """
+    rejouer_button.draw(window)
+    quitter_button.draw(window)
+    enregistrer_button.draw(window)
+    score_upload_button.draw(window)
+    if enregistrer_texte:
+        text = Text(window,
+                        (0.37,
+                            0.9,
+                            0.3,
+                            0.1),
+                        game_strings.get_string("save_success"))
+        text.draw(window)
     pygame.display.flip()
-    return rejouer_button, quitter_button
+    return rejouer_button, quitter_button, enregistrer_button
 
 
-def game_over_menu(window, score, time, lines, game_screen):
-    rejouer_button, quitter_button = create_game_over_menu(window, score, time, lines, game_screen)
+def game_over_menu(window, score, time, lines, game_screen, screenshot):
     proceed = True
+    enregistrer_texte = False
     while proceed:
+        rejouer_button, quitter_button, enregistrer_button = create_game_over_menu(window, score, time, lines, game_screen, enregistrer_texte)
         for event in pygame.event.get():
             loop_starter_pack(window, event)
             if event.type == pygame.VIDEORESIZE:
-                rejouer_button, quitter_button = create_game_over_menu(window, score, time, lines, game_screen)
+                rejouer_button = create_game_over_menu(window, score, time, lines, game_screen)
             if rejouer_button.is_pressed(event):
                 game_choice_menu(window)
                 proceed = False
@@ -488,3 +484,6 @@ def game_over_menu(window, score, time, lines, game_screen):
                 proceed = False
                 main_menu(window)
                 return
+            if enregistrer_button.is_pressed(event):
+                pygame.image.save(screenshot, "screenshot.png")
+                enregistrer_texte = True
