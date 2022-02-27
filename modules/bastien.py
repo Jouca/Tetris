@@ -5,7 +5,7 @@ les menus du jeu Tetris. Repassage du code par Solène, (@periergeia)."""
 import pygame
 try:
     from constant import LANG, COLOR
-    from diego import GameStrings, post_request
+    from diego import GameStrings, post_request, read_json
     from paul import main_rule
     from gameplay import gameplay
     from solene import RadioButton
@@ -13,7 +13,7 @@ try:
     from useful import get_font_size, loop_starter_pack, Button, Button2, Text
 except ModuleNotFoundError:
     from modules.constant import LANG, COLOR
-    from modules.diego import GameStrings, post_request
+    from modules.diego import GameStrings, post_request, read_json
     from modules.paul import main_rule
     from modules.gameplay import gameplay
     from modules.solene import RadioButton
@@ -421,13 +421,13 @@ def create_game_over_menu(window, score, time_value, lines_count, game_screen, e
                 0.2),
                game_strings.get_string("gameover"))
     end.draw(frame)
-    score = Text(window,
+    score_text = Text(window,
                  (0,
                   0.25,
                   0.3,
                   0.1),
                  game_strings.get_string("yourscore").format(score))
-    score.draw(frame)
+    score_text.draw(frame)
     time = Text(window,
                  (0,
                   0.32,
@@ -446,9 +446,26 @@ def create_game_over_menu(window, score, time_value, lines_count, game_screen, e
     quitter_button = Button2(window, (0.3, 0.64, 0.05), 'back')
     enregistrer_button = Button2(window, (0.44, 0.64, 0.05), 'save')
     score_upload_button = Button2(window, (0.3, 0.75, 0.05), 'upload')
+
     local_score_surface = pygame.Surface((round(0.18 * window_w), round(0.44 * window_h)))
     pygame.draw.rect(local_score_surface, (150, 150, 150), (0, 0, round(0.18 * window_w), round(0.44 * window_h)), 5)
+    local_scores = read_json("./others/game_save/data.json")
+    y_value = 0
+    for i in range(1, len(local_scores)+1):
+        color = COLOR["WHITE"]
+        if score == local_scores[f"{i}"]:
+            color = COLOR["YELLOW"]
+        current_score = Text(local_score_surface,
+                             (0.36,
+                              0.1 * i,
+                              0.23,
+                              0.23),
+                             f"{i} - {local_scores[f'{i}']}",
+                             color=color)
+        current_score.draw(local_score_surface)
+        y_value += 0.13
     frame.blit(local_score_surface, (round(0.3 * window_w), round(0.23 * window_h)))
+
     window.blit(game_screen, (0, 0))
     window.blit(frame, (round(0.26 * window_w), round(0.16 * window_h)))
     rejouer_button.draw(window)

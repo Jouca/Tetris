@@ -9,7 +9,7 @@ from modules.bastien import main_menu
 
 # pylint: disable=E1101
 # (no-member) erreur apparaissant pour les constantes de pygame référant aux
-# touches de clavier et boutons de fenêtre, ... 
+# touches de clavier et boutons de fenêtre, ...
 
 # initialisation de pygame
 pygame.init()

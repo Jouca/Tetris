@@ -11,7 +11,7 @@
     "level": "LEVEL",
     "goal": "GOAL",
     "gameover": "GAME OVER",
-    "yourscore": "Your score :  {} pts",
+    "yourscore": "Your score :  {}",
     "yourtime": "Time : {}",
     "lines_count": "Lines : {}",
     "resume": "RESUME",

@@ -145,7 +145,7 @@ def gameplay(window, game_type):
             # phase lock down
             elif tetrimino.state == 2:
                 # le tetrimino est lock dans matrix
-                game_over = tetrimino.__lock_on_matrix__(matrix, game_over)
+                game_over = tetrimino.__lock_on_matrix__(matrix, game_over, data.get_score())
                 # clear les lines s'il y a
                 matrix.clear_lines(data)
                 # le tetrimino suivant est créé

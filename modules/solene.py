@@ -11,14 +11,14 @@ import pygame.freetype
 try:
     from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME
     from constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
-    from diego import clear_lines, GameStrings
+    from diego import clear_lines, GameStrings, insert_local_score
     from paul import border_dict
     from useful import get_font_size, Button
 except ModuleNotFoundError:
     from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
     from modules.constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from modules.constant import PHASIS_NAME
-    from modules.diego import clear_lines, GameStrings
+    from modules.diego import clear_lines, GameStrings, insert_local_score
     from modules.paul import border_dict
     from modules.useful import get_font_size, Button
 
@@ -654,7 +654,7 @@ class Tetrimino(Matrix):
         stock += f'\n type du tetrimino : {TETRIMINO_SHAPE[self.type]}'
         return stock
 
-    def __lock_on_matrix__(self, matrix, game_over):
+    def __lock_on_matrix__(self, matrix, game_over, score):
         """Méthode permettant de lock un tetrimino (celui de l'instance),
         dans sur la matrix de jeu. `matrix` est une instance de la classe
         Matrix."""
@@ -670,6 +670,7 @@ class Tetrimino(Matrix):
                     matrix.content[pos_y][pos_x] = self.type
                     if matrix.higher_row < 1:
                         game_over = True
+                        insert_local_score(score)
                     if pos_y < matrix.higher_row:
                         matrix.higher_row = pos_y
         return game_over

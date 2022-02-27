@@ -5,6 +5,7 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 import json
 import pygame
 import requests
+import json
 try:
     from constant import LANG
 except ModuleNotFoundError:
@@ -109,3 +110,27 @@ def post_request(url, data=None, headers=None):
         return response.text, response.status_code
     except requests.exceptions.ConnectionError as e:
         return game_strings.get_string("error"), 0
+
+
+def read_json(filename):
+    """
+    Permet de lire un fichier json.
+    """
+    with open(filename, encoding="utf-8") as fichier:
+        data = json.load(fichier)
+    fichier.close()
+    return dict(data)
+
+
+def insert_local_score(score):
+    """
+    Permet d'insérer un score dans le fichier `data.json`.
+    """
+    data = read_json("./others/game_save/data.json")
+    for i in data:
+        if score >= data[i]:
+            data[i] = score
+            break
+    with open("./others/game_save/data.json", "w", encoding="utf-8") as fichier:
+        json.dump(data, fichier, indent=4)
+    fichier.close()

@@ -250,7 +250,7 @@ class Button2(Button1):
 class Text:
     """modélise un texte visuel formaté avec le style général du jeu."""
 
-    def __init__(self, window, relative_position, text, left_align=False):
+    def __init__(self, window, relative_position, text, left_align=False, color=COLOR['WHITE']):
         """méthode constructeur de la classe :
         - `window` est la fenêtre sur laquelle est créé le bouton ;
         - `relative_position` correspond à un 4-uple (`x`, `y`, `w`, `h`)
@@ -280,6 +280,7 @@ class Text:
             de la fenêtre ou soulèvera une erreur si la résolution de l'écran est
             supérieur à la marge laissé au préalable).
         - `text` est le texte à afficher, doit être une chaîne de caractères ;
+        - `color` est la couleur du texte, par défaut `color` est `COLOR['WHITE']`
         >>> text = Text((0.3, 0.4, 0.4, 0.2), "Hello world !")"""
         window_w, window_h = window.get_size()
         x_value = round(relative_position[0] * window_w)
@@ -288,7 +289,7 @@ class Text:
         font_size = get_font_size(round(relative_position[3] * window_h))
         font = pygame.font.SysFont("./others/Anton-Regular.ttf", font_size)
         self.text = text
-        self.text_image = font.render(text, 1 , COLOR['WHITE'])
+        self.text_image = font.render(text, 1 , color)
         try:
             x_value += window.rect.x
             y_value += window.rect.y
