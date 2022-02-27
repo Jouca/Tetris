@@ -1,4 +1,4 @@
-"""module codé par Paul TG8 (@DominataurusRex), contenant des fonctions utiles
+"""module codé par Paul TG5 (@DominataurusRex), contenant des fonctions utiles
 au bon fonctionnement du jeu Tetris."""
 
 def get_all_side(tetrimino_shape):

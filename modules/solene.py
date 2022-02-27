@@ -1304,3 +1304,6 @@ class Data:
         score = self.font.render(str(self.values['score']).zfill(10), 1,
                                  COLOR['WHITE'])
         self.values_surface['score']['surface'] = score
+
+    def get_score(self):
+        return self.values['score']

@@ -1,4 +1,4 @@
-"""module codé par Bastien (@BLASTUHQ) TG8, contenant des fonctions pour
+"""module codé par Bastien (@BLASTUHQ) TG5, contenant des fonctions pour
 les menus du jeu Tetris. Repassage du code par Solène, (@periergeia)."""
 
 
@@ -269,14 +269,14 @@ def game_choice_menu(window):
                     if mode.get_value() == 0:
                         window.fill(0x000000)
                         level = a_mode[0]
-                        gameplay(window, (level, 0))
-                        game_over_menu(window)
+                        data = gameplay(window, (level, 0))
+                        game_over_menu(window, data.get_score())
                         proceed = False
                     else:
                         window.fill(0x000000)
                         level, hight = b_mode_option
-                        gameplay(window, (level.get_value(), hight.get_value()))
-                        game_over_menu(window)
+                        data = gameplay(window, (level.get_value(), hight.get_value()))
+                        game_over_menu(window, data.get_score())
                         proceed = False
             
             if previous_menu_button.is_pressed(event):
@@ -405,7 +405,7 @@ def leaderboard_menu(window, page):
                 return
 
 
-def create_game_over_menu(window):
+def create_game_over_menu(window, score):
     font_height = round(0.15 * window.get_height())
     font_size = get_font_size(font_height)
     end = Text(window,
@@ -414,7 +414,6 @@ def create_game_over_menu(window):
                 1,
                 0.3),
                game_strings.get_string("gameover"))
-    score = "123456"
     score = Text(window,
                  (0,
                   0.3,
@@ -446,18 +445,19 @@ def create_game_over_menu(window):
     return rejouer_button, quitter_button
 
 
-def game_over_menu(window):
-    rejouer_button, quitter_button = create_game_over_menu(window)
+def game_over_menu(window, score):
+    rejouer_button, quitter_button = create_game_over_menu(window, score)
     proceed = True
     while proceed:
         for event in pygame.event.get():
             loop_starter_pack(window, event)
             if event.type == pygame.VIDEORESIZE:
-                rejouer_button, quitter_button = create_game_over_menu(window)
+                rejouer_button, quitter_button = create_game_over_menu(window, score)
             if rejouer_button.is_pressed(event):
                 game_choice_menu(window)
                 proceed = False
                 return
             if quitter_button.is_pressed(event):
                 proceed = False
-                pygame.quit()
+                main_menu(window)
+                return

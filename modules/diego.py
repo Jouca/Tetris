@@ -1,4 +1,4 @@
-"""module codé par Diego (@Jouca) TG8, contenant diverses classes et
+"""module codé par Diego (@Jouca) TG5, contenant diverses classes et
 fonctions utiles au bon fonctionnement du jeu Tetris."""
 
 

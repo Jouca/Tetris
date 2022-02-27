@@ -172,3 +172,4 @@ def gameplay(window, game_type):
             display_game_data(window, data, game_chrono)
     get_game_picture()
     print('---------------------------------------------------------')
+    return data
