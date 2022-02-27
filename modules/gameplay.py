@@ -170,6 +170,6 @@ def gameplay(window, game_type):
                 # reaffichage de l'écran
                 display_all(window, game_object)
             display_game_data(window, data, game_chrono)
-    get_game_picture()
+    game_screen = get_game_picture(window)
     print('---------------------------------------------------------')
-    return data
+    return data, game_screen

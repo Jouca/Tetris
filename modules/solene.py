@@ -117,8 +117,13 @@ def create_game_pause(window):
     return resume_button, option_button
 
 
-def get_game_picture():  # ##
+def get_game_picture(window):  # ##
     """fait une sauvegarde du jeu sous la forme d'un pygame.Surface."""
+    screenshot = window.subsurface(window.get_rect())
+    screen_window = pygame.Surface(screenshot.get_size())
+    screenshot.set_alpha(60)
+    screen_window.blit(screenshot, (0, 0))
+    return screen_window
 
 
 def display_visual_tetrimino(surface, place_properties, y_axis, t_type):
@@ -1154,6 +1159,7 @@ class Data:
                                 'position': None} for i in range(5)}
         self.font = None
         self.surface = None
+        self.chronometer = chronometer
         self.resize(window, matrix)
         self.chrono_value(chronometer)
         self.values_relative_position()
@@ -1307,3 +1313,9 @@ class Data:
 
     def get_score(self):
         return self.values['score']
+
+    def get_time(self):
+        return self.chronometer.get_chrono_value()
+
+    def get_lines_count(self):
+        return self.values['lines']

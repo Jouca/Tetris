@@ -6,12 +6,14 @@ import pygame
 try:
     from constant import LANG, COLOR
     from diego import GameStrings, post_request
+    from paul import main_rule
     from gameplay import gameplay
     from solene import RadioButton
     from useful import get_font_size, loop_starter_pack, Button, Button2, Text
 except ModuleNotFoundError:
     from modules.constant import LANG, COLOR
     from modules.diego import GameStrings, post_request
+    from modules.paul import main_rule
     from modules.gameplay import gameplay
     from modules.solene import RadioButton
     from modules.useful import get_font_size, loop_starter_pack, Button, Button2, Text
@@ -72,7 +74,8 @@ def main_menu(window):
                 proceed = False
                 return
             if help_button.is_pressed(event):
-                # menuplay()
+                main_rule(window)
+                main_menu(window)
                 proceed = False
                 return
 
@@ -269,14 +272,14 @@ def game_choice_menu(window):
                     if mode.get_value() == 0:
                         window.fill(0x000000)
                         level = a_mode[0]
-                        data = gameplay(window, (level, 0))
-                        game_over_menu(window, data.get_score())
+                        data, game_screen = gameplay(window, (level, 0))
+                        game_over_menu(window, data.get_score(), data.get_time(), data.get_lines_count(), game_screen)
                         proceed = False
                     else:
                         window.fill(0x000000)
                         level, hight = b_mode_option
-                        data = gameplay(window, (level.get_value(), hight.get_value()))
-                        game_over_menu(window, data.get_score())
+                        data, game_screen = gameplay(window, (level.get_value(), hight.get_value()))
+                        game_over_menu(window, data.get_score(), data.get_time(), data.get_lines_count(), game_screen)
                         proceed = False
             
             if previous_menu_button.is_pressed(event):
@@ -405,21 +408,40 @@ def leaderboard_menu(window, page):
                 return
 
 
-def create_game_over_menu(window, score):
+def create_game_over_menu(window, score, time_value, lines_count, game_screen):
     font_height = round(0.15 * window.get_height())
     font_size = get_font_size(font_height)
+    window_w, window_h = window.get_size()
+    frame = pygame.Surface((round(0.5 * window_w), round(0.7 * window_h)))
+    pygame.draw.rect(frame, (150, 150, 150), (0, 0, round(0.5 * window_w), round(0.7 * window_h)), 5)
     end = Text(window,
-               (0,
-                0.075,
-                1,
-                0.3),
+               (0.15,
+                0.025,
+                0.2,
+                0.2),
                game_strings.get_string("gameover"))
+    end.draw(frame)
     score = Text(window,
                  (0,
+                  0.25,
                   0.3,
-                  1,
-                  0.15),
+                  0.1),
                  game_strings.get_string("yourscore").format(score))
+    score.draw(frame)
+    time = Text(window,
+                 (0,
+                  0.32,
+                  0.3,
+                  0.1),
+                 game_strings.get_string("yourtime").format(time_value))
+    time.draw(frame)
+    lines = Text(window,
+                 (0,
+                  0.39,
+                  0.3,
+                  0.1),
+                 game_strings.get_string("lines_count").format(lines_count))
+    lines.draw(frame)
     rejouer_button = Button(window,
                             (0.3,
                              0.5,
@@ -434,25 +456,28 @@ def create_game_over_menu(window, score):
                              0.18),
                             game_strings.get_string("quit"),
                             font_size)
-
+    window.blit(game_screen, (0, 0))
+    window.blit(frame, (round(0.26 * window_w), round(0.16 * window_h)))
+    """
     frame = pygame.Surface(window.get_size())
     end.draw(frame)
     score.draw(frame)
     quitter_button.draw(frame)
     rejouer_button.draw(frame)
     window.blit(frame, (0, 0))
+    """
     pygame.display.flip()
     return rejouer_button, quitter_button
 
 
-def game_over_menu(window, score):
-    rejouer_button, quitter_button = create_game_over_menu(window, score)
+def game_over_menu(window, score, time, lines, game_screen):
+    rejouer_button, quitter_button = create_game_over_menu(window, score, time, lines, game_screen)
     proceed = True
     while proceed:
         for event in pygame.event.get():
             loop_starter_pack(window, event)
             if event.type == pygame.VIDEORESIZE:
-                rejouer_button, quitter_button = create_game_over_menu(window, score)
+                rejouer_button, quitter_button = create_game_over_menu(window, score, time, lines, game_screen)
             if rejouer_button.is_pressed(event):
                 game_choice_menu(window)
                 proceed = False

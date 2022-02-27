@@ -1,7 +1,7 @@
 """module contenant les constantes utiles au jeu Tetris."""
 
 
-LANG = "FR"
+LANG = "EN"
 
 COLOR = {'RED': (237, 41, 57),
          'ORANGE': (255, 121, 0),
