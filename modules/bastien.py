@@ -1,5 +1,6 @@
 """module codé par Bastien (@BLASTUHQ) TG5, contenant des fonctions pour
-les menus du jeu Tetris. Repassage du code par Solène, (@periergeia)."""
+les menus du jeu Tetris. Repassage du code par Solène, (@periergeia).
+Menu game_over par Diego (@Jouca) TG5 et menu game_choice par Solène."""
 
 
 import datetime
@@ -12,7 +13,7 @@ try:
     from gameplay import gameplay
     from solene import RadioButton
     from paul import main_rule
-    from useful import loop_starter_pack, Button, Button2, Text
+    from useful import loop_starter_pack, Button1, Button2, Text
 except ModuleNotFoundError:
     from modules.constant import LANG, COLOR
     from modules.diego import GameStrings, post_request, read_json
@@ -20,7 +21,7 @@ except ModuleNotFoundError:
     from modules.gameplay import gameplay
     from modules.solene import RadioButton
     from modules.paul import main_rule
-    from modules.useful import loop_starter_pack, Button, Button2, Text
+    from modules.useful import loop_starter_pack, Button1, Button2, Text
 
 
 game_strings = GameStrings(LANG)
@@ -35,15 +36,15 @@ def create_main_menu(window):
 
     window_w = window.get_width()
     
-    play_button = Button(window, (logo_pos[0] / window_w,
+    play_button = Button1(window, (logo_pos[0] / window_w,
                          0.45, logo_size[0] / window_w, 0.15), game_strings.get_string("play"))
-    ranking_button = Button(window,
+    ranking_button = Button1(window,
                             (logo_pos[0] / window_w,
                              0.65,
                              (logo_size[0] / window_w) * 0.65,
                              0.15),
                             game_strings.get_string("leaderboard"))
-    help_button = Button(window,
+    help_button = Button1(window,
                          (logo_pos[0] / window_w + (logo_size[0] / window_w) * 0.65,
                           0.65,
                           (logo_size[0] / window_w) * 0.35,
@@ -85,14 +86,14 @@ def main_menu(window):
 
 
 def create_mode(window):
-    mode_a = Button(window,
+    mode_a = Button1(window,
                             (0.175,
                              0.2,
                              0.3,
                              0.6),
                              '',
                             (100, 100, 100))
-    mode_b = Button(window,
+    mode_b = Button1(window,
                            (0.525,
                             0.2,
                             0.3,
@@ -105,7 +106,7 @@ def create_mode(window):
     for i in range(2):
         x_value = 0.15
         for j in range(5):
-            button = Button(mode_b,
+            button = Button1(mode_b,
                            (x_value,
                             y_value,
                             0.14,  # 1/7
@@ -120,7 +121,7 @@ def create_mode(window):
     for i in range(2):
         x_value = 0.15
         for j in range(3):
-            button = Button(mode_b,
+            button = Button1(mode_b,
                            (x_value,
                             y_value,
                             0.23,  # 7/30
@@ -132,14 +133,14 @@ def create_mode(window):
         y_value += 0.1
     b_mode_option = (RadioButton(tuple(level_button_list)),
                      RadioButton(tuple(hight_button_list)))
-    plus_button = Button(mode_a,
+    plus_button = Button1(mode_a,
                             (0.65,
                              0.5,
                              0.2,
                              0.1),
                              '+',
                             (120, 120, 120))
-    less_button = Button(mode_a,
+    less_button = Button1(mode_a,
                            (0.65,
                             0.7,
                             0.2,
@@ -297,7 +298,7 @@ def create_leaderboard_menu(window):
     frame = pygame.Surface(window.get_size())
     previous_menu_button.draw(frame)
     window.blit(frame, (0, 0))
-    statement = Button(window,
+    statement = Button1(window,
                          (0.15,
                           0.15,
                           0.7,
@@ -376,7 +377,7 @@ def create_leaderboard_table(window, leaderboard, page):
 
 
 def create_error_table(window, error):
-    message = Button(window,
+    message = Button1(window,
                          (0.15,
                           0.425,
                           0.7,
@@ -419,7 +420,7 @@ def get_now_string():
 
 def create_game_over_menu(window, score, time_value, lines_count, game_screen, enregistrer_texte):
     frame = pygame.Surface(window.get_size())
-    background = Button(window,
+    background = Button1(window,
                            (0.1,
                             0.1,
                             0.78,
@@ -462,7 +463,7 @@ def create_game_over_menu(window, score, time_value, lines_count, game_screen, e
     quit_button = Button2(background, (0.225, 0.75, 0.1), 'back')
     save_button = Button2(background, (0.350, 0.75, 0.1), 'save')
     score_upload_button = Button2(background, (0.475, 0.75, 0.1), 'upload')
-    local_score_surface = Button(background,
+    local_score_surface = Button1(background,
                            (0.6,
                             0.25,
                             0.3,
@@ -522,6 +523,7 @@ def game_over_menu(window, score, time, lines, game_screen, screenshot):
                 main_menu(window)
                 return
             if save_button.is_pressed(event):
-                pygame.image.save(screenshot, 'game_screen_save/screenshot.png')
-                os.rename('game_screen_save/screenshot.png', f'game_screen_save/{get_now_string()}.png')
-                enregistrer_texte = True
+                if not enregistrer_texte:
+                    pygame.image.save(screenshot, 'game_screen_save/screenshot.png')
+                    os.rename('game_screen_save/screenshot.png', f'game_screen_save/{get_now_string()}.png')
+                    enregistrer_texte = True
