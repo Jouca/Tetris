@@ -2,6 +2,8 @@
 les menus du jeu Tetris. Repassage du code par Solène, (@periergeia)."""
 
 
+import datetime
+import os
 import pygame
 try:
     from constant import LANG, COLOR
@@ -10,7 +12,7 @@ try:
     from gameplay import gameplay
     from solene import RadioButton
     from paul import main_rule
-    from useful import get_font_size, loop_starter_pack, Button, Button2, Text
+    from useful import loop_starter_pack, Button, Button2, Text
 except ModuleNotFoundError:
     from modules.constant import LANG, COLOR
     from modules.diego import GameStrings, post_request, read_json
@@ -18,7 +20,7 @@ except ModuleNotFoundError:
     from modules.gameplay import gameplay
     from modules.solene import RadioButton
     from modules.paul import main_rule
-    from modules.useful import get_font_size, loop_starter_pack, Button, Button2, Text
+    from modules.useful import loop_starter_pack, Button, Button2, Text
 
 
 game_strings = GameStrings(LANG)
@@ -410,97 +412,116 @@ def leaderboard_menu(window, page):
                 return
 
 
+def get_now_string():
+    now = datetime.datetime.now()
+    return now.strftime('%d-%m-%Y_%Hh%M')
+
+
 def create_game_over_menu(window, score, time_value, lines_count, game_screen, enregistrer_texte):
-    window_w, window_h = window.get_size()
-    frame = pygame.Surface((round(0.5 * window_w), round(0.7 * window_h)))
-    pygame.draw.rect(frame, (150, 150, 150), (0, 0, round(0.5 * window_w), round(0.7 * window_h)), 5)
-    end = Text(window,
-               (0.15,
+    frame = pygame.Surface(window.get_size())
+    background = Button(window,
+                           (0.1,
+                            0.1,
+                            0.78,
+                            0.8),
+                           '',
+                           (100, 100, 100))
+    background.draw(frame)
+    end = Text(background,
+               (0,
                 0.025,
-                0.2,
-                0.2),
+                1,
+                0.3),
                game_strings.get_string("gameover"))
     end.draw(frame)
-    score_text = Text(window,
-                 (0,
+    score_text = Text(background,
+                 (0.1,
                   0.25,
-                  0.3,
-                  0.1),
-                 game_strings.get_string("yourscore").format(score))
+                  1,
+                  0.15),
+                 game_strings.get_string("yourscore").format(score),
+                 True)
     score_text.draw(frame)
-    time = Text(window,
-                 (0,
-                  0.32,
-                  0.3,
-                  0.1),
-                 game_strings.get_string("yourtime").format(time_value))
+    time = Text(background,
+                 (0.1,
+                  0.40,
+                  1,
+                  0.15),
+                 game_strings.get_string("yourtime").format(time_value),
+                 True)
     time.draw(frame)
-    lines = Text(window,
-                 (0,
-                  0.39,
-                  0.3,
-                  0.1),
-                 game_strings.get_string("lines_count").format(lines_count))
+    lines = Text(background,
+                 (0.1,
+                  0.55,
+                  1,
+                  0.15),
+                 game_strings.get_string("lines_count").format(lines_count),
+                 True)
     lines.draw(frame)
-    rejouer_button = Button2(window, (0.37, 0.64, 0.05), 'retry')
-    quitter_button = Button2(window, (0.3, 0.64, 0.05), 'back')
-    enregistrer_button = Button2(window, (0.44, 0.64, 0.05), 'save')
-    score_upload_button = Button2(window, (0.3, 0.75, 0.05), 'upload')
-
-    local_score_surface = pygame.Surface((round(0.18 * window_w), round(0.44 * window_h)))
-    pygame.draw.rect(local_score_surface, (150, 150, 150), (0, 0, round(0.18 * window_w), round(0.44 * window_h)), 5)
+    replay_button = Button2(background, (0.1, 0.75, 0.1), 'retry')
+    quit_button = Button2(background, (0.225, 0.75, 0.1), 'back')
+    save_button = Button2(background, (0.350, 0.75, 0.1), 'save')
+    score_upload_button = Button2(background, (0.475, 0.75, 0.1), 'upload')
+    local_score_surface = Button(background,
+                           (0.6,
+                            0.25,
+                            0.3,
+                            0.5 + 0.1 * background.get_width()/background.get_height()),
+                           '',
+                           (1, 1, 1))
+    local_score_surface.draw(frame)
     local_scores = read_json("./others/game_save/data.json")
-    y_value = 0
     for i in range(1, len(local_scores)+1):
         color = COLOR["WHITE"]
-        if score == local_scores[f"{i}"]:
+        if score == int(local_scores[str(i)]):
             color = COLOR["YELLOW"]
         current_score = Text(local_score_surface,
-                             (0.36,
+                             (0.07,
                               0.1 * i,
-                              0.23,
+                              1,
                               0.23),
-                             f"{i} - {local_scores[f'{i}']}",
-                             color=color)
-        current_score.draw(local_score_surface)
-        y_value += 0.13
-    frame.blit(local_score_surface, (round(0.3 * window_w), round(0.23 * window_h)))
-
-    window.blit(game_screen, (0, 0))
-    window.blit(frame, (round(0.26 * window_w), round(0.16 * window_h)))
-    rejouer_button.draw(window)
-    quitter_button.draw(window)
-    enregistrer_button.draw(window)
+                             f"{i} - {local_scores[str(i)]}",
+                             True,
+                             color)
+        current_score.draw(frame)
+    frame.set_colorkey(COLOR['BLACK'])
+    screen_save = pygame.transform.scale(game_screen, window.get_size())
+    window.blit(screen_save, (0, 0))
+    window.blit(frame, (0, 0))
+    replay_button.draw(window)
+    quit_button.draw(window)
+    save_button.draw(window)
     score_upload_button.draw(window)
     if enregistrer_texte:
         text = Text(window,
-                        (0.37,
-                            0.9,
-                            0.3,
-                            0.1),
-                        game_strings.get_string("save_success"))
+                    (0.37,
+                    0.9,
+                    0.3,
+                    0.1),
+                    game_strings.get_string("save_success"))
         text.draw(window)
     pygame.display.flip()
-    return rejouer_button, quitter_button, enregistrer_button
+    return replay_button, quit_button, save_button
 
 
 def game_over_menu(window, score, time, lines, game_screen, screenshot):
     proceed = True
     enregistrer_texte = False
     while proceed:
-        rejouer_button, quitter_button, enregistrer_button = create_game_over_menu(window, score, time, lines, game_screen, enregistrer_texte)
+        replay_button, quit_button, save_button = create_game_over_menu(window, score, time, lines, game_screen, enregistrer_texte)
         for event in pygame.event.get():
             loop_starter_pack(window, event)
             if event.type == pygame.VIDEORESIZE:
-                rejouer_button = create_game_over_menu(window, score, time, lines, game_screen)
-            if rejouer_button.is_pressed(event):
+                replay_button, quit_button, save_button = create_game_over_menu(window, score, time, lines, game_screen, enregistrer_texte)
+            if replay_button.is_pressed(event):
                 game_choice_menu(window)
                 proceed = False
                 return
-            if quitter_button.is_pressed(event):
+            if quit_button.is_pressed(event):
                 proceed = False
                 main_menu(window)
                 return
-            if enregistrer_button.is_pressed(event):
-                pygame.image.save(screenshot, "screenshot.png")
+            if save_button.is_pressed(event):
+                pygame.image.save(screenshot, 'game_screen_save/screenshot.png')
+                os.rename('game_screen_save/screenshot.png', f'game_screen_save/{get_now_string()}.png')
                 enregistrer_texte = True
