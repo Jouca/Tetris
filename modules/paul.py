@@ -30,13 +30,13 @@ def get_all_side(tetrimino_shape):
                 if j < min_west:
                     west.append((i, j))
                     min_west = j
-                if j > max_east:
+                if j >= max_east:
                     column = j
             if tetrimino_shape[j][i] == 1:
                 if j < min_north:
                     north.append((j, i))
                     min_north = j
-                if j > max_south:
+                if j >= max_south:
                     row = j
         if column != 10:
             east.append((i, column))
