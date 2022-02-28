@@ -52,7 +52,7 @@ def loop_starter_pack(tetris_window, event):
     return tetris_window
 
 
-class Button1:
+class Button:
     """crée un bouton visuel formaté avec le style général du jeu.
     Bouton ayant la spécificité d'être de forme carré."""
 
@@ -125,7 +125,7 @@ class Button1:
                 # dans le cas où l'appuie est effectué sur un bouton
                 if self.mouse_on(event):
                     # le son "click" est joué 
-                    pygame.mixer.Sound.play(Button.click)
+                    pygame.mixer.Sound.play(Button1.click)
                     return True        
         return False
     
@@ -153,12 +153,16 @@ class Button1:
     def get_height(self):
         """renvoie la longueur du bouton."""
         return self.rect.h
+    
+    def get_width(self):
+        """renvoie la largeur du bouton."""
+        return self.rect.w
 
 
-class Button(Button1):
+class Button1(Button):
     """crée un bouton visuel contenant un texte centré."""
 
-    def __init__(self, window, relative_position, text, color=COLOR['BLACK']):   # ##
+    def __init__(self, window, relative_position, text, color=COLOR['BLACK']):
         """méthode constructeur de la classe :
         - `window` est la fenêtre sur laquelle est créé le bouton ;
         - `relative_position` correspond à un 4-uple (`x`, `y`, `w`, `h`)
@@ -205,7 +209,7 @@ class Button(Button1):
         surface.blit(self.text_image, self.text_pos)
 
 
-class Button2(Button1):
+class Button2(Button):
     """crée un bouton visuel formaté avec le style général du jeu."""
 
     def __init__(self, window, relative_position, image_name):
