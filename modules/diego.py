@@ -128,8 +128,8 @@ def insert_local_score(score):
     """
     data = read_json("./others/game_save/data.json")
     for i in data:
-        if score >= data[i]:
-            data[i] = score
+        if score >= int(data[i]):
+            data[i] = str(score).zfill(8)
             break
     with open("./others/game_save/data.json", "w", encoding="utf-8") as fichier:
         json.dump(data, fichier, indent=4)
