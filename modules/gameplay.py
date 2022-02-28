@@ -171,5 +171,4 @@ def gameplay(window, game_type):
                 display_all(window, game_object)
             display_game_data(window, data, game_chrono)
     game_screen, screenshot = get_game_picture(window)
-    print('---------------------------------------------------------')
     return data, game_screen, screenshot

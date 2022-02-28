@@ -1,6 +1,5 @@
 """module codé par Bastien (@BLASTUHQ) TG5, contenant des fonctions pour
-les menus du jeu Tetris. Repassage du code par Solène, (@periergeia).
-Menu game_over par Diego (@Jouca) TG5 et menu game_choice par Solène."""
+les menus du jeu Tetris. Repassage du code par Solène, (@periergeia)."""
 
 
 import datetime

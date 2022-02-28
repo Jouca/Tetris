@@ -13,14 +13,14 @@ try:
     from constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from diego import clear_lines, GameStrings, insert_local_score
     from paul import border_dict
-    from useful import get_font_size, Button
+    from useful import get_font_size, Button1
 except ModuleNotFoundError:
     from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
     from modules.constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from modules.constant import PHASIS_NAME
     from modules.diego import clear_lines, GameStrings, insert_local_score
     from modules.paul import border_dict
-    from modules.useful import get_font_size, Button
+    from modules.useful import get_font_size, Button1
 
 
 game_strings = GameStrings(LANG)
@@ -86,14 +86,14 @@ def display_game_data(window, data, chronometer):
 def create_game_pause(window):
     """crée un visuel permettant au joueur de comprendre que le
     jeu est mis en pause."""
-    resume_button = Button(window,
+    resume_button = Button1(window,
                            (0.25,
                             0.3,
                             0.5,
                             0.15),
                            game_strings.get_string("resume"),
                            (75, 75, 75))
-    option_button = Button(window,
+    option_button = Button1(window,
                            (0.25,
                             0.55,
                             0.5,
@@ -102,7 +102,7 @@ def create_game_pause(window):
                            (75, 75, 75))
     frame = pygame.Surface(window.get_size())
     frame.set_colorkey((0, 0, 0))
-    background = Button(window,
+    background = Button1(window,
                            (0.1,
                             0.1,
                             0.78,
@@ -117,7 +117,7 @@ def create_game_pause(window):
     return resume_button, option_button
 
 
-def get_game_picture(window):  # ##
+def get_game_picture(window):
     """fait une sauvegarde du jeu sous la forme d'un pygame.Surface."""
     screenshot = window.subsurface(window.get_rect())
     normal_screenshot = screenshot.copy()
