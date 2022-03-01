@@ -5,12 +5,14 @@
 import time
 import pygame
 try:
+    from diego import insert_local_score
     from solene import Chronometer, Bag, Matrix, Tetrimino
     from solene import HoldQueue, NextQueue, Data
     from solene import resize_all, display_all
     from solene import display_game_data, create_game_pause, get_game_picture
     from useful import loop_starter_pack, Button2
 except ModuleNotFoundError:
+    from modules.diego import insert_local_score
     from modules.solene import Chronometer, Bag, Matrix, Tetrimino
     from modules.solene import HoldQueue, NextQueue, Data
     from modules.solene import resize_all, display_all
@@ -51,9 +53,9 @@ def gameplay(window, game_type):
     softdrop = False
     game_paused = False
 
-    game_over = False
+    proceed = {'state': True, 'type': 'lose'}
 
-    while not game_over:
+    while proceed['state']:
 
         game_object = (tetrimino, matrix, next_queue, hold_queue, data, menu_button)
 
@@ -66,7 +68,6 @@ def gameplay(window, game_type):
                                'width': window_w,
                                'height': window_h,
                                'margin': round(0.05 * window_h)}
-                print(f'current window size :   {window_data}')
                 # reaffichage avec changement des tailles et emplacement des objets
                 resize_all(window_data, game_object)
                 display_all(window, game_object)
@@ -112,6 +113,9 @@ def gameplay(window, game_type):
 
                 elif key[pygame.K_UP] or key[pygame.K_x]:
                     tetrimino.turn_right(matrix)
+                
+                elif key[pygame.K_w]:
+                    tetrimino.turn_left(matrix)
 
                 elif event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
                     if hold_queue.can_hold:
@@ -145,9 +149,12 @@ def gameplay(window, game_type):
             # phase lock down
             elif tetrimino.state == 2:
                 # le tetrimino est lock dans matrix
-                game_over = tetrimino.__lock_on_matrix__(matrix, game_over, data.get_score())
+                proceed['state'] = tetrimino.__lock_on_matrix__(matrix)
                 # clear les lines s'il y a
-                matrix.clear_lines(data)
+                matrix.check_clear_lines(data)
+                if matrix.is_game_won():
+                    proceed['state'] = False
+                    proceed['type'] = 'win'
                 # le tetrimino suivant est créé
                 tetrimino = Tetrimino(bag, matrix)
                 next_queue.update(bag)
@@ -170,5 +177,12 @@ def gameplay(window, game_type):
                 # reaffichage de l'écran
                 display_all(window, game_object)
             display_game_data(window, data, game_chrono)
+
+    insert_local_score(data.values['score'])
     game_screen, screenshot = get_game_picture(window)
-    return data, game_screen, screenshot
+    game_data = {'score': data.values['score'],
+                 'time': game_chrono.get_chrono_value(),
+                 'lines': data.values['lines'],
+                 'mode': data.values['game_mode'],
+                 'issue': proceed['type']}
+    return game_data, game_screen, screenshot
