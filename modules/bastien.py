@@ -276,14 +276,14 @@ def game_choice_menu(window):
                     if mode.get_value() == 0:
                         window.fill(0x000000)
                         level = a_mode[0]
-                        data, game_screen, screenshot = gameplay(window, (level, 0))
-                        game_over_menu(window, data.get_score(), data.get_time(), data.get_lines_count(), game_screen, screenshot)
+                        game_data, game_screen, screenshot = gameplay(window, (level, -1))
+                        game_over_menu(window, game_data, game_screen, screenshot)
                         proceed = False
                     else:
                         window.fill(0x000000)
                         level, hight = b_mode_option
-                        data, game_screen, screenshot = gameplay(window, (level.get_value(), hight.get_value()))
-                        game_over_menu(window, data.get_score(), data.get_time(), data.get_lines_count(), game_screen, screenshot)
+                        game_data, game_screen, screenshot = gameplay(window, (level.get_value(), hight.get_value()))
+                        game_over_menu(window, game_data, game_screen, screenshot)
                         proceed = False
             
             if previous_menu_button.is_pressed(event):
@@ -417,7 +417,7 @@ def get_now_string():
     return now.strftime('%d-%m-%Y_%Hh%M')
 
 
-def create_game_over_menu(window, score, time_value, lines_count, game_screen, enregistrer_texte):
+def create_game_over_menu(window, game_data, game_screen, enregistrer_texte):
     frame = pygame.Surface(window.get_size())
     background = Button1(window,
                            (0.1,
@@ -432,14 +432,14 @@ def create_game_over_menu(window, score, time_value, lines_count, game_screen, e
                 0.025,
                 1,
                 0.3),
-               game_strings.get_string("gameover"))
+               game_strings.get_string(game_data['issue']))
     end.draw(frame)
     score_text = Text(background,
                  (0.1,
                   0.25,
                   1,
                   0.15),
-                 game_strings.get_string("yourscore").format(score),
+                 game_strings.get_string("yourscore").format(game_data['score']),
                  True)
     score_text.draw(frame)
     time = Text(background,
@@ -447,7 +447,7 @@ def create_game_over_menu(window, score, time_value, lines_count, game_screen, e
                   0.40,
                   1,
                   0.15),
-                 game_strings.get_string("yourtime").format(time_value),
+                 game_strings.get_string("yourtime").format(game_data['time']),
                  True)
     time.draw(frame)
     lines = Text(background,
@@ -455,7 +455,7 @@ def create_game_over_menu(window, score, time_value, lines_count, game_screen, e
                   0.55,
                   1,
                   0.15),
-                 game_strings.get_string("lines_count").format(lines_count),
+                 game_strings.get_string("lines_count").format(game_data['lines']),
                  True)
     lines.draw(frame)
     replay_button = Button2(background, (0.1, 0.75, 0.1), 'retry')
@@ -473,7 +473,7 @@ def create_game_over_menu(window, score, time_value, lines_count, game_screen, e
     local_scores = read_json("./others/game_save/data.json")
     for i in range(1, len(local_scores)+1):
         color = COLOR["WHITE"]
-        if score == int(local_scores[str(i)]):
+        if game_data['score'] == int(local_scores[str(i)]):
             color = COLOR["YELLOW"]
         current_score = Text(local_score_surface,
                              (0.07,
@@ -504,15 +504,15 @@ def create_game_over_menu(window, score, time_value, lines_count, game_screen, e
     return replay_button, quit_button, save_button
 
 
-def game_over_menu(window, score, time, lines, game_screen, screenshot):
+def game_over_menu(window, game_data, game_screen, screenshot):
     proceed = True
     enregistrer_texte = False
     while proceed:
-        replay_button, quit_button, save_button = create_game_over_menu(window, score, time, lines, game_screen, enregistrer_texte)
+        replay_button, quit_button, save_button = create_game_over_menu(window, game_data, game_screen, enregistrer_texte)
         for event in pygame.event.get():
             loop_starter_pack(window, event)
             if event.type == pygame.VIDEORESIZE:
-                replay_button, quit_button, save_button = create_game_over_menu(window, score, time, lines, game_screen, enregistrer_texte)
+                replay_button, quit_button, save_button = create_game_over_menu(window, game_data, game_screen, enregistrer_texte)
             if replay_button.is_pressed(event):
                 game_choice_menu(window)
                 proceed = False
