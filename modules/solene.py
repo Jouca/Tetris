@@ -10,15 +10,17 @@ import pygame
 import pygame.freetype
 try:
     from constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR, PHASIS_NAME
-    from constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
-    from diego import clear_lines, GameStrings, insert_local_score
+    from constant import ROTATION_POINT, DATA_KEYS
+    from constant import DATA_STRINGS, LANG, VISUAL_STRUCTURE
+    from diego import clear_lines, GameStrings
     from paul import border_dict
     from useful import get_font_size, Button1
 except ModuleNotFoundError:
     from modules.constant import TETRIMINO_DATA, TETRIMINO_SHAPE, COLOR
-    from modules.constant import ROTATION_POINT, DATA_KEYS, DATA_STRINGS, LANG, VISUAL_STRUCTURE
+    from modules.constant import ROTATION_POINT, DATA_KEYS
+    from modules.constant import DATA_STRINGS, LANG, VISUAL_STRUCTURE
     from modules.constant import PHASIS_NAME
-    from modules.diego import clear_lines, GameStrings, insert_local_score
+    from modules.diego import clear_lines, GameStrings
     from modules.paul import border_dict
     from modules.useful import get_font_size, Button1
 
@@ -27,8 +29,6 @@ game_strings = GameStrings(LANG)
 
 
 # pylint: disable=E1101
-
-# supprimer des attributs avec delattr(self, 'field_to_delete') super().__init__(*args, **kwargs)
 
 
 def resize_all(window_data, game_objet):
@@ -87,28 +87,28 @@ def create_game_pause(window):
     """crée un visuel permettant au joueur de comprendre que le
     jeu est mis en pause."""
     resume_button = Button1(window,
-                           (0.25,
-                            0.3,
-                            0.5,
-                            0.15),
-                           game_strings.get_string("resume"),
-                           (75, 75, 75))
+                            (0.25,
+                             0.3,
+                             0.5,
+                             0.15),
+                            game_strings.get_string("resume"),
+                            (75, 75, 75))
     option_button = Button1(window,
-                           (0.25,
-                            0.55,
-                            0.5,
-                            0.15),
-                           game_strings.get_string("options"),
-                           (75, 75, 75))
+                            (0.25,
+                             0.55,
+                             0.5,
+                             0.15),
+                            game_strings.get_string("options"),
+                            (75, 75, 75))
     frame = pygame.Surface(window.get_size())
     frame.set_colorkey((0, 0, 0))
     background = Button1(window,
-                           (0.1,
-                            0.1,
-                            0.78,
-                            0.8),
-                           '',
-                           (100, 100, 100))
+                         (0.1,
+                          0.1,
+                          0.78,
+                          0.8),
+                         '',
+                         (100, 100, 100))
     background.draw(frame)
     resume_button.draw(frame)
     option_button.draw(frame)
@@ -362,6 +362,7 @@ class Matrix:
     def __init__(self, window, game_type):
         """initialisation des différents attributs de la classe Matrix."""
         self.grid_surface = None
+        self.end_game = False
         self.resize(window)
         self.content = [[0 for j in range(10)] for i in range(22)]
         # création d'une matrice vide avec deux lignes pour la skyline
@@ -372,15 +373,7 @@ class Matrix:
                 line[j] = 0 if line[j] > 7 else line[j]
             self.content[21-i] = line
 
-    # ##temporaire
-    def __str__(self):
-        stock = ''
-        for i in range(1, 22):
-            stock += ' '.join(str(self.content[i]))
-            stock += '\n'
-        return stock
-
-    def clear_lines(self, data):
+    def check_clear_lines(self, data):
         """voir dans `diego.py` suivi d'une modification de l'attribut
         modelisation, ainsi que highter_row, la ligne la plus haute afin
         de respecter la cohérence."""
@@ -388,13 +381,12 @@ class Matrix:
         # dans le cas où il y a un line clear
         if nb_line_cleared > 0:
             # ajoute le nombre de line_clear aux informations du jeu
-            data.add_to_line_clear(nb_line_cleared)
+            self.end_game = data.add_to_line_clear(nb_line_cleared)
             # ## placer dans constantes ?
             multiply_by = {1: 100, 2: 300, 3: 500, 4: 800}
             level = data.values['lines']
             data.score_increase(level * multiply_by[nb_line_cleared])
             self.higher_row += nb_line_cleared
-
 
     def resize(self, window):
         """redimmensionne les valeurs utile à la représentation
@@ -423,8 +415,9 @@ class Matrix:
                                                     self.cell_size,
                                                     self.cell_size * 7/10)
                 else:
+                    y_value = y_axis + j * self.cell_size
                     Matrix.cell[i][j+1] = pygame.Rect(x_axis,
-                                                      y_axis + j * self.cell_size,
+                                                      y_value,
                                                       self.cell_size,
                                                       self.cell_size)
         self.resize_grid_surface(window)
@@ -486,18 +479,7 @@ class Matrix:
                     color = Tetrimino.COLOR_SHADE[current_cell][0]
                     pygame.draw.rect(surface,
                                      color, self.cell[j][i])
-
-        # demo toutes les cases, première et dernière de matrix visible
-        '''for element in self.cell:
-            for i in range(10):
-                for j in range(1, 22):
-                    # ##couleurs sympa garder pour mode spécial ?
-                    color = (i*4, j*4, 40)
-                    pygame.draw.rect(surface, color, self.cell[i][j])
-        pygame.draw.rect(surface, (250, 0, 0), self.cell[0][1])
-        pygame.draw.rect(surface, (0, 250, 0), self.cell[9][21])'''
         surface.blit(self.grid_surface, (0, 0))
-
 
     def draw_ghost_piece(self, surface, tetrimino):
         """dessin de la ghost piece."""
@@ -514,8 +496,8 @@ class Matrix:
                 x_value = self.cell[cell_pos_x][cell_pos_y].x
                 y_value = self.cell[cell_pos_x][cell_pos_y].y
                 pygame.draw.line(surface, color,
-                             (x_value, y_value),
-                             (x_value + line_lenght, y_value), 3)
+                                 (x_value, y_value),
+                                 (x_value + line_lenght, y_value), 3)
             except KeyError:
                 pass
         # dessin des lignes à droite
@@ -528,8 +510,8 @@ class Matrix:
                 x_value = self.cell_size + self.cell[cell_pos_x][cell_pos_y].x
                 y_value = self.cell[cell_pos_x][cell_pos_y].y
                 pygame.draw.line(surface, color,
-                             (x_value, y_value),
-                             (x_value, y_value + line_lenght), 3)
+                                 (x_value, y_value),
+                                 (x_value, y_value + line_lenght), 3)
             except KeyError:
                 pass
         # dessin des lignes en dessous
@@ -561,6 +543,10 @@ class Matrix:
             except KeyError:
                 pass
 
+    def is_game_won(self):
+        """renseigne si la partie est gagnée."""
+        return self.end_game
+
 
 def start_center(tetrimino_type):
     """indique l'indice permettant de centrer un tetrimino
@@ -569,7 +555,7 @@ def start_center(tetrimino_type):
     return (10 - len(TETRIMINO_SHAPE[tetrimino_type])) // 2
 
 
-class Tetrimino(Matrix):
+class Tetrimino:
     """modélise un tetrimino.
 
     ATTRIBUTS:
@@ -588,10 +574,24 @@ class Tetrimino(Matrix):
         - 1 si le tetrimino est en 'lock phase', phase où le tetrimino
         s'apprête à se figer dans la matrice ;
         - 2 lorsque le tetrimino est en 'completion phase' ;
-    - `type`
-    - x_coordinate
-    - y_coordinate
-    """
+    - `type` (int) compris entre 1 et 7 inclus, il s'agit du type du
+    tetrimino :
+        - 1: O-tetrimino;
+        - 2: I-tetrimino;
+        - 3: T-tetrimino;
+        - 4: L-tetrimino;
+        - 5: J-tetrimino;
+        - 6: S-tetrimino;
+        - 7: Z-tetrimino;
+    - `x_coordinate` (int) compris entre -2 et 8, situe le tetrimino sur
+    l'axe des abscisses de matrix grâce au coin haut gauche de la
+    représentation du tetrimino sur une matrice 2x2, 3x3 ou 4x4 dépendant
+    du type du tetrimino. Plus `x_coordinate` est petit, plus le tetrimino
+    se situe vers le bord gauche, à l'inverse, plus il est grand plus le
+    tetrimino est situé sur le bord droit.
+    - `y_coordinate` (int) compris entre 0 et 20, situe le tetrimino sur
+    l'axe des ordonnées de matrix, plus `y_coordinate` est petit, plus le
+    tetrimino est haut situé sur matrix."""
 
     # compteur intéressant pour les informations en fin de partie
     count = 0
@@ -640,21 +640,8 @@ class Tetrimino(Matrix):
         self.find_lower_pos(matrix)
         # incrémente le nombre de tetrimino créé de 1
         Tetrimino.count += 1
-        # ##à enlever en fin
-        print(f"Tetrimino {self.type}")
-        print(self)
 
-    # ##temporaire, pour la visualisation du tetrimino, à enlever à la fin
-    def __str__(self):
-        """ceci est une docstring pylint :)"""
-        stock = ''
-        for element in Tetrimino.ROTATION_PHASIS[self.type][self.facing]:
-            stock += ' '.join(str(element))
-            stock += '\n'
-        stock += f'\n type du tetrimino : {TETRIMINO_SHAPE[self.type]}'
-        return stock
-
-    def __lock_on_matrix__(self, matrix, game_over, score):
+    def __lock_on_matrix__(self, matrix):
         """Méthode permettant de lock un tetrimino (celui de l'instance),
         dans sur la matrix de jeu. `matrix` est une instance de la classe
         Matrix."""
@@ -669,11 +656,10 @@ class Tetrimino(Matrix):
                     pos_x = self.x_coordinate + i
                     matrix.content[pos_y][pos_x] = self.type
                     if matrix.higher_row < 1:
-                        game_over = True
-                        insert_local_score(score)
+                        return False
                     if pos_y < matrix.higher_row:
                         matrix.higher_row = pos_y
-        return game_over
+        return True
 
     def __can_fall__(self, matrix):
         """test afin de vérifier si un tetrimino peut tomber.
@@ -708,7 +694,9 @@ class Tetrimino(Matrix):
                     # le mino ne sort pas de matrix
                     if mino and j + self.x_coordinate > -1:
                         # cellule de matrix libre pour mino
-                        if matrix.content[i + self.y_coordinate][j + self.x_coordinate] == 0:
+                        y_value = i + self.y_coordinate
+                        x_value = j + self.x_coordinate
+                        if matrix.content[y_value][x_value] == 0:
                             # reussite du test par mino
                             count += 1
             # dans le cas où les quatre mino réussissent le test
@@ -744,8 +732,6 @@ class Tetrimino(Matrix):
         else:
             t_type = 'I'
             nb_column = 4
-        # ## test pour les situation de rotation à enlever en fin
-        print(f'{PHASIS_NAME[self.facing]}  -->  {PHASIS_NAME[facing]}')
         tetrimino_shape = Tetrimino.ROTATION_PHASIS[self.type][facing]
         # optimisable, mais comme cela on a une économie en calcul
         # je privilégie la performance :) (et puis, pas besoin de mettre
@@ -768,12 +754,10 @@ class Tetrimino(Matrix):
         # s'opère lorsque facing vaut SOUTH pour un tetrimino 3x2
         # il n'y a pas de test supplémentaire donc ne peut pas tourner
         except KeyError:
-            print('turn point : FAIL')
             self.x_coordinate = coordinates[0]
             self.y_coordinate = coordinates[1]
             return False
         # dans le cas où tous les test échouent
-        print('turn point : FAIL')
         self.x_coordinate = coordinates[0]
         self.y_coordinate = coordinates[1]
         return False
@@ -841,7 +825,7 @@ class Tetrimino(Matrix):
         # du moment que le tetrimino peut être placé sans accroc
         while proceed:
             if self.test_around(matrix, tetrimino_shape, nb_column):
-            # on incrémente pour faire descendre le tetrimino d'une ligne
+                # on incrémente pour faire descendre le tetrimino d'une ligne
                 self.y_coordinate += 1
                 if self.y_coordinate > 20:
                     proceed = False
@@ -867,7 +851,7 @@ class Tetrimino(Matrix):
                         ordinate = i + self.y_coordinate
                         pygame.draw.rect(surface,
                                          color,
-                                         self.cell[abcsissa][ordinate])
+                                         Matrix.cell[abcsissa][ordinate])
                     except KeyError:
                         pass
 
@@ -971,22 +955,12 @@ class Tetrimino(Matrix):
         """renvoie le type du tetrimino."""
         return self.type
 
-    # ## docstring foireuses à améliorer par la suite en fonction
-    # vu que pas forcément vrai avec super rotation system
     def get_x(self):
-        """renvoie la position x du tetrimino relatif à matrix.
-        - 0 s'il est dans la colonne la plus à gauche ;
-        - 8, valeur maximale pour la colonne la plus à droite
-        possible pour un tetrimino"""
+        """renvoie la position x du tetrimino relatif à matrix."""
         return self.x_coordinate
 
     def get_y(self):
-        """renvoie la position y du tetrimino dans matrix.
-        - 0 s'il est dans la partie supérieure à la skyline ;
-        - 1, dans la skyline ;
-        - 20, valeur maximale pouvant être renvoyée (si on prend
-        un O tetrimino sachant que sa représentation se fait sur
-        une matrice 2x2)."""
+        """renvoie la position y du tetrimino dans matrix."""
         return self.y_coordinate
 
 
@@ -1147,21 +1121,20 @@ class Data:
         des instances de classes du même nom, `game_type` est un 2-uplet
         contenant dans l'ordre, le niveau et la difficulté imposée au mode B.
         le niveau peut-être compris entre 0 et 10 inclus. La difficulté quant à
-        elle est comprise entre 0 et 6 inclus, 6 signifiant qu'il s'agit du mode
-        A (le mode B permettant de choisir pour niveau max 5)."""
+        elle est comprise entre -1 et 5 inclus, -1 signifiant qu'il s'agit du
+        mode A (le mode B permettant de choisir pour niveau max 5)."""
         level, hight = game_type
         # goal correspond à l'objectif à atteindre avant le passage au niveau
         # suivant. 25 dans le cas du mode B, autrement 5 fois le niveau choisi
-        hight -= 1
-        goal = 25 if hight - 1 > 0 else level * 5
+        goal = 25 if hight != -1 else level * 5
         first_values = [0, 0, level, goal]
         self.values = {DATA_KEYS[i]: first_values[i] for i in range(4)}
+        self.values['game_mode'] = 'B' if hight != -1 else 'A'
         self.values_surface = {DATA_STRINGS[i]:
                                {'surface': None,
                                 'position': None} for i in range(5)}
         self.font = None
         self.surface = None
-        self.chronometer = chronometer
         self.resize(window, matrix)
         self.chrono_value(chronometer)
         self.values_relative_position()
@@ -1289,21 +1262,26 @@ class Data:
 
     def add_to_line_clear(self, value_to_add):
         """ajoute `value_to_add` au nombre de line_clear."""
+        game_win = False
         self.values['lines'] += value_to_add
         lines = self.font.render(str(self.values['lines']).zfill(3), 1,
                                  COLOR['WHITE'])
         self.values_surface['lines']['surface'] = lines
         self.values['goal'] -= value_to_add
         if self.values['goal'] < 1:
-            self.values['level'] += 1
-            self.set_fall_speed()
-            self.values['goal'] = self.values['level'] * 5
-            level = self.font.render(str(self.values['level']).zfill(2), 1,
-                                     COLOR['WHITE'])
-            self.values_surface['level']['surface'] = level
+            if self.values['game_mode'] == 'A':
+                self.values['level'] += 1
+                self.set_fall_speed()
+                self.values['goal'] = self.values['level'] * 5
+                level = self.font.render(str(self.values['level']).zfill(2), 1,
+                                        COLOR['WHITE'])
+                self.values_surface['level']['surface'] = level
+            else:
+                game_win = True
         goal = self.font.render(str(self.values['goal']).zfill(3), 1,
-                                  COLOR['WHITE'])
+                                COLOR['WHITE'])
         self.values_surface['goal']['surface'] = goal
+        return game_win
 
     def score_increase(self, value_to_add):
         """augmente l'attribut score de `value_to_add` devant
@@ -1312,12 +1290,3 @@ class Data:
         score = self.font.render(str(self.values['score']).zfill(10), 1,
                                  COLOR['WHITE'])
         self.values_surface['score']['surface'] = score
-
-    def get_score(self):
-        return self.values['score']
-
-    def get_time(self):
-        return self.chronometer.get_chrono_value()
-
-    def get_lines_count(self):
-        return self.values['lines']
