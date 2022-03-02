@@ -18,7 +18,7 @@
 
 ---
 
-<h2>FICHIERS IMAGES UTILISES (DANS ./image/):</h2>
+<h2>FICHIERS IMAGES UTILISÉS (dans ./image/):</h2>
 
 Tous les fichiers images ont été dessinés par <a href="https://github.com/periergeia">periergeia</a>
 - [back.png](./image/back.png)
@@ -36,7 +36,7 @@ Tous les fichiers images ont été dessinés par <a href="https://github.com/per
 
 ---
 
-<h2>FICHIERS SON UTILISES (DANS ./sound/):</h2>
+<h2>FICHIERS SON UTILISÉS (dans ./sound/):</h2>
 
 - [click.wav](./sound/click.wav) de <u>dland</u> à l'adresse <a href="https://freesound.org/people/dland/sounds/320181/">https://freesound.org/people/dland/sounds/320181/</a> hebergé par freesound. Modification apportée --> fichier renommé.
 - [korobeiniki.ogg](./sound/korobeiniki.ogg) arrangement et interprétation de la musique originale utilisé dans le jeu Tetris (de Nikolay Nekrasov écrit 1861) par <a href="https://github.com/periergeia">periergeia</a>
@@ -49,7 +49,7 @@ Tous les fichiers images ont été dessinés par <a href="https://github.com/per
 
 <h2>LICENSE TETRIS:</h2>
 
-Tetris ® & © 1985~[current year] Tetris Holding, LLC.<br>
+Tetris ® & © 1985~2022 Tetris Holding, LLC.<br>
 Tetris logo, Tetris theme song and Tetriminos are trademarks of Tetris Holding, LLC.<br>
 Licensed to The Tetris Company.<br>
 Game Design by Alexey Pajitnov.<br>
@@ -61,4 +61,4 @@ All Rights Reserved.
 <h2>Veuillez apprécier le jeu !</h2>
 
 Note: certaines fonctionnalités n'ont pas pu être codés dans les temps, le menu des options que l'on accède par la game pause (quand on met la gameplay sur pause) notamment ainsi que l'envoi des résultats sur le serveur pour mettre à jour le classement du menu des classement pour le moment fixe TvT
-Veuillez nous excuser du manque ...
+Veuillez nous excuser du manque et de la frustration eventuelle rencontrée, l'équipe travaille fort à l'amélioration du jeu ...
