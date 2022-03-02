@@ -12,3 +12,7 @@
 </div>
 
 ---
+
+<div align="center">
+  <h1>Tetris in Python (PyGame)</h1>
+</div>
