@@ -7,7 +7,6 @@
 <div align="center">
   <img alt="GitHub" src="https://img.shields.io/github/license/Jouca/Tetris?style=for-the-badge">
   <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/Jouca/Tetris?style=for-the-badge">
-  <img alt="GitHub manifest version" src="https://img.shields.io/github/manifest-json/v/Jouca/Tetris?style=for-the-badge">
   <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/Jouca/Tetris?style=for-the-badge">
 </div>
 
@@ -15,6 +14,25 @@
 
 <h1>TETRIS EN PYTHON (LIBRAIRIE PYGAME)</h1>
 <p>Ce projet a été codé avec <a href="https://github.com/periergeia">periergeia</a>, <a href="https://github.com/DominataurusRex">DominataurusRex</a> et <a href="https://github.com/BLASTUHQ">BLASTUHQ</a> pour le projet de deuxième trimestre de l'année scolaire 2021-2022 dans la spécialité NSI (Numériques et Sciences de l'Informatique) en <b>Python</b>.
+  
+<h2>Vous pouvez également trouvé le serveur via ce repo : <a href="https://github.com/Jouca/Tetris-Server">Tetris Serveur</a></h2>
+
+---
+
+<h1>PRÉREQUIS POUR L'INSTALLATION</h1>
+
+<p>Afin de pouvoir installer le serveur, il vous faut au départ installer les modules suivants :</p>
+<ul>
+  <li>Pygame</li>
+  <li>Requests</li>
+</ul>
+
+<p>Voici les commandes afin d'installer ces modules :</p>
+
+```
+>>> pip install pygame
+>>> pip install requests
+```
 
 ---
 
