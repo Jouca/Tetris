@@ -6,17 +6,17 @@ import time
 import pygame
 try:
     from diego import insert_local_score
-    from solene import Chronometer, Bag, Matrix, Tetrimino
-    from solene import HoldQueue, NextQueue, Data
-    from solene import resize_all, display_all
-    from solene import display_game_data, create_game_pause, get_game_picture
+    from solene_1 import Chronometer, Bag, Data
+    from solene_1 import resize_all, display_all
+    from solene_1 import display_game_data, create_game_pause, get_game_picture
+    from solene_2 import Matrix, Tetrimino, HoldQueue, NextQueue
     from useful import loop_starter_pack, Button2
 except ModuleNotFoundError:
     from modules.diego import insert_local_score
-    from modules.solene import Chronometer, Bag, Matrix, Tetrimino
-    from modules.solene import HoldQueue, NextQueue, Data
-    from modules.solene import resize_all, display_all
-    from modules.solene import display_game_data, create_game_pause, get_game_picture
+    from modules.solene_1 import Chronometer, Bag, Data
+    from modules.solene_1 import resize_all, display_all
+    from modules.solene_1 import display_game_data, create_game_pause, get_game_picture
+    from modules.solene_2 import Matrix, Tetrimino, HoldQueue, NextQueue
     from modules.useful import loop_starter_pack, Button2
 
 
