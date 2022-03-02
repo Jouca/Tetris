@@ -13,7 +13,7 @@ from modules.bastien import main_menu
 
 # initialisation de pygame
 pygame.init()
- 
+
 # préréglage du module mixer
 pygame.mixer.pre_init(44100, -16, 2, 1024)
 pygame.mixer.music.set_volume(0.4)
