@@ -10,3 +10,5 @@
   <img alt="GitHub manifest version" src="https://img.shields.io/github/manifest-json/v/Jouca/Tetris?style=for-the-badge">
   <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/Jouca/Tetris?style=for-the-badge">
 </div>
+
+---
