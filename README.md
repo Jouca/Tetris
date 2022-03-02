@@ -16,3 +16,4 @@
 <div align="center">
   <h1>Tetris in Python (PyGame)</h1>
 </div>
+<p>This project was coded with @periergeia, @DominataurusRex and @BLASTUHQ for the 2nd trimester in NSI (Numériques et Sciences de l'Informatique)</p>
