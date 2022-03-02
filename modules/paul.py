@@ -132,42 +132,42 @@ def create_main_rule(window):
                    0.5,
                    0.08),
                   game_strings.get_string("regle_ligne5"))
-    ligneA1 = Text(window,
-                   (0.1,
-                    0.35,
-                    0.4,
-                    0.08),
-                   game_strings.get_string("regle_ligneA1"))
-    ligneA2 = Text(window,
-                   (0.1,
-                    0.4,
-                    0.4,
-                    0.08),
-                   game_strings.get_string("regle_ligneA2"))
-    ligneA3 = Text(window,
-                   (0.1,
-                    0.45,
-                    0.4,
-                    0.08),
-                   game_strings.get_string("regle_ligneA3"))
-    ligneB1 = Text(window,
-                   (0.5,
-                    0.35,
-                    0.4,
-                    0.08),
-                   game_strings.get_string("regle_ligneB1"))
-    ligneB2 = Text(window,
-                   (0.5,
-                    0.4,
-                    0.4,
-                    0.08),
-                   game_strings.get_string("regle_ligneB2"))
-    ligneB3 = Text(window,
-                   (0.5,
-                    0.45,
-                    0.4,
-                    0.08),
-                   game_strings.get_string("regle_ligneB3"))
+    ligne_a1 = Text(window,
+                    (0.1,
+                     0.35,
+                     0.4,
+                     0.08),
+                    game_strings.get_string("regle_ligneA1"))
+    ligne_a2 = Text(window,
+                    (0.1,
+                     0.4,
+                     0.4,
+                     0.08),
+                    game_strings.get_string("regle_ligneA2"))
+    ligne_a3 = Text(window,
+                    (0.1,
+                     0.45,
+                     0.4,
+                     0.08),
+                    game_strings.get_string("regle_ligneA3"))
+    ligne_b1 = Text(window,
+                    (0.5,
+                     0.35,
+                     0.4,
+                     0.08),
+                    game_strings.get_string("regle_ligneB1"))
+    ligne_b2 = Text(window,
+                    (0.5,
+                     0.4,
+                     0.4,
+                     0.08),
+                    game_strings.get_string("regle_ligneB2"))
+    ligne_b3 = Text(window,
+                    (0.5,
+                     0.45,
+                     0.4,
+                     0.08),
+                    game_strings.get_string("regle_ligneB3"))
     # Mise en place des touches de la colonne de gauche
     arrow_up = Button(window,
                       (0.08,
@@ -277,12 +277,12 @@ def create_main_rule(window):
     ligne3.draw(frame)
     ligne4.draw(frame)
     ligne5.draw(frame)
-    ligneA1.draw(frame)
-    ligneA2.draw(frame)
-    ligneA3.draw(frame)
-    ligneB1.draw(frame)
-    ligneB2.draw(frame)
-    ligneB3.draw(frame)
+    ligne_a1.draw(frame)
+    ligne_a2.draw(frame)
+    ligne_a3.draw(frame)
+    ligne_b1.draw(frame)
+    ligne_b2.draw(frame)
+    ligne_b3.draw(frame)
     # Affichage touches colonne gauche
     arrow_up.draw(frame)
     arrow_up_text.draw(frame)
