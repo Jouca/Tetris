@@ -5,11 +5,12 @@ import pygame
 try:
     from constant import LANG
     from diego import GameStrings
-    from useful import loop_starter_pack, Button1, Button2, Text
+    from useful import loop_starter_pack, Button, Button2, Text
 except:
     from modules.constant import LANG
     from modules.diego import GameStrings
-    from modules.useful import loop_starter_pack, Button1, Button2, Text
+    from modules.useful import loop_starter_pack, Button, Button2, Text
+
 
 def get_all_side(tetrimino_shape):
     """Renvoie un dictionnaire avec la liste des blocs aux
@@ -42,7 +43,7 @@ def get_all_side(tetrimino_shape):
             east.append((i, column))
         if row != 10:
             south.append((row, i))
-    return {0:north, 1:east, 2:south, 3:west}
+    return {0: north, 1: east, 2: south, 3: west}
 
 
 def list_conversion(liste, orientation):
@@ -91,6 +92,7 @@ def border_dict(tetrimino_shape):
 # Partie Règlement
 game_strings = GameStrings(LANG)
 
+
 def create_main_rule(window):
     """Génère l'affichage de la page règlement"""
     # Mise en place du bouton retour
@@ -99,8 +101,7 @@ def create_main_rule(window):
                            0.05,
                            0.04),
                           'back')
-    
-    # Mise en place des règles communes, puis celui du Mode A et enfin du Mode B
+    # Mise en place des règles communes, celui du Mode A et du Mode B
     ligne1 = Text(window,
                   (0.25,
                    0.05,
@@ -167,9 +168,8 @@ def create_main_rule(window):
                     0.4,
                     0.08),
                    game_strings.get_string("regle_ligneB3"))
-    
     # Mise en place des touches de la colonne de gauche
-    arrow_up = Button1(window,
+    arrow_up = Button(window,
                       (0.08,
                        0.55,
                        0.11,
@@ -181,7 +181,7 @@ def create_main_rule(window):
                           0.1,
                           0.08),
                          game_strings.get_string("arrow_up_text"), True)
-    arrow_left = Button1(window,
+    arrow_left = Button(window,
                         (0.08,
                          0.65,
                          0.11,
@@ -193,7 +193,7 @@ def create_main_rule(window):
                             0.1,
                             0.08),
                            game_strings.get_string("arrow_left_text"), True)
-    arrow_right = Button1(window,
+    arrow_right = Button(window,
                          (0.08,
                           0.75,
                           0.11,
@@ -205,7 +205,7 @@ def create_main_rule(window):
                              0.1,
                              0.08),
                             game_strings.get_string("arrow_right_text"), True)
-    arrow_down = Button1(window,
+    arrow_down = Button(window,
                         (0.08,
                          0.85,
                          0.11,
@@ -219,7 +219,7 @@ def create_main_rule(window):
                            ": Soft Drop", True)
 
     # Mise en place des touches de la colonne de droite
-    escape = Button1(window,
+    escape = Button(window,
                     (0.54,
                      0.55,
                      0.11,
@@ -231,7 +231,7 @@ def create_main_rule(window):
                         0.1,
                         0.08),
                        ": Pause", True)
-    turn_left = Button1(window,
+    turn_left = Button(window,
                        (0.54,
                         0.65,
                         0.11,
@@ -243,7 +243,7 @@ def create_main_rule(window):
                            0.1,
                            0.08),
                           game_strings.get_string("turn_left"), True)
-    hold = Button1(window,
+    hold = Button(window,
                   (0.54,
                    0.75,
                    0.11,
@@ -255,7 +255,7 @@ def create_main_rule(window):
                       0.1,
                       0.08),
                      ": Hold", True)
-    space = Button1(window,
+    space = Button(window,
                    (0.54,
                     0.85,
                     0.11,
@@ -267,9 +267,7 @@ def create_main_rule(window):
                        0.1,
                        0.08),
                       ": Hard Drop", True)
-    
     frame = pygame.Surface(window.get_size())
-    
     # Affichage bouton retour
     back_button.draw(frame)
 
@@ -285,7 +283,6 @@ def create_main_rule(window):
     ligneB1.draw(frame)
     ligneB2.draw(frame)
     ligneB3.draw(frame)
-
     # Affichage touches colonne gauche
     arrow_up.draw(frame)
     arrow_up_text.draw(frame)
@@ -295,8 +292,7 @@ def create_main_rule(window):
     arrow_right_text.draw(frame)
     arrow_down.draw(frame)
     arrow_down_text.draw(frame)
-
-    #Affichage touches colonne droite
+    # Affichage touches colonne droite
     escape.draw(frame)
     escape_text.draw(frame)
     turn_left.draw(frame)
@@ -308,6 +304,7 @@ def create_main_rule(window):
     window.blit(frame, (0, 0))
     pygame.display.flip()
     return back_button
+
 
 def main_rule(window):
     """Permet de rendre fonctionnel l'affichage du règlement"""
