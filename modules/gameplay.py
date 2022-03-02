@@ -80,6 +80,8 @@ def gameplay(window, game_type):
                 if game_paused:
                     game_chrono.freeze()
                     resume_button, option_button = create_game_pause(window)
+                else:
+                    game_chrono.unfreeze()
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_DOWN:
