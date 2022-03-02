@@ -10,7 +10,7 @@ try:
     from diego import GameStrings, post_request, read_json
     from paul import main_rule
     from gameplay import gameplay
-    from solene import RadioButton
+    from solene_1 import RadioButton
     from paul import main_rule
     from useful import loop_starter_pack, Button1, Button2, Text
 except ModuleNotFoundError:
@@ -18,7 +18,7 @@ except ModuleNotFoundError:
     from modules.diego import GameStrings, post_request, read_json
     from modules.paul import main_rule
     from modules.gameplay import gameplay
-    from modules.solene import RadioButton
+    from modules.solene_1 import RadioButton
     from modules.paul import main_rule
     from modules.useful import loop_starter_pack, Button1, Button2, Text
 
@@ -27,6 +27,9 @@ game_strings = GameStrings(LANG)
 
 
 def create_main_menu(window):
+    """
+    partie affichage (placement des bouton dans la zone de la fenettre) du menu de base avec le bouton play
+    """
     logo = pygame.image.load('./image/logo.jpg').convert_alpha()
     logo_height = window.get_height() // 4
     logo_size = (round(340 * logo_height / 153), logo_height)
@@ -61,6 +64,9 @@ def create_main_menu(window):
 
 
 def main_menu(window):
+    """
+    partie logique, qui gere l'ensemble du jeux en appellan la fonction adéquate au bouton préssé
+    """
     play_button, ranking_button, help_button = create_main_menu(window)
     # évènements pygame
     proceed = True
@@ -68,6 +74,9 @@ def main_menu(window):
         for event in pygame.event.get():
             loop_starter_pack(window, event)
             if event.type == pygame.VIDEORESIZE:
+                """
+                pour resize les éléments de la fenettre
+                """
                 play_button, ranking_button, help_button = create_main_menu(window)
             if play_button.is_pressed(event):
                 game_choice_menu(window)
@@ -85,6 +94,9 @@ def main_menu(window):
 
 
 def create_mode(window):
+    """
+    partie affichage des modes du jeux (A et B)
+    """
     mode_a = Button1(window,
                             (0.175,
                              0.2,
@@ -210,6 +222,9 @@ def create_surface(window, mode):
 
 
 def create_game_choice_menu(window, mode, surface, b_mode_option, a_mode):
+    """
+    fonction gérant les lvl
+    """
     window.fill(0x000000)
     mode.button_list[0].draw(window)
     mode.button_list[1].draw(window)
@@ -230,6 +245,9 @@ def create_game_choice_menu(window, mode, surface, b_mode_option, a_mode):
 
 
 def handle_a_mode(event, a_mode):
+    """
+    fonction pour le mode A
+    """
     if a_mode[1].is_pressed(event):
         if a_mode[0] < 15:
             a_mode[0] += 1
@@ -242,6 +260,9 @@ def handle_a_mode(event, a_mode):
 
 
 def game_choice_menu(window):
+    """
+    partie logique du menu servant a choisir sont mode de jeux
+    """
     mode, b_mode_option, a_mode = create_mode(window)
     surface, previous_menu_button = create_surface(window, mode)
     create_game_choice_menu(window, mode, surface, b_mode_option, a_mode)
@@ -293,6 +314,9 @@ def game_choice_menu(window):
 
 
 def create_leaderboard_menu(window):
+    """
+    partie affichage du classement
+    """
     previous_menu_button = Button2(window, (0.9, 0.05, 0.04), 'back')
     frame = pygame.Surface(window.get_size())
     previous_menu_button.draw(frame)
@@ -309,6 +333,9 @@ def create_leaderboard_menu(window):
 
 
 def create_leaderboard_table(window, leaderboard, page):
+    """
+    
+    """
     window_w, window_h = window.get_size()
     x_value = round(0.15 * window_w)+5
     y_value = round(0.15 * window_h)+5
@@ -413,11 +440,17 @@ def leaderboard_menu(window, page):
 
 
 def get_now_string():
+    """
+    retourne la date actuel
+    """
     now = datetime.datetime.now()
     return now.strftime('%d-%m-%Y_%Hh%M')
 
 
 def create_game_over_menu(window, game_data, game_screen, enregistrer_texte):
+    """
+    partie affichage du menu game over
+    """
     frame = pygame.Surface(window.get_size())
     background = Button1(window,
                            (0.1,
@@ -505,6 +538,9 @@ def create_game_over_menu(window, game_data, game_screen, enregistrer_texte):
 
 
 def game_over_menu(window, game_data, game_screen, screenshot):
+    """
+    partie logique du menu game over
+    """
     proceed = True
     enregistrer_texte = False
     while proceed:

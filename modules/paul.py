@@ -5,11 +5,11 @@ import pygame
 try:
     from constant import LANG
     from diego import GameStrings
-    from useful import loop_starter_pack, Button, Button2, Text
+    from useful import loop_starter_pack, Button1, Button2, Text
 except:
     from modules.constant import LANG
     from modules.diego import GameStrings
-    from modules.useful import loop_starter_pack, Button, Button2, Text
+    from modules.useful import loop_starter_pack, Button1, Button2, Text
 
 
 def get_all_side(tetrimino_shape):
@@ -169,7 +169,7 @@ def create_main_rule(window):
                      0.08),
                     game_strings.get_string("regle_ligneB3"))
     # Mise en place des touches de la colonne de gauche
-    arrow_up = Button(window,
+    arrow_up = Button1(window,
                       (0.08,
                        0.55,
                        0.11,
@@ -181,7 +181,7 @@ def create_main_rule(window):
                           0.1,
                           0.08),
                          game_strings.get_string("arrow_up_text"), True)
-    arrow_left = Button(window,
+    arrow_left = Button1(window,
                         (0.08,
                          0.65,
                          0.11,
@@ -193,7 +193,7 @@ def create_main_rule(window):
                             0.1,
                             0.08),
                            game_strings.get_string("arrow_left_text"), True)
-    arrow_right = Button(window,
+    arrow_right = Button1(window,
                          (0.08,
                           0.75,
                           0.11,
@@ -205,7 +205,7 @@ def create_main_rule(window):
                              0.1,
                              0.08),
                             game_strings.get_string("arrow_right_text"), True)
-    arrow_down = Button(window,
+    arrow_down = Button1(window,
                         (0.08,
                          0.85,
                          0.11,
@@ -219,7 +219,7 @@ def create_main_rule(window):
                            ": Soft Drop", True)
 
     # Mise en place des touches de la colonne de droite
-    escape = Button(window,
+    escape = Button1(window,
                     (0.54,
                      0.55,
                      0.11,
@@ -231,7 +231,7 @@ def create_main_rule(window):
                         0.1,
                         0.08),
                        ": Pause", True)
-    turn_left = Button(window,
+    turn_left = Button1(window,
                        (0.54,
                         0.65,
                         0.11,
@@ -243,7 +243,7 @@ def create_main_rule(window):
                            0.1,
                            0.08),
                           game_strings.get_string("turn_left"), True)
-    hold = Button(window,
+    hold = Button1(window,
                   (0.54,
                    0.75,
                    0.11,
@@ -255,7 +255,7 @@ def create_main_rule(window):
                       0.1,
                       0.08),
                      ": Hold", True)
-    space = Button(window,
+    space = Button1(window,
                    (0.54,
                     0.85,
                     0.11,
