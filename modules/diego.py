@@ -5,7 +5,6 @@ fonctions utiles au bon fonctionnement du jeu Tetris."""
 import json
 import pygame
 import requests
-import json
 try:
     from constant import LANG
 except ModuleNotFoundError:
@@ -13,14 +12,26 @@ except ModuleNotFoundError:
 
 
 class GameStrings:
+    """
+    Classe permettant de gérer les chaines de caractères du jeu.
+    """
     def __init__(self, language="FR"):
-        with open(f"./others/game_string/{language}/game_strings.json", "r", encoding="utf-8") as f:
-            self.data = json.load(f)
-    
+        with open(
+            f"./others/game_string/{language}/game_strings.json",
+            "r", encoding="utf-8"
+        ) as fichier:
+            self.data = json.load(fichier)
+
     def get_string(self, key):
+        """
+        Permet de récupérer une chaine de caractères à partir de sa clé.
+        """
         return self.data[key]
 
     def get_all_strings(self):
+        """
+        Permet de récupérer toutes les chaines de caractères.
+        """
         return self.data
 
 
@@ -108,7 +119,7 @@ def post_request(url, data=None, headers=None):
     try:
         response = requests.post(url, data=data, headers=headers, timeout=10)
         return response.text, response.status_code
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.ConnectionError:
         return game_strings.get_string("error"), 0
 
 
