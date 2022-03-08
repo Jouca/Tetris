@@ -15,7 +15,7 @@
 <h1>TETRIS EN PYTHON (LIBRAIRIE PYGAME)</h1>
 <p>Ce projet a été codé avec <a href="https://github.com/periergeia">periergeia</a>, <a href="https://github.com/DominataurusRex">DominataurusRex</a> et <a href="https://github.com/BLASTUHQ">BLASTUHQ</a> pour le projet de deuxième trimestre de l'année scolaire 2021-2022 dans la spécialité NSI (Numériques et Sciences de l'Informatique) en <b>Python</b>.
   
-<h2>Vous pouvez également trouvé le serveur via ce repo : <a href="https://github.com/Jouca/Tetris-Server">Tetris Serveur</a></h2>
+<h2>Vous pouvez également trouver le serveur via ce répertoire : <a href="https://github.com/Jouca/Tetris-Server">Tetris Serveur</a></h2>
 
 ---
 
