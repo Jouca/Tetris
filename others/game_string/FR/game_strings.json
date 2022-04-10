@@ -43,6 +43,13 @@
     "arrow_right": " FLECHE DROITE",
     "arrow_right_text": ": Déplacement à droite",
     "arrow_down": "FLECHE BAS",
+    "arrow_down_text": ": Soft Drop",
+    "escape": "Echap / F1",
+    "escape_text": ": Pause",
+    "turn_left": "Z / W",
+    "turn_left_text": ": Rotation antihoraire",
+    "hold": "C",
+    "hold_text": ": Réserve",
     "space": "Espace",
-    "turn_left": ": Rotation antihoraire"
+    "space_text": ": Hard_Drop"
 }

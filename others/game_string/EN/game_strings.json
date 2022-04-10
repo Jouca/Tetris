@@ -43,6 +43,13 @@
     "arrow_right": " RIGHT ARROW",
     "arrow_right_text": ": Move right",
     "arrow_down": "DOWN ARROW",
+    "arrow_down_text": ": Soft Drop",
+    "escape": "Echap / F1",
+    "escape_text": ": Pause",
+    "turn_left": "Z / W",
+    "turn_left_text": ": Counterclockwise rotation",
+    "hold": "C",
+    "hold_text": ": Hold",
     "space": "Space",
-    "turn_left": ": Counterclockwise rotation"
+    "space_text": ": Hard_Drop"
 }

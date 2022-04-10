@@ -95,212 +95,50 @@ game_strings = GameStrings(LANG)
 
 def create_main_rule(window):
     """Génère l'affichage de la page règlement"""
+    frame = pygame.Surface(window.get_size())
     # Mise en place du bouton retour
     back_button = Button2(window,
-                          (0.9,
-                           0.05,
-                           0.04),
+                          (0.9, 0.05, 0.04),
                           'back')
-    # Mise en place des règles communes, celui du Mode A et du Mode B
-    ligne1 = Text(window,
-                  (0.25,
-                   0.05,
-                   0.5,
-                   0.08),
-                  game_strings.get_string("regle_ligne1"))
-    ligne2 = Text(window,
-                  (0.25,
-                   0.1,
-                   0.5,
-                   0.08),
-                  game_strings.get_string("regle_ligne2"))
-    ligne3 = Text(window,
-                  (0.25,
-                   0.15,
-                   0.5,
-                   0.08),
-                  game_strings.get_string("regle_ligne3"))
-    ligne4 = Text(window,
-                  (0.25,
-                   0.2,
-                   0.5,
-                   0.08),
-                  game_strings.get_string("regle_ligne4"))
-    ligne5 = Text(window,
-                  (0.25,
-                   0.25,
-                   0.5,
-                   0.08),
-                  game_strings.get_string("regle_ligne5"))
-    ligne_a1 = Text(window,
-                    (0.1,
-                     0.35,
-                     0.4,
-                     0.08),
-                    game_strings.get_string("regle_ligneA1"))
-    ligne_a2 = Text(window,
-                    (0.1,
-                     0.4,
-                     0.4,
-                     0.08),
-                    game_strings.get_string("regle_ligneA2"))
-    ligne_a3 = Text(window,
-                    (0.1,
-                     0.45,
-                     0.4,
-                     0.08),
-                    game_strings.get_string("regle_ligneA3"))
-    ligne_b1 = Text(window,
-                    (0.5,
-                     0.35,
-                     0.4,
-                     0.08),
-                    game_strings.get_string("regle_ligneB1"))
-    ligne_b2 = Text(window,
-                    (0.5,
-                     0.4,
-                     0.4,
-                     0.08),
-                    game_strings.get_string("regle_ligneB2"))
-    ligne_b3 = Text(window,
-                    (0.5,
-                     0.45,
-                     0.4,
-                     0.08),
-                    game_strings.get_string("regle_ligneB3"))
-    # Mise en place des touches de la colonne de gauche
-    arrow_up = Button1(window,
-                      (0.08,
-                       0.55,
-                       0.11,
-                       0.08),
-                      game_strings.get_string("arrow_up"))
-    arrow_up_text = Text(window,
-                         (0.2,
-                          0.56,
-                          0.1,
-                          0.08),
-                         game_strings.get_string("arrow_up_text"), True)
-    arrow_left = Button1(window,
-                        (0.08,
-                         0.65,
-                         0.11,
-                         0.08),
-                        game_strings.get_string("arrow_left"))
-    arrow_left_text = Text(window,
-                           (0.2,
-                            0.66,
-                            0.1,
-                            0.08),
-                           game_strings.get_string("arrow_left_text"), True)
-    arrow_right = Button1(window,
-                         (0.08,
-                          0.75,
-                          0.11,
-                          0.08),
-                         game_strings.get_string("arrow_right"))
-    arrow_right_text = Text(window,
-                            (0.2,
-                             0.76,
-                             0.1,
-                             0.08),
-                            game_strings.get_string("arrow_right_text"), True)
-    arrow_down = Button1(window,
-                        (0.08,
-                         0.85,
-                         0.11,
-                         0.08),
-                        game_strings.get_string("arrow_down"))
-    arrow_down_text = Text(window,
-                           (0.2,
-                            0.86,
-                            0.1,
-                            0.08),
-                           ": Soft Drop", True)
-
-    # Mise en place des touches de la colonne de droite
-    escape = Button1(window,
-                    (0.54,
-                     0.55,
-                     0.11,
-                     0.08),
-                    "Echap / F1")
-    escape_text = Text(window,
-                       (0.66,
-                        0.56,
-                        0.1,
-                        0.08),
-                       ": Pause", True)
-    turn_left = Button1(window,
-                       (0.54,
-                        0.65,
-                        0.11,
-                        0.08),
-                       "Z / W")
-    turn_left_text = Text(window,
-                          (0.66,
-                           0.66,
-                           0.1,
-                           0.08),
-                          game_strings.get_string("turn_left"), True)
-    hold = Button1(window,
-                  (0.54,
-                   0.75,
-                   0.11,
-                   0.08),
-                  "C")
-    hold_text = Text(window,
-                     (0.66,
-                      0.76,
-                      0.1,
-                      0.08),
-                     ": Hold", True)
-    space = Button1(window,
-                   (0.54,
-                    0.85,
-                    0.11,
-                    0.08),
-                   game_strings.get_string("space"))
-    space_text = Text(window,
-                      (0.66,
-                       0.86,
-                       0.1,
-                       0.08),
-                      ": Hard Drop", True)
-    frame = pygame.Surface(window.get_size())
-    # Affichage bouton retour
     back_button.draw(frame)
 
-    # Affichage règle
-    ligne1.draw(frame)
-    ligne2.draw(frame)
-    ligne3.draw(frame)
-    ligne4.draw(frame)
-    ligne5.draw(frame)
-    ligne_a1.draw(frame)
-    ligne_a2.draw(frame)
-    ligne_a3.draw(frame)
-    ligne_b1.draw(frame)
-    ligne_b2.draw(frame)
-    ligne_b3.draw(frame)
-    # Affichage touches colonne gauche
-    arrow_up.draw(frame)
-    arrow_up_text.draw(frame)
-    arrow_left.draw(frame)
-    arrow_left_text.draw(frame)
-    arrow_right.draw(frame)
-    arrow_right_text.draw(frame)
-    arrow_down.draw(frame)
-    arrow_down_text.draw(frame)
-    # Affichage touches colonne droite
-    escape.draw(frame)
-    escape_text.draw(frame)
-    turn_left.draw(frame)
-    turn_left_text.draw(frame)
-    hold.draw(frame)
-    hold_text.draw(frame)
-    space.draw(frame)
-    space_text.draw(frame)
+    # Mise en place des règles communes
+    for line in range(1, 6):
+        text = Text(window,
+                    (0.25, (0.05 * line), 0.5, 0.08),
+                    game_strings.get_string("regle_ligne" + str(line)))
+        text.draw(frame)
+
+    # Mise en place des règles du Mode A et du Mode B
+    list_regle = ["A1", "A2", "A3", "B1", "B2", "B3"]
+    for line in range(3):
+        for side in range(2):
+            x_value = 0.1 + (0.4 * side)
+            y_value = 0.35 + (0.05 * line)
+            text_pos = line + (side * 3)
+            text = Text(window,
+                        (x_value, y_value, 0.4, 0.08),
+                        game_strings.get_string("regle_ligne" + list_regle[text_pos]))
+            text.draw(frame)
+    
+    # Mise en place des touches des deux colonnes
+    list_touch = ["arrow_up", "arrow_left", "arrow_right", "arrow_down",
+                  "escape", "turn_left", "hold", "space"]
+    for touch in range(4):
+        for side in range(2):
+            x_value_button = 0.08 + (0.46 * side)
+            x_value_text = 0.2 + (0.46 * side)
+            y_value = 0.55 + (0.1 * touch)
+            text_pos = touch + (side * 4)
+            button = Button1(window,
+                             (x_value_button, y_value, 0.11, 0.08),
+                             game_strings.get_string(list_touch[text_pos]))
+            text = Text(window,
+                        (x_value_text, y_value, 0.1, 0.08),
+                        game_strings.get_string(list_touch[text_pos] + "_text"), True)
+            button.draw(frame)
+            text.draw(frame)
+
     window.blit(frame, (0, 0))
     pygame.display.flip()
     return back_button
