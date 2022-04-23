@@ -28,7 +28,8 @@ game_strings = GameStrings(LANG)
 
 def create_main_menu(window):
     """
-    partie affichage (placement des bouton dans la zone de la fenettre) du menu de base avec le bouton play
+    partie affichage (placement des bouton dans la zone de la fenettre) du
+    menu de base avec le bouton play
     """
     logo = pygame.image.load('./image/logo.jpg').convert_alpha()
     logo_height = window.get_height() // 4
@@ -37,7 +38,7 @@ def create_main_menu(window):
     logo_pos = (window.get_width() - logo_size[0]) // 2, round(window.get_height() * 0.15)
 
     window_w = window.get_width()
-    
+
     play_button = Button1(window, (logo_pos[0] / window_w,
                          0.45, logo_size[0] / window_w, 0.15), game_strings.get_string("play"))
     ranking_button = Button1(window,
@@ -52,7 +53,7 @@ def create_main_menu(window):
                           (logo_size[0] / window_w) * 0.35,
                           0.15),
                          game_strings.get_string("help"))
-    
+
     frame = pygame.Surface(window.get_size())
     frame.blit(logo_to_display, (logo_pos))
     play_button.draw(frame)
@@ -74,9 +75,7 @@ def main_menu(window):
         for event in pygame.event.get():
             loop_starter_pack(window, event)
             if event.type == pygame.VIDEORESIZE:
-                """
-                pour resize les éléments de la fenettre
-                """
+                # pour resize les éléments de la fenettre
                 play_button, ranking_button, help_button = create_main_menu(window)
             if play_button.is_pressed(event):
                 game_choice_menu(window)
@@ -163,6 +162,9 @@ def create_mode(window):
 
 
 def create_surface(window, mode):
+    """
+    Affiche la surface de sélection du mode de jeu.
+    """
     surface = pygame.Surface(window.get_size())
     statement_1 = Text(window,
                      (0.175,
@@ -223,7 +225,7 @@ def create_surface(window, mode):
 
 def create_game_choice_menu(window, mode, surface, b_mode_option, a_mode):
     """
-    fonction gérant les lvl
+    fonction gérant les niveaux.
     """
     window.fill(0x000000)
     mode.button_list[0].draw(window)
@@ -251,7 +253,7 @@ def handle_a_mode(event, a_mode):
     if a_mode[1].is_pressed(event):
         if a_mode[0] < 15:
             a_mode[0] += 1
-            return True 
+            return True
     if a_mode[2].is_pressed(event):
         if a_mode[0] > 1:
             a_mode[0] -= 1
@@ -303,10 +305,14 @@ def game_choice_menu(window):
                     else:
                         window.fill(0x000000)
                         level, hight = b_mode_option
-                        game_data, game_screen, screenshot = gameplay(window, (level.get_value(), hight.get_value()))
+                        game_data, game_screen, screenshot = gameplay(
+                            window,
+                            (level.get_value(),
+                            hight.get_value())
+                        )
                         game_over_menu(window, game_data, game_screen, screenshot)
                         proceed = False
-            
+
             if previous_menu_button.is_pressed(event):
                 main_menu(window)
                 proceed = False
@@ -315,7 +321,7 @@ def game_choice_menu(window):
 
 def create_leaderboard_menu(window):
     """
-    partie affichage du classement
+    Affichage du classement
     """
     previous_menu_button = Button2(window, (0.9, 0.05, 0.04), 'back')
     frame = pygame.Surface(window.get_size())
@@ -334,7 +340,7 @@ def create_leaderboard_menu(window):
 
 def create_leaderboard_table(window, leaderboard, page):
     """
-    
+    Crée la table du classement.
     """
     window_w, window_h = window.get_size()
     x_value = round(0.15 * window_w)+5
@@ -403,6 +409,9 @@ def create_leaderboard_table(window, leaderboard, page):
 
 
 def create_error_table(window, error):
+    """
+    Affiche le message d'erreur sur la table du classement.
+    """
     message = Button1(window,
                          (0.15,
                           0.425,
@@ -415,6 +424,9 @@ def create_error_table(window, error):
 
 
 def leaderboard_menu(window, page):
+    """
+    Menu du leaderboard.
+    """
     previous_menu_button = create_leaderboard_menu(window)
     proceed = True
     response, status_code = post_request("http://tetrisnsi.tk/leaderboard")
@@ -544,11 +556,21 @@ def game_over_menu(window, game_data, game_screen, screenshot):
     proceed = True
     enregistrer_texte = False
     while proceed:
-        replay_button, quit_button, save_button = create_game_over_menu(window, game_data, game_screen, enregistrer_texte)
+        replay_button, quit_button, save_button = create_game_over_menu(
+            window,
+            game_data,
+            game_screen,
+            enregistrer_texte
+        )
         for event in pygame.event.get():
             loop_starter_pack(window, event)
             if event.type == pygame.VIDEORESIZE:
-                replay_button, quit_button, save_button = create_game_over_menu(window, game_data, game_screen, enregistrer_texte)
+                replay_button, quit_button, save_button = create_game_over_menu(
+                    window,
+                    game_data,
+                    game_screen,
+                    enregistrer_texte
+                )
             if replay_button.is_pressed(event):
                 game_choice_menu(window)
                 proceed = False
@@ -560,5 +582,8 @@ def game_over_menu(window, game_data, game_screen, screenshot):
             if save_button.is_pressed(event):
                 if not enregistrer_texte:
                     pygame.image.save(screenshot, 'game_screen_save/screenshot.png')
-                    os.rename('game_screen_save/screenshot.png', f'game_screen_save/{get_now_string()}.png')
+                    os.rename(
+                        'game_screen_save/screenshot.png',
+                        f'game_screen_save/{get_now_string()}.png'
+                    )
                     enregistrer_texte = True

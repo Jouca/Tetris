@@ -1,12 +1,14 @@
-import pygame
+"""Module comportant les fonctions utiles au jeu."""
+
 import sys
+import pygame
 try:
     from constant import COLOR, FONT_HEIGHT
 except ModuleNotFoundError:
     from modules.constant import COLOR, FONT_HEIGHT
 
 pygame.init()
- 
+
 # préréglage du module mixer
 pygame.mixer.pre_init(44100, -16, 2, 1024)
 pygame.mixer.music.set_volume(0.4)
@@ -18,14 +20,13 @@ def get_font_size(font_height):
     fenêtre de jeu."""
     if font_height < 19:
         return 12
-    else:
-        i = 0
-        try:
-            while font_height > FONT_HEIGHT[i]:
-                i += 1
-        except IndexError:
-            pass
-        return i + 12
+    i = 0
+    try:
+        while font_height > FONT_HEIGHT[i]:
+            i += 1
+    except IndexError:
+        pass
+    return i + 12
 
 
 def loop_starter_pack(tetris_window, event):
@@ -41,12 +42,10 @@ def loop_starter_pack(tetris_window, event):
     # dans le cas où l'utilisateur change la taille de la fenêtre
     if event.type == pygame.VIDEORESIZE:
         width, height = event.size
-        if width < 545:
-            width = 545
+        width = max(width, 545)
+        height = max(height, 303)
         if width / height < 1.3:
             width = round(1.8 * height)
-        if height < 303:
-            height = 303
         window_size = (width, height)
         tetris_window = pygame.display.set_mode(window_size, pygame.RESIZABLE)
     return tetris_window
@@ -124,15 +123,15 @@ class Button:
             if event.button == 1:
                 # dans le cas où l'appuie est effectué sur un bouton
                 if self.mouse_on(event):
-                    # le son "click" est joué 
+                    # le son "click" est joué
                     pygame.mixer.Sound.play(Button1.click)
-                    return True        
+                    return True
         return False
-    
+
     def get_color(self):
         """renvoie la couleur de fond du bouton."""
         return self.color
-    
+
     def change_color(self, color):
         """change la couleur du bouton pour `color` un 3-tuple au format
         RGB de couleur."""
@@ -142,7 +141,7 @@ class Button:
         """détecte si la souris est sur le bouton. La méthode renvoie
         True si c'est bien le cas, autrement elle renvoie False."""
         if self.rect.collidepoint(event.pos):
-            return True            
+            return True
         return False
 
     def get_size(self):
@@ -153,7 +152,7 @@ class Button:
     def get_height(self):
         """renvoie la longueur du bouton."""
         return self.rect.h
-    
+
     def get_width(self):
         """renvoie la largeur du bouton."""
         return self.rect.w
@@ -235,7 +234,7 @@ class Button2(Button):
         image_path = f'./image/{image_name}.png'
         self.image = pygame.image.load(image_path).convert_alpha()
         super().__init__(window, relative_position, COLOR['BLACK'])
-    
+
     def resize(self, window):
         try:
             window_surface = pygame.Surface(window['size'])
@@ -309,6 +308,7 @@ class Text:
         """permet de dessiner le bouton sur une surface `surface` devant
         être un objet pygame.Surface"""
         surface.blit(self.text_image, self.text_pos)
-    
+
     def get_text(self):
+        """retourne le texte du texte"""
         return self.text

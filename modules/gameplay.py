@@ -21,7 +21,9 @@ except ModuleNotFoundError:
 
 
 def gameplay(window, game_type):
-    """gameplay du jeu tetris."""
+    """
+    Gameplay du jeu tetris.
+    """
     w_width, w_height = window.get_size()
     window_data = {'size': (w_width, w_height),
                    'width': w_width,
