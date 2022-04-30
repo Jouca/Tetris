@@ -55,7 +55,10 @@ class Button:
     """crée un bouton visuel formaté avec le style général du jeu.
     Bouton ayant la spécificité d'être de forme carré."""
 
-    click = pygame.mixer.Sound('sound/click.wav')
+    try:
+        click = pygame.mixer.Sound('sound/click.wav')
+    except:
+        click = pygame.mixer.Sound('./../sound/click.wav')
 
     def __init__(self, window, relative_position, color):
         """méthode constructeur de la classe :
@@ -115,7 +118,7 @@ class Button:
         pygame.draw.rect(surface, (150, 150, 150), self.rect, 3)
 
     def is_pressed(self, event):
-        """permet de détecter si le joueur a fait un clic gauche
+        """permet de détecter si le joueur a effectué un clic gauche
         sur le bouton. Renvoie un booléen, True si le bouton est cliqué,
         False sinon. `event` correspond à un objet pygame.Event."""
         # dans le cas où le joueur appuie avec le bouton gauche de la souris
@@ -162,36 +165,18 @@ class Button1(Button):
     """crée un bouton visuel contenant un texte centré."""
 
     def __init__(self, window, relative_position, text, color=COLOR['BLACK']):
-        """méthode constructeur de la classe :
-        - `window` est la fenêtre sur laquelle est créé le bouton ;
-        - `relative_position` correspond à un 4-uple (`x`, `y`, `w`, `h`)
-        indiquant la position et les dimensions relatives selon les dimensions
-        de la fenêtre, toutes les valeurs doivent être comprises entre 0 et 1
-        exclus afin que le bouton soit visible, dans l'ordre :
-            - position relative `x`, positionnement x par rapport à la largeur
-            de la fenêtre (sur bord gauche lorsque `x` vaut 0, droit lorsque
-            `x` vaut 1 (sort du cadre)) ;
-            - position relative `y`, positionnement y par rapport à la longueur
-            de la fenêtre (sur le bord haut lorsque `y` vaut 0, sur le bord bas
-            lorsque `y` vaut 1 auquel cas ne sera pas visible puisque le bouton
-            sortira du cadre de la fenêtre)) ;
-            - valeur `w`, représente la largeur du bouton selon la largeur de
-            la fenêtre (pour `w` égal à 0, le bouton est inexistant ce qui
-            n'est pas très intéressant, lorsque `w` vaut 1, le bouton possède
-            une largeur égale à celle de la fenêtre) ;
-            - valeur `h`, représente la longueur du bouton selon la longueur
-            de la fenêtre (pour `h` égal à 0, le bouton est inexistant ce qui
-            n'est pas très intéressant, lorsque `w` vaut 1, le bouton possède
-            une longueur égale à celle de la fenêtre)
-        - `text` est le texte associé au bouton, doit être une chaîne de
-        caractères ;
-        - `font_size`, un entier spécifiant la taille de la police pour le texte
-        à afficher sur le bouton visuel, dans le cas où elle n'est pas
-        indiqué, la taille dépendra de la hauteur du bouton."""
+        """se reférer à la documentation de la méthode constructrice de la
+        classe parent `Button`.
+        paramètres supplémentaires :
+        - `text`: doit être une chaîne de caractère, texte apparaissant centré
+        sur le bouton.
+        - `color`: vaut par défaut noir, peut être changé, le format rgb de
+        couleur est exigé sous la forme d'un 3-tuple."""
         self.text = text
         super().__init__(window, relative_position, color)
 
     def resize(self, window):
+        """redimmensionne le bouton selon la valeur de la fenêtre."""
         super().resize(window)
         window_h = window.get_height()
         h_value = round(self.relative_position[3] * window_h)
@@ -209,33 +194,26 @@ class Button1(Button):
 
 
 class Button2(Button):
-    """crée un bouton visuel formaté avec le style général du jeu."""
+    """crée un bouton visuel formaté avec le style général du jeu, le bouton
+    a la particularité d'être de forme carré et de pouvoir supporter une image
+    occupant l'espace du bouton."""
 
     def __init__(self, window, relative_position, image_name):
-        """méthode constructeur de la classe :
-        - `window` est la fenêtre sur laquelle est créé le bouton ;
-        - `relative_position` correspond à un 3-uple (`x`, `y`, `w`)
-        indiquant la position et les dimensions relatives selon les dimensions
-        de la fenêtre, toutes les valeurs doivent être comprises entre 0 et 1
-        exclus afin que le bouton soit visible, dans l'ordre :
-            - position relative `x`, positionnement x par rapport à la largeur
-            de la fenêtre (sur bord gauche lorsque `x` vaut 0, droit lorsque
-            `x` vaut 1 (sort du cadre)) ;
-            - position relative `y`, positionnement y par rapport à la longueur
-            de la fenêtre (sur le bord haut lorsque `y` vaut 0, sur le bord bas
-            lorsque `y` vaut 1 auquel cas ne sera pas visible puisque le bouton
-            sortira du cadre de la fenêtre)) ;
-            - valeur `w`, représente la longueur du côté du bouton selon la
-            hauteur de la fenêtre (pour `w` égal à 0, le bouton est inexistant
-            ce qui n'est pas très intéressant, lorsque `w` vaut 1, le bouton est
-            un carré de côté égal à la hauteur de la fenêtre) ;
-        - `image_name` est l'image associé au bouton, il doit s'agir d'un # ##
-        """
-        image_path = f'./image/{image_name}.png'
+        """se reférer à la documentation de la méthode constructrice de la
+        classe parent `Button`.
+        paramètres supplémentaires :
+        - `image_name` est l'image associé au bouton, il doit s'agir du nom de
+        l'image situé dans `./../image`, une chaîne de caractère."""
+        try:
+            image_path = f'./../image/{image_name}.png'
+        except:
+            image_path = f'./image/{image_name}.png'
         self.image = pygame.image.load(image_path).convert_alpha()
         super().__init__(window, relative_position, COLOR['BLACK'])
 
     def resize(self, window):
+        """met à jour les valeurs de position et dimension selon celles de la
+        fenêtre `window` un dictionnaire."""
         try:
             window_surface = pygame.Surface(window['size'])
             super().resize(window_surface)
