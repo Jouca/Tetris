@@ -188,7 +188,7 @@ class Button1(Button):
 
     def draw(self, surface):
         """permet de dessiner le bouton sur une surface `surface` devant
-        être un objet pygame.Surface"""
+        être un objet pygame.Surface."""
         super().draw(surface)
         surface.blit(self.text_image, self.text_pos)
 
@@ -222,7 +222,7 @@ class Button2(Button):
 
     def draw(self, surface):
         """permet de dessiner le bouton sur une surface `surface` devant
-        être un objet pygame.Surface"""
+        être un objet pygame.Surface."""
         super().draw(surface)
         image = pygame.transform.scale(self.image, self.get_size())
         surface.blit(image, (self.rect.x, self.rect.y))
@@ -284,9 +284,9 @@ class Text:
 
     def draw(self, surface):
         """permet de dessiner le bouton sur une surface `surface` devant
-        être un objet pygame.Surface"""
+        être un objet pygame.Surface."""
         surface.blit(self.text_image, self.text_pos)
 
     def get_text(self):
-        """retourne le texte du texte"""
+        """retourne le texte du texte."""
         return self.text
