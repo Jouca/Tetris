@@ -42,7 +42,7 @@ icon = pygame.image.load("./image/logo.ico").convert_alpha()
 
 
 # personnalisation de la fenêtre
-pygame.display.set_caption("TETRIS")
+pygame.display.set_caption("PYTRIS")
 pygame.display.set_icon(icon)
 
 
