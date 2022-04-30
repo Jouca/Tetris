@@ -204,10 +204,7 @@ class Button2(Button):
         paramètres supplémentaires :
         - `image_name` est l'image associé au bouton, il doit s'agir du nom de
         l'image situé dans `./../image`, une chaîne de caractère."""
-        try:
-            image_path = f'./../image/{image_name}.png'
-        except:
-            image_path = f'./image/{image_name}.png'
+        image_path = f'./image/{image_name}.png'
         self.image = pygame.image.load(image_path).convert_alpha()
         super().__init__(window, relative_position, COLOR['BLACK'])
 
