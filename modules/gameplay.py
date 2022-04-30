@@ -21,9 +21,7 @@ except ModuleNotFoundError:
 
 
 def gameplay(window, game_type):
-    """
-    Gameplay du jeu tetris.
-    """
+    """gameplay du jeu tetris."""
     w_width, w_height = window.get_size()
     window_data = {'size': (w_width, w_height),
                    'width': w_width,
@@ -77,7 +75,9 @@ def gameplay(window, game_type):
                     display_game_data(window, data, game_chrono)
                     resume_button, option_button = create_game_pause(window)
 
+            # si le bouton des menu est pressé
             if menu_button.is_pressed(event):
+                # jeu mis en pause ou jeu repris selon cas
                 game_paused = not game_paused
                 if game_paused:
                     game_chrono.freeze()
@@ -85,8 +85,10 @@ def gameplay(window, game_type):
                 else:
                     game_chrono.unfreeze()
 
+            # flèche bas relâchée 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_DOWN:
+                    # arrêt du soft-dropping
                     softdrop = False
                     data.set_fall_speed()
 
@@ -94,7 +96,9 @@ def gameplay(window, game_type):
 
                 key = pygame.key.get_pressed()
 
+                # touche f1 ou echap pressée
                 if key[pygame.K_F1] or key[pygame.K_ESCAPE]:
+                    # jeu mis en pause ou repris selon cas
                     game_paused = not game_paused
                     if game_paused:
                         game_chrono.freeze()
@@ -102,27 +106,42 @@ def gameplay(window, game_type):
                     else:
                         game_chrono.unfreeze()
 
+                # touche espace pressée
                 elif key[pygame.K_SPACE]:
+                    # réalise un hard drop sur le tetrimino en jeu
                     tetrimino.hard_drop(data)
 
+                # touche flèche bas pressée
                 elif key[pygame.K_DOWN]:
+                    # permet le softdrop sur la pièce
                     softdrop = True
                     data.fall_speed /= 20
 
+                # touche flèche droite pressée
                 elif key[pygame.K_RIGHT]:
+                    # déplace le tetrimino en jeu d'une case de matrix à droite
                     tetrimino.move_right(matrix)
 
+                # touche flèche gauche pressée
                 elif key[pygame.K_LEFT]:
+                    # déplace le tetrimino en jeu d'une case de matrix à gauche
                     tetrimino.move_left(matrix)
 
+                # lorsque la touche flèche haut ou la touche X est pressée
                 elif key[pygame.K_UP] or key[pygame.K_x]:
+                    # fait tourner la pièce dans le sens horaire
                     tetrimino.turn_right(matrix)
                 
+                # touche W pressée
                 elif key[pygame.K_w]:
+                    # fait tourner la pièce dans le sens anti-horaire
                     tetrimino.turn_left(matrix)
 
+                # touche C ou bien Shift pressée
                 elif event.key == pygame.K_c or (event.mod and pygame.KMOD_SHIFT):
+                    # dans le cas où il est possible de Hold le tetrimino en jeu
                     if hold_queue.can_hold:
+                        # réalise une hold par un tour de passe passe 
                         temp = hold_queue.get_t_type()
                         hold_queue.hold(tetrimino)
                         # dans le cas où la hold queue n'est pas vide
@@ -135,8 +154,11 @@ def gameplay(window, game_type):
                             # création d'un nouveau tetrimino
                             tetrimino = Tetrimino(bag, matrix)
                             next_queue.update(bag)
+        # dans le cas où le jeu est mis en pause
         if game_paused:
+            # si le bouton reprendre est pressé 
             if resume_button.is_pressed(event):
+                # reprise du jeu
                 game_chrono.unfreeze()
                 game_paused = False
 
@@ -182,6 +204,7 @@ def gameplay(window, game_type):
                 display_all(window, game_object)
             display_game_data(window, data, game_chrono)
 
+    # mise à jour des scores en local
     insert_local_score(data.values['score'])
     game_screen, screenshot = get_game_picture(window)
     game_data = {'score': data.values['score'],
