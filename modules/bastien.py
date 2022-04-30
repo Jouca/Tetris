@@ -27,10 +27,8 @@ game_strings = GameStrings(LANG)
 
 
 def create_main_menu(window):
-    """
-    partie affichage (placement des bouton dans la zone de la fenettre) du
-    menu de base avec le bouton play
-    """
+    """partie affichage du menu principal."""
+    # importation du logo
     logo = pygame.image.load('./image/logo.jpg').convert_alpha()
     logo_height = window.get_height() // 4
     logo_size = (round(340 * logo_height / 153), logo_height)
@@ -39,21 +37,27 @@ def create_main_menu(window):
 
     window_w = window.get_width()
 
-    play_button = Button1(window, (logo_pos[0] / window_w,
-                         0.45, logo_size[0] / window_w, 0.15), game_strings.get_string("play"))
+    # définition de boutons
+    play_button = Button1(window,
+                          (logo_pos[0] / window_w,
+                           0.45,
+                           logo_size[0] / window_w,
+                           0.15),
+                          game_strings.get_string("play"))
     ranking_button = Button1(window,
-                            (logo_pos[0] / window_w,
-                             0.65,
-                             (logo_size[0] / window_w) * 0.65,
-                             0.15),
-                            game_strings.get_string("leaderboard"))
+                             (logo_pos[0] / window_w,
+                              0.65,
+                              (logo_size[0] / window_w) * 0.65,
+                              0.15),
+                             game_strings.get_string("leaderboard"))
     help_button = Button1(window,
-                         (logo_pos[0] / window_w + (logo_size[0] / window_w) * 0.65,
-                          0.65,
-                          (logo_size[0] / window_w) * 0.35,
-                          0.15),
-                         game_strings.get_string("help"))
+                          (logo_pos[0] / window_w + (logo_size[0] / window_w) * 0.65,
+                           0.65,
+                           (logo_size[0] / window_w) * 0.35,
+                           0.15),
+                          game_strings.get_string("help"))
 
+    #placement sur la fenêtre de jeu
     frame = pygame.Surface(window.get_size())
     frame.blit(logo_to_display, (logo_pos))
     play_button.draw(frame)
@@ -65,9 +69,8 @@ def create_main_menu(window):
 
 
 def main_menu(window):
-    """
-    partie logique, qui gere l'ensemble du jeux en appellan la fonction adéquate au bouton préssé
-    """
+    """partie logique, qui gère le menu principal appelant la fonction
+    adéquate au bouton pressé."""
     play_button, ranking_button, help_button = create_main_menu(window)
     # évènements pygame
     proceed = True
@@ -77,132 +80,143 @@ def main_menu(window):
             if event.type == pygame.VIDEORESIZE:
                 # pour resize les éléments de la fenettre
                 play_button, ranking_button, help_button = create_main_menu(window)
+            # bouton "jouer" pressé
             if play_button.is_pressed(event):
+                # appel de la fonction des options de jeu
                 game_choice_menu(window)
                 proceed = False
                 return
+            # bouton "classement" pressé
             if ranking_button.is_pressed(event):
+                # appel de la fonction gérant l'affichage du classement
                 leaderboard_menu(window, 1)
                 proceed = False
                 return
+            # bouton aide pressé
             if help_button.is_pressed(event):
+                # appel d'affichage des règles
                 main_rule(window)
+                # retour au menu principal lorsque la fonction précédente se termine
                 main_menu(window)
                 proceed = False
                 return
 
 
 def create_mode(window):
-    """
-    partie affichage des modes du jeux (A et B)
-    """
+    """fonction annexe des options de jeu.
+    La fonction renvoie des objets utiles au maniement des options."""
+    # création des encadrés qui seront sensibles au survol de la souris
     mode_a = Button1(window,
-                            (0.175,
-                             0.2,
-                             0.3,
-                             0.6),
-                             '',
-                            (100, 100, 100))
+                     (0.175,
+                      0.2,
+                      0.3,
+                      0.6),
+                     '',
+                     (100, 100, 100))
     mode_b = Button1(window,
-                           (0.525,
-                            0.2,
-                            0.3,
-                            0.6),
-                            '',
-                           (100, 100, 100))
+                     (0.525,
+                      0.2,
+                      0.3,
+                      0.6),
+                     '',
+                     (100, 100, 100))
     mode = RadioButton((mode_a, mode_b))
+    # création de listes pour les options du mode B
+    # liste contenant les choix de niveau
     level_button_list = []
     y_value = 0.35
     for i in range(2):
         x_value = 0.15
         for j in range(5):
             button = Button1(mode_b,
-                           (x_value,
-                            y_value,
-                            0.14,  # 1/7
-                            0.1),
-                            str(i * 5 + j),
-                           (110, 110, 110))
+                             (x_value,
+                              y_value,
+                              0.14,  # 1/7
+                              0.1),
+                              str(i * 5 + j),
+                             (110, 110, 110))
             level_button_list.append(button)
             x_value += 0.14
         y_value += 0.1
+    # liste des choix de hauteur (difficulté)
     hight_button_list = []
     y_value = 0.7
     for i in range(2):
         x_value = 0.15
         for j in range(3):
             button = Button1(mode_b,
-                           (x_value,
-                            y_value,
-                            0.23,  # 7/30
-                            0.1),
-                            str(i * 3 + j),
-                           (110, 110, 110))
+                             (x_value,
+                              y_value,
+                              0.23,  # 7/30
+                              0.1),
+                              str(i * 3 + j),
+                             (110, 110, 110))
             hight_button_list.append(button)
             x_value += 0.23
         y_value += 0.1
+    # création de l'objet gérant les options selectionnées dans le mode B
     b_mode_option = (RadioButton(tuple(level_button_list)),
                      RadioButton(tuple(hight_button_list)))
+    # création des boutons "+" et "-" apparent dans le mode A
     plus_button = Button1(mode_a,
-                            (0.65,
-                             0.5,
-                             0.2,
-                             0.1),
-                             '+',
-                            (120, 120, 120))
-    less_button = Button1(mode_a,
+                          (0.65,
+                           0.5,
+                           0.2,
+                           0.1),
+                          '+',
+                          (120, 120, 120))
+    minus_button = Button1(mode_a,
                            (0.65,
                             0.7,
                             0.2,
                             0.1),
                             '-',
                            (120, 120, 120))
-    a_mode = [1, plus_button, less_button]
+    a_mode = [1, plus_button, minus_button]
     return mode, b_mode_option, a_mode
 
 
 def create_surface(window, mode):
-    """
-    Affiche la surface de sélection du mode de jeu.
-    """
+    """fonction créant la surface de fond visible du menu des options."""
     surface = pygame.Surface(window.get_size())
+    # textes
     statement_1 = Text(window,
-                     (0.175,
-                      0.05,
-                      0.65,
-                      0.15),
-                     game_strings.get_string("select_mode"))
+                       (0.175,
+                        0.05,
+                        0.65,
+                        0.15),
+                       game_strings.get_string("select_mode"))
     statement_2 = Text(window,
-                     (0,
-                      0.85,
-                      1,
-                      0.1),
-                     game_strings.get_string("enter_game"))
+                       (0,
+                        0.85,
+                        1,
+                        0.1),
+                       game_strings.get_string("enter_game"))
     statement_a = Text(mode.button_list[0],
-                     (0,
-                      0.3,
-                      1,
-                      0.15),
-                     game_strings.get_string("a_mode_statement"))
+                       (0,
+                        0.3,
+                        1,
+                        0.15),
+                       game_strings.get_string("a_mode_statement"))
     mode_a_text = Text(mode.button_list[0],
-                     (0,
-                      0.08,
-                      1,
-                      0.25),
-                     game_strings.get_string("mode_a"))
+                       (0,
+                        0.08,
+                        1,
+                        0.25),
+                       game_strings.get_string("mode_a"))
     mode_b_text = Text(mode.button_list[1],
-                     (0,
-                      0.08,
-                      1,
-                      0.25),
-                     game_strings.get_string("mode_b"))
+                       (0,
+                        0.08,
+                        1,
+                        0.25),
+                       game_strings.get_string("mode_b"))
     level = Text(mode.button_list[1],
-                     (0.15,
-                      0.25,
-                      1,
-                      0.1),
-                     game_strings.get_string("level"),
-                     True)
+                 (0.15,
+                  0.25,
+                  1,
+                  0.1),
+                 game_strings.get_string("level"),
+                 True)
     hight = Text(mode.button_list[1],
                      (0.15,
                       0.6,
@@ -211,6 +225,7 @@ def create_surface(window, mode):
                      game_strings.get_string("difficulty"),
                      True)
     previous_menu_button = Button2(window, (0.9, 0.05, 0.04), 'back')
+    # dessin des textes sur la surface à renvoyer
     statement_1.draw(surface)
     statement_2.draw(surface)
     statement_a.draw(surface)
@@ -224,36 +239,41 @@ def create_surface(window, mode):
 
 
 def create_game_choice_menu(window, mode, surface, b_mode_option, a_mode):
-    """
-    fonction gérant les niveaux.
-    """
+    """partie affichage du menu des options de jeu, elle requiert différents
+    paramètres issues de fonctions annexes."""
     window.fill(0x000000)
+    # dessin des encadrés d'options de jeu A et B
     mode.button_list[0].draw(window)
     mode.button_list[1].draw(window)
+    # dessin des boutons du mode B
     for option in b_mode_option:
         for button in option.button_list:
             button.draw(window)
+    # dessin des boutons "+" et "-" du mode A
     for button in a_mode[1:]:
         button.draw(window)
+    # ajout du texte Level
     level = Text(mode.button_list[0],
-                     (0.15,
-                      0.43,
-                      0.4,
-                      0.7),
-                     str(a_mode[0]))
+                 (0.15,
+                  0.43,
+                  0.4,
+                  0.7),
+                 str(a_mode[0]))
     level.draw(window)
     window.blit(surface, (0, 0))
     pygame.display.flip()
 
 
 def handle_a_mode(event, a_mode):
-    """
-    fonction pour le mode A
-    """
+    """gère le mode A. Renvoie un booléen, True lorsqu'un des boutons
+    du mode A est pressé, False autrement. Le niveau est compris entre
+    1 et 15 inclus."""
+    # dans le cas où le bouton "+" est pressé
     if a_mode[1].is_pressed(event):
         if a_mode[0] < 15:
             a_mode[0] += 1
             return True
+    # dans le cas où le bouton "-" est pressé
     if a_mode[2].is_pressed(event):
         if a_mode[0] > 1:
             a_mode[0] -= 1
@@ -262,9 +282,10 @@ def handle_a_mode(event, a_mode):
 
 
 def game_choice_menu(window):
-    """
-    partie logique du menu servant a choisir sont mode de jeux
-    """
+    """partie logique du menu des options de jeu.
+    Elle permet après que la touche entrée soit pressée de commencer la partie
+    en prenant en considération les choix du joueur."""
+    # premières attributions de valeurs aux variables utilisées
     mode, b_mode_option, a_mode = create_mode(window)
     surface, previous_menu_button = create_surface(window, mode)
     create_game_choice_menu(window, mode, surface, b_mode_option, a_mode)
@@ -273,17 +294,26 @@ def game_choice_menu(window):
         for event in pygame.event.get():
             window = loop_starter_pack(window, event)
 
+            # si l'un des boutons du mode A est pressé
             if handle_a_mode(event, a_mode):
+                # mise à jour de l'affichage
                 create_game_choice_menu(window, mode, surface, b_mode_option, a_mode)
 
+            # si la souris survole une surface mode différente de celle sur laquelle elle est
             if mode.radio_change(event):
+                # mise à jour de l'affichage
                 create_game_choice_menu(window, mode, surface, b_mode_option, a_mode)
-
+            
+            # vérification pour chaque option contenu dans le mode B
             for option in b_mode_option:
+                # si un clic de la souris s'opère
                 if option.click_change(event):
+                    # mise à jour de l'affichage
                     create_game_choice_menu(window, mode, surface, b_mode_option, a_mode)
 
+            # si la fenêtre est redimensionnée
             if event.type == pygame.VIDEORESIZE:
+                # redimenssionnement de tous les objets nécéssaire à l'affichage
                 for button in mode.button_list:
                     button.resize(window)
                 for option in b_mode_option:
@@ -292,37 +322,43 @@ def game_choice_menu(window):
                 a_mode[1].resize(mode.button_list[0])
                 a_mode[2].resize(mode.button_list[0])
                 surface, previous_menu_button = create_surface(window, mode)
+                # mise à jour de l'affichage
                 create_game_choice_menu(window, mode, surface, b_mode_option, a_mode)
 
+            # lorsque la touche entrée est pressée
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
+                    # si le choix du joueur est le mode A
                     if mode.get_value() == 0:
                         window.fill(0x000000)
                         level = a_mode[0]
+                        # appel de la fonction du gameplay
                         game_data, game_screen, screenshot = gameplay(window, (level, -1))
+                        # renvoi vers le game over
                         game_over_menu(window, game_data, game_screen, screenshot)
                         proceed = False
+                    # autrement le choix ne peut que être le mode B
                     else:
                         window.fill(0x000000)
                         level, hight = b_mode_option
-                        game_data, game_screen, screenshot = gameplay(
-                            window,
-                            (level.get_value(),
-                            hight.get_value())
-                        )
+                        # appel de la fonction du gameplay
+                        game_data, game_screen, screenshot = gameplay(window,
+                                                                      (level.get_value(),
+                                                                      hight.get_value()))
+                        # renvoi vers le game over
                         game_over_menu(window, game_data, game_screen, screenshot)
                         proceed = False
 
+            # dans le cas où le bouton de retour au menu précédent est pressé
             if previous_menu_button.is_pressed(event):
+                # appel du menu principal
                 main_menu(window)
                 proceed = False
                 return
 
 
 def create_leaderboard_menu(window):
-    """
-    Affichage du classement
-    """
+    """Affichage du classement."""
     previous_menu_button = Button2(window, (0.9, 0.05, 0.04), 'back')
     frame = pygame.Surface(window.get_size())
     previous_menu_button.draw(frame)
@@ -339,9 +375,7 @@ def create_leaderboard_menu(window):
 
 
 def create_leaderboard_table(window, leaderboard, page):
-    """
-    Crée la table du classement.
-    """
+    """Crée la table du classement."""
     window_w, window_h = window.get_size()
     x_value = round(0.15 * window_w)+5
     y_value = round(0.15 * window_h)+5
@@ -409,9 +443,7 @@ def create_leaderboard_table(window, leaderboard, page):
 
 
 def create_error_table(window, error):
-    """
-    Affiche le message d'erreur sur la table du classement.
-    """
+    """Affiche le message d'erreur sur la table du classement."""
     message = Button1(window,
                          (0.15,
                           0.425,
@@ -424,9 +456,7 @@ def create_error_table(window, error):
 
 
 def leaderboard_menu(window, page):
-    """
-    Menu du leaderboard.
-    """
+    """Menu du leaderboard."""
     previous_menu_button = create_leaderboard_menu(window)
     proceed = True
     response, status_code = post_request("http://tetrisnsi.tk/leaderboard")
@@ -452,17 +482,13 @@ def leaderboard_menu(window, page):
 
 
 def get_now_string():
-    """
-    retourne la date actuel
-    """
+    """renvoie la date mise en forme."""
     now = datetime.datetime.now()
     return now.strftime('%d-%m-%Y_%Hh%M')
 
 
 def create_game_over_menu(window, game_data, game_screen, enregistrer_texte):
-    """
-    partie affichage du menu game over
-    """
+    """partie affichage du menu game over."""
     frame = pygame.Surface(window.get_size())
     background = Button1(window,
                            (0.1,
@@ -550,9 +576,7 @@ def create_game_over_menu(window, game_data, game_screen, enregistrer_texte):
 
 
 def game_over_menu(window, game_data, game_screen, screenshot):
-    """
-    partie logique du menu game over
-    """
+    """partie logique du menu game over."""
     proceed = True
     enregistrer_texte = False
     while proceed:
