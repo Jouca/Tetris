@@ -67,7 +67,7 @@ Tous les fichiers images ont été dessinés par <a href="https://github.com/per
 
 <h2>LICENSE TETRIS:</h2>
 
-Tetris ® & © 1985~2022 Tetris Holding, LLC.<br>
+Tetris® & © 1985~2022 Tetris Holding, LLC.<br>
 Tetris logo, Tetris theme song and Tetriminos are trademarks of Tetris Holding, LLC.<br>
 Licensed to The Tetris Company.<br>
 Game Design by Alexey Pajitnov.<br>
