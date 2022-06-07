@@ -13,7 +13,7 @@
 ---
 
 <h1>PYTRIS (LIBRAIRIE PYGAME)</h1>
-<p>Ce projet a été codé avec <a href="https://github.com/periergeia">periergeia</a>, <a href="https://github.com/DominataurusRex">DominataurusRex</a> et <a href="https://github.com/BLASTUHQ">BLASTUHQ</a> pour le projet de deuxième trimestre de l'année scolaire 2021-2022 dans la spécialité NSI (Numériques et Sciences de l'Informatique) en <b>Python</b>.
+<p>Ce projet a été codé par <a href="https://github.com/periergeia">periergeia</a>, <a href="https://github.com/DominataurusRex">DominataurusRex</a> et <a href="https://github.com/BLASTUHQ">BLASTUHQ</a> pour le projet de deuxième trimestre de l'année scolaire 2021-2022 dans la spécialité NSI (Numériques et Sciences de l'Informatique) en <b>Python</b>.
   
 <h2>Vous pouvez également trouver le serveur via ce répertoire : <a href="https://github.com/Jouca/Tetris-Server">Pytris Serveur</a></h2>
 
@@ -22,9 +22,9 @@
 <div class="banner", align="center">
   <img src="https://trophees-nsi.fr/media/pages/espace-presse/4f54081fa3-1643755528/trophees-nsi-logo-orange.png", style="text-align: center; object-fit: cover; max-width: 100%; height: 400px;">
 </div>
-<h1 align="center">🏆 <ins>Lauréat dans l'académie d'Ile-de-France - Créteil</ins> 🏆</h1>
+<h1 align="center">🏆 <ins>Lauréat nationale et dans l'académie d'Ile-de-France - Créteil</ins> 🏆</h1>
 
-<h2 align="center">Pytris a été nominée par le jury de l'Académie de Créteil en tant que <ins>Meilleur projet de Terminale</ins> durant l'édition 2022 du concours "Les trophées NSI"</h2>
+<h2 align="center">Pytris a été nominée par le <ins>jury nationale</ins> et par le <ins>jury de l'Académie de Créteil</ins> en tant que <ins>Meilleur projet de Terminale</ins> durant la première édition du concours "Les trophées NSI"</h2>
 
 ---
 
