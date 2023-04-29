@@ -20,7 +20,7 @@
 ---
 
 <div class="banner", align="center">
-  <img src="https://trophees-nsi.fr/media/pages/espace-presse/4f54081fa3-1643755528/trophees-nsi-logo-orange.png", style="text-align: center; object-fit: cover; max-width: 100%; height: 400px;">
+  <img src="https://trophees-nsi.fr/media/pages/documentation/7423db6c08-1643755528/trophees-nsi-logo-orange.png", style="text-align: center; object-fit: cover; max-width: 100%; height: 400px;">
 </div>
 <h1 align="center">🏆 <ins>Lauréat national et dans l'académie d'Ile-de-France - Créteil</ins> 🏆</h1>
 
