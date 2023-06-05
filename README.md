@@ -47,7 +47,7 @@
 
 <h2>FICHIERS IMAGES UTILISÉS (dans ./image/):</h2>
 
-Tous les fichiers images ont été dessinés par <a href="https://github.com/periergeia">periergeia</a>
+Tous les fichiers images ont été dessinés par <a href="https://github.com/periergeia">periergeia</a> et <a href="[https://github.com/periergeia](https://twitter.com/hir0shi_gg)">Hir0shi</a> (pour le logo du jeu)
 - [back.png](./image/back.png)
 - [bronze.png](./image/bronze_medal.png)
 - [gold_medal.png](./image/gold_medal.png)
