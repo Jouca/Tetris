@@ -26,7 +26,7 @@
 </div>
 <h1 align="center">🏆 <ins>Lauréat national et dans l'académie d'Ile-de-France - Créteil</ins> 🏆</h1>
 
-<h2 align="center">Pytris a été nominée par le <ins>jury national</ins> et par le <ins>jury de l'Académie de Créteil</ins> en tant que <ins>Meilleur projet de Terminale</ins> durant la première édition du concours "Les trophées NSI"</h2>
+<h2 align="center">Pytris a été nominée par le <ins>jury national</ins> et par le <ins>jury de l'Académie de Créteil</ins> en tant que <ins>Meilleur projet de Terminale</ins> durant la première édition du concours "Les trophées NSI" en 2022.</h2>
 
 ---
 
